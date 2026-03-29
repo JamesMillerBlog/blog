@@ -23,6 +23,9 @@ build
 .playwright-mcp/
 .superpowers/
 
+# AI workflow artifacts (specs, plans)
+docs/superpowers/
+
 # Claude Code local settings (machine-specific paths)
 .claude/settings.local.json
 

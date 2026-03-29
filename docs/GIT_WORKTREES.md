@@ -1,258 +1,101 @@
 # Git Worktrees Guide
 
-Git worktrees let you check out multiple branches into separate directories simultaneously — same repo, multiple working states, no stashing.
+Git worktrees allow you to check out multiple branches into separate directories simultaneously. This means you can have multiple working states of the same repository at the same time, without needing to stash changes or constantly switch branches in a single directory.
 
-## Why Use Worktrees?
+## Best Practice: Where Worktrees Live
 
-| Scenario | Without Worktrees | With Worktrees |
-|----------|-------------------|----------------|
-| Bug fix while writing a post | Stash, switch, fix, switch, unstash | Open bug-fix worktree, fix, done |
-| Review a PR while coding | Stash everything, checkout PR branch | Open PR in its own worktree |
-| Compare two implementations | Copy-paste between files | Open both side by side |
-| Run two dev servers at once | Not possible on same branch | Each worktree runs independently |
+It is best practice to keep worktrees completely outside of the main repository's directory. A common approach is to use a sibling directory.
+
+For example, if your main repository is in a directory called `Project`, you can create a `Project.worktrees` directory next to it:
+
+```text
+Workspace/
+├── Project/                              <-- Your main repository
+└── Project.worktrees/                    <-- The container for your worktrees
+    ├── feature-branch/                   <-- A git worktree
+    └── bugfix-branch/                    <-- Another git worktree
+```
 
 ---
 
-## Where Worktrees Live
-
-Worktree files live in whatever directory you specify when creating them (typically alongside the main repo). Git tracks them internally in `.git/worktrees/` inside your main repo.
-
-**On disk:**
-```
-Creative_Technology/
-├── Blog/              ← main repo (.git lives here)
-├── blog-feature/      ← feature worktree (just a directory)
-├── blog-hotfix/       ← hotfix worktree
-└── blog-drafts/       ← drafts worktree
-```
-
-**Inside `.git`:**
-```
-Blog/.git/worktrees/
-├── blog-feature/      ← metadata only (not the actual files)
-└── blog-hotfix/
-```
-
-You never need to touch `.git/worktrees/` directly — git manages it.
-
-### Seeing all active worktrees
-
-```bash
-git worktree list
-```
-
-Example output:
-```
-/Users/jamesmiller/Documents/Creative_Technology/Blog           abc1234 [main]
-/Users/jamesmiller/Documents/Creative_Technology/blog-feature   def5678 [feature/new-homepage]
-/Users/jamesmiller/Documents/Creative_Technology/blog-hotfix    ghi9012 [hotfix/fix-broken-nav]
-```
-
-Shows each worktree's path, current commit, and branch.
-
----
-
-## What Branch is a Worktree Based On?
-
-Each worktree can be based on any branch, commit, or starting point — it is not automatically based on `main`. You control this when creating it.
-
-```bash
-# Based on main (most common — start fresh from production)
-git worktree add -b feature/new-homepage ../blog-feature main
-
-# Based on an existing branch (pick up where it left off)
-git worktree add ../blog-hotfix hotfix/fix-broken-nav
-
-# Based on a specific commit
-git worktree add ../blog-experiment abc1234
-
-# Based on a remote branch
-git fetch origin
-git worktree add ../blog-pr origin/pr-branch-name
-```
-
-**If you don't specify a base**, git uses `HEAD` of your current branch — which is `main` if that's what you have checked out, but not guaranteed.
-
-**For this blog, the typical pattern:**
-| Worktree purpose | Base on |
-|-----------------|---------|
-| New feature | `main` — start from stable production |
-| Hotfix | `main` — fix what's currently live |
-| Draft posts | `main` or a long-lived `drafts` branch |
-| PR review | The remote PR branch |
-
----
-
-## Full Lifecycle
+## Worktree Lifecycle Commands
 
 ### 1. Create a Worktree
 
+When you create a worktree, you specify the path where it should be created and the branch it should track.
+
+**Create a NEW branch based on `main`:**
+
 ```bash
-# From anywhere inside the main repo
-cd /Users/jamesmiller/Documents/Creative_Technology/Blog
+git worktree add -b <new-branch-name> ../Project.worktrees/<new-branch-name> main
+```
 
-# New branch based on main (recommended default)
-git worktree add -b feature/new-homepage ../blog-feature main
+**Create a local tracking branch based on an existing remote branch:**
 
-# New branch based on an existing branch
-git worktree add -b hotfix/fix-broken-nav ../blog-hotfix main
+```bash
+git fetch origin
+git worktree add -b <branch-name> ../Project.worktrees/<branch-name> origin/<branch-name>
+```
 
-# Check out an already-existing branch
-git worktree add ../blog-drafts drafts
+**Check out an already-existing local branch:**
+
+```bash
+git worktree add ../Project.worktrees/<branch-name> <branch-name>
+```
+
+eg
+
+```bash
+git worktree add -b aws-infrastructure ../Blog.worktrees/new-feature origin/new-feature
 ```
 
 ### 2. Work in the Worktree
 
-The worktree is a fully normal directory — `cd` into it and work as usual:
+The worktree functions as a normal Git directory. You can `cd` into it, make changes, run your development server, and commit as usual.
 
 ```bash
-cd ../blog-feature/web
-pnpm install   # only needed if package.json changed vs main
-pnpm dev       # runs on port 3000 by default
+cd ../Project.worktrees/<branch-name>
+# Work, commit, push, etc.
 ```
 
-To run both worktrees simultaneously, use different ports:
+_Note: Dependencies (like `node_modules`) and ignored files (like `.env`) are not shared between worktrees. You will need to install dependencies and set up environment variables in each new worktree._
 
-```bash
-# Terminal 1 — main
-cd Blog/web && pnpm dev --port 3000
+### 3. List Active Worktrees
 
-# Terminal 2 — feature worktree
-cd ../blog-feature/web && pnpm dev --port 3001
-```
-
-### 3. Commit and Push
-
-```bash
-cd ../blog-feature
-git add .
-git commit -m "feat: new homepage layout"
-git push -u origin feature/new-homepage
-```
-
-### 4. Merge / PR
-
-Create your PR from the pushed branch as normal. Once merged, clean up the worktree.
-
-### 5. Remove the Worktree
-
-```bash
-# Clean removal (preferred)
-git worktree remove ../blog-feature
-
-# If the above fails (untracked files etc.), force it
-git worktree remove --force ../blog-feature
-
-# If you deleted the directory manually, prune the stale git reference
-git worktree prune
-```
-
-### 6. Verify
+To see all currently active worktrees and their locations:
 
 ```bash
 git worktree list
-# Should only show your main worktree
 ```
 
----
+### 4. Remove a Worktree
 
-## Opening Each Worktree in Its Own Editor Window
+Once you are done with a worktree (e.g., after merging a PR), you should remove it.
 
-Yes — each worktree is just a directory, so editors treat it as a completely independent project.
-
-### VS Code
+**Clean removal (preferred):**
 
 ```bash
-# Open as a new window
-code /Users/jamesmiller/Documents/Creative_Technology/blog-feature
-
-# Or from inside the worktree
-cd ../blog-feature && code .
+git worktree remove ../Project.worktrees/<branch-name>
 ```
 
-You'll get two separate VS Code windows, each with their own file explorer, terminal, and Source Control panel showing only that branch's changes.
-
-### Cursor
+**Force removal (if it contains untracked or uncommitted files):**
 
 ```bash
-cursor /Users/jamesmiller/Documents/Creative_Technology/blog-feature
-
-# Or
-cd ../blog-feature && cursor .
+git worktree remove --force ../Project.worktrees/<branch-name>
 ```
 
-### Multiple editors simultaneously
+### 5. Cleanup Stale Worktrees
 
-You can have `Blog/` open in one window and `blog-feature/` in another at the same time. They share the same `.git` database so commits from either window are immediately visible in both, but each editor only shows its own working directory.
-
----
-
-## Claude Code Per Worktree
-
-Claude Code scopes its context (CLAUDE.md, memory, working directory) to whichever directory it's opened in:
+If you accidentally delete a worktree directory using standard system commands (like `rm -rf`) instead of `git worktree remove`, Git will still retain its internal metadata. To clean up these broken references:
 
 ```bash
-cd ../blog-feature
-claude
-```
-
-Or without changing directory:
-
-```bash
-claude --cwd ../blog-feature
-```
-
----
-
-## Common Workflows
-
-### Writing a draft while fixing a bug
-
-```bash
-# You're writing a post in the drafts worktree
-cd ../blog-drafts
-# editing _posts/new-post.mdx...
-
-# Bug reported — don't touch your draft
-cd ../blog-hotfix
-git checkout -b fix/broken-nav
-# fix the bug, commit, push, PR
-
-# Back to your draft exactly where you left it
-cd ../blog-drafts
-```
-
-### Running feature and production simultaneously
-
-```bash
-# Terminal 1 — production
-cd Blog/web && pnpm dev --port 3000
-
-# Terminal 2 — feature branch
-cd ../blog-feature/web && pnpm dev --port 3001
-
-# Compare at localhost:3000 and localhost:3001
-```
-
-### Reviewing a PR
-
-```bash
-git fetch origin
-git worktree add ../blog-pr-123 origin/pr-branch-name
-
-# Open in a new editor window
-code ../blog-pr-123
-
-# Clean up when done
-git worktree remove ../blog-pr-123
+git worktree prune
 ```
 
 ---
 
 ## Rules and Gotchas
 
-- **You cannot check out the same branch in two worktrees** — git prevents this
-- **`node_modules` is not shared** — each worktree needs its own `pnpm install` if dependencies differ from main
-- **`.env` files are not shared** — copy or symlink as needed
-- **`git worktree prune`** cleans up stale `.git/worktrees/` entries if you deleted a directory manually
-- **Worktrees are local only** — they don't affect the remote or other developers
+- **Branch uniqueness:** You cannot check out the same branch in two different worktrees simultaneously.
+- **Dependencies:** Run your package manager install command (e.g., `npm install`, `pnpm install`, `yarn install`) in new worktrees if the dependencies differ from your main worktree.
+- **Moving worktrees:** Never use `mv` to rename or move a worktree directory. Always use `git worktree move <old-path> <new-path>`.

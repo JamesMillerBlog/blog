@@ -1,52 +1,52 @@
-import { Metadata } from "next";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { getAllPosts, getPostBySlug } from "@/common/utils/posts";
-import { SITE_URL, TWITTER_HANDLE, AUTHOR } from "@/common/consts/constants";
-import { ui } from "@/i18n/en";
-import { compileMDXContent } from "@/common/utils/mdx";
-import { PostBody } from "@/app/posts/_components/post-body";
-import { PostHeader } from "@/app/posts/_components/post-header";
-import { JsonLd } from "@/components/ui/json-ld";
-import { ArrowLeftIcon } from "lucide-react";
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { getAllPosts, getPostBySlug } from '@/common/utils/posts'
+import { SITE_URL, TWITTER_HANDLE, AUTHOR } from '@/common/consts/constants'
+import { ui } from '@/i18n/en'
+import { compileMDXContent } from '@/common/utils/mdx'
+import { PostBody } from '@/app/posts/_components/post-body'
+import { PostHeader } from '@/app/posts/_components/post-header'
+import { JsonLd } from '@/components/ui/json-ld'
+import { ArrowLeftIcon } from 'lucide-react'
 
 export default async function Post(props: Params) {
-  const params = await props.params;
-  const post = await getPostBySlug(params.slug);
+  const params = await props.params
+  const post = await getPostBySlug(params.slug)
 
   if (!post) {
-    return notFound();
+    return notFound()
   }
 
-  if (post.draft && process.env.NODE_ENV !== "development") {
-    return notFound();
+  if (post.draft && process.env.NODE_ENV !== 'development') {
+    return notFound()
   }
 
-  const content = await compileMDXContent(post.content || "");
+  const content = await compileMDXContent(post.content || '')
 
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
     headline: post.title,
     description: post.excerpt,
     image: post.coverImage,
     datePublished: post.date,
     dateModified: post.date,
     author: {
-      "@type": "Person",
+      '@type': 'Person',
       name: AUTHOR.name,
       url: AUTHOR.url,
     },
     publisher: {
-      "@type": "Person",
+      '@type': 'Person',
       name: AUTHOR.name,
       url: AUTHOR.url,
     },
     mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `${SITE_URL}/posts/${post.slug}`,
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/posts/${post.slug}`,
     },
-  };
+  }
 
   return (
     <>
@@ -72,24 +72,24 @@ export default async function Post(props: Params) {
         </article>
       </main>
     </>
-  );
+  )
 }
 
 type Params = {
   params: Promise<{
-    slug: string;
-  }>;
-};
+    slug: string
+  }>
+}
 
 export async function generateMetadata(props: Params): Promise<Metadata> {
-  const params = await props.params;
-  const post = await getPostBySlug(params.slug);
+  const params = await props.params
+  const post = await getPostBySlug(params.slug)
 
   if (!post) {
-    return notFound();
+    return notFound()
   }
 
-  const url = `${SITE_URL}/posts/${post.slug}`;
+  const url = `${SITE_URL}/posts/${post.slug}`
 
   return {
     title: post.title,
@@ -98,7 +98,7 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
     openGraph: {
       title: post.title,
       description: post.excerpt,
-      type: "article",
+      type: 'article',
       url,
       publishedTime: post.date,
       authors: [AUTHOR.name],
@@ -112,7 +112,7 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
       ],
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
       images: [post.ogImage.url],
@@ -121,13 +121,13 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
     alternates: {
       canonical: url,
     },
-  };
+  }
 }
 
 export async function generateStaticParams() {
-  const posts = await getAllPosts();
+  const posts = await getAllPosts()
 
   return posts.map((post) => ({
     slug: post.slug,
-  }));
+  }))
 }

@@ -1,26 +1,26 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { HeroSection } from "./hero-section";
-import { FeaturedPosts } from "./featured-posts";
-import { TagCloudSection } from "./tag-cloud-section";
-import { FilteredPostGrid } from "./filtered-post-grid";
-import { Post } from "@/types/post";
+import { useState } from 'react'
+import { HeroSection } from './hero-section'
+import { FeaturedPosts } from './featured-posts'
+import { TagCloudSection } from './tag-cloud-section'
+import { FilteredPostGrid } from './filtered-post-grid'
+import { Post } from '@/types/post'
 
 type Props = {
-  allPosts: Post[];
-  featuredTags: string[];
-};
+  allPosts: Post[]
+  featuredTags: string[]
+}
 
 export function HomeContent({ allPosts, featuredTags }: Props) {
-  const [selectedTag, setSelectedTag] = useState("All");
+  const [selectedTag, setSelectedTag] = useState('All')
 
-  const featuredPost = allPosts[0];
-  const secondaryPosts = allPosts.slice(1, 3);
-  const morePosts = allPosts.slice(3);
+  const featuredPost = allPosts[0]
+  const secondaryPosts = allPosts.slice(1, 3)
+  const morePosts = allPosts.slice(3)
 
   function handleTagSelect(tag: string) {
-    setSelectedTag(tag);
+    setSelectedTag(tag)
   }
 
   return (
@@ -41,5 +41,5 @@ export function HomeContent({ allPosts, featuredTags }: Props) {
         />
       )}
     </>
-  );
+  )
 }

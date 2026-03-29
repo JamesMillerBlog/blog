@@ -1,5 +1,5 @@
-import { compileMDX } from "next-mdx-remote/rsc";
-import { ReactElement } from "react";
+import { compileMDX } from 'next-mdx-remote/rsc'
+import { ReactElement } from 'react'
 
 export async function compileMDXContent(source: string): Promise<ReactElement> {
   const { content } = await compileMDX({
@@ -7,7 +7,7 @@ export async function compileMDXContent(source: string): Promise<ReactElement> {
     options: {
       parseFrontmatter: false,
     },
-  });
+  })
 
-  return content;
+  return content
 }

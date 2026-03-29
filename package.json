@@ -1,7 +1,18 @@
 {
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev": "pnpm --dir web dev",
+    "build": "pnpm --dir web build",
+    "start": "pnpm --dir web start",
+    "test": "pnpm --dir web test",
+    "test:watch": "pnpm --dir web test:watch",
+    "test:coverage": "pnpm --dir web test:coverage",
+    "test:e2e": "pnpm --dir web test:e2e",
+    "typecheck": "pnpm --dir web typecheck",
+    "lint": "pnpm --dir web lint",
+    "format": "pnpm --dir web format",
+    "format:check": "pnpm --dir web format:check"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

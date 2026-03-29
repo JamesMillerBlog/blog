@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { ui } from "@/i18n/en";
+import Link from 'next/link'
+import { ui } from '@/i18n/en'
 
 export default function NotFound() {
   return (
@@ -11,9 +11,7 @@ export default function NotFound() {
         <h2 className="font-headline text-3xl md:text-4xl font-bold text-on-surface mb-6">
           {ui.notFound.heading}
         </h2>
-        <p className="font-body text-xl text-on-surface-variant mb-12">
-          {ui.notFound.description}
-        </p>
+        <p className="font-body text-xl text-on-surface-variant mb-12">{ui.notFound.description}</p>
         <Link
           href="/"
           className="inline-block bg-primary text-on-primary font-headline font-bold px-8 py-4 rounded-full hover:scale-105 transition-transform active:scale-95 shadow-md"
@@ -22,5 +20,5 @@ export default function NotFound() {
         </Link>
       </div>
     </main>
-  );
+  )
 }

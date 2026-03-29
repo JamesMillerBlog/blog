@@ -1,0 +1,254 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;500;600&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  /* Design System: "The Whimsical Scholar" */
+
+  /* Primary Colors */
+  --color-primary: #00675d;
+  --color-primary-dim: #005a50;
+  --color-primary-container: #6af2de;
+  --color-primary-fixed: #6af2de;
+  --color-primary-fixed-dim: #5ae4d0;
+  --color-on-primary: #c0fff3;
+  --color-on-primary-container: #00594f;
+  --color-on-primary-fixed: #00443c;
+  --color-on-primary-fixed-variant: #006359;
+  --color-inverse-primary: #6df5e1;
+
+  /* Secondary Colors */
+  --color-secondary: #a02d70;
+  --color-secondary-dim: #912063;
+  --color-secondary-container: #ffc0db;
+  --color-secondary-fixed: #ffc0db;
+  --color-secondary-fixed-dim: #ffabd1;
+  --color-on-secondary: #ffeff3;
+  --color-on-secondary-container: #86155a;
+  --color-on-secondary-fixed: #690045;
+  --color-on-secondary-fixed-variant: #922164;
+
+  /* Tertiary Colors (Gold accents - use sparingly) */
+  --color-tertiary: #755600;
+  --color-tertiary-dim: #674b00;
+  --color-tertiary-container: #fcc025;
+  --color-tertiary-fixed: #fcc025;
+  --color-tertiary-fixed-dim: #edb210;
+  --color-on-tertiary: #fff1db;
+  --color-on-tertiary-container: #563e00;
+  --color-on-tertiary-fixed: #3d2b00;
+  --color-on-tertiary-fixed-variant: #614700;
+
+  /* Surface Colors (Tonal Layering) */
+  --color-surface: #f5f7f9;
+  --color-surface-dim: #d0d5d8;
+  --color-surface-bright: #f5f7f9;
+  --color-surface-container: #e5e9eb;
+  --color-surface-container-low: #eef1f3;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #dfe3e6;
+  --color-surface-container-highest: #d9dde0;
+  --color-surface-variant: #d9dde0;
+  --color-surface-tint: #00675d;
+  --color-on-surface: #2c2f31;
+  --color-on-surface-variant: #595c5e;
+  --color-inverse-surface: #0b0f10;
+  --color-inverse-on-surface: #9a9d9f;
+
+  /* Background */
+  --color-background: #f5f7f9;
+  --color-on-background: #2c2f31;
+
+  /* Outline */
+  --color-outline: #747779;
+  --color-outline-variant: #abadaf;
+
+  /* Error */
+  --color-error: #b31b25;
+  --color-error-dim: #9f0519;
+  --color-error-container: #fb5151;
+  --color-on-error: #ffefee;
+  --color-on-error-container: #570008;
+
+  /* Typography */
+  --font-family-headline: 'Plus Jakarta Sans', sans-serif;
+  --font-family-body: 'Newsreader', serif;
+  --font-family-label: 'Plus Jakarta Sans', sans-serif;
+
+  /* Border Radius (per design system) */
+  --radius-sm: 0.5rem;
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --spacing-28: 7rem;
+
+  /* Typography Scale */
+  --font-size-display-lg: 3.5rem;
+  --font-size-title-lg: 1.375rem;
+  --font-size-body-lg: 1rem;
+  --font-size-label-md: 0.75rem;
+  --font-size-5xl: 2.5rem;
+  --font-size-6xl: 2.75rem;
+  --font-size-7xl: 4.5rem;
+  --font-size-8xl: 6.25rem;
+
+  --letter-spacing-tighter: -0.04em;
+
+  /* Shadows (use sparingly - prefer tonal layering) */
+  --shadow-sm: 0 5px 10px rgba(44, 47, 49, 0.04);
+  --shadow-md: 0 8px 30px rgba(44, 47, 49, 0.06);
+  --shadow-lg: 0 20px 40px rgba(44, 47, 49, 0.08);
+  --shadow-xl: 0 25px 50px rgba(44, 47, 49, 0.1);
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+/* Dark Mode Overrides */
+.dark {
+  --color-primary: #6df5e1;
+  --color-primary-dim: #5ae4d0;
+  --color-primary-container: #00594f;
+  --color-on-primary: #00443c;
+  --color-on-primary-container: #6af2de;
+
+  --color-secondary: #ffabd1;
+  --color-secondary-dim: #ff97c7;
+  --color-secondary-container: #922164;
+  --color-on-secondary: #690045;
+  --color-on-secondary-container: #ffc0db;
+
+  --color-tertiary: #edb210;
+  --color-tertiary-container: #614700;
+  --color-on-tertiary: #3d2b00;
+  --color-on-tertiary-container: #fcc025;
+
+  --color-surface: #0b0f10;
+  --color-surface-dim: #0b0f10;
+  --color-surface-bright: #2c2f31;
+  --color-surface-container: #1a1d1f;
+  --color-surface-container-low: #141718;
+  --color-surface-container-lowest: #050809;
+  --color-surface-container-high: #242729;
+  --color-surface-container-highest: #2f3234;
+  --color-surface-variant: #3a3d3f;
+  --color-on-surface: #e1e3e5;
+  --color-on-surface-variant: #c4c6c8;
+
+  --color-background: #0b0f10;
+  --color-on-background: #e1e3e5;
+
+  --color-outline: #8d9092;
+  --color-outline-variant: #5a5d5f;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #690005;
+  --color-on-error-container: #ffdad6;
+}
+
+/* Base Styles */
+body {
+  font-family: var(--font-family-label);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+/* Typography Classes */
+.font-headline {
+  font-family: var(--font-family-headline);
+}
+
+.font-body {
+  font-family: var(--font-family-body);
+}
+
+.font-label {
+  font-family: var(--font-family-label);
+}
+
+/* ─── Semantic Type Scale ───────────────────────────────────────────────────
+   Use these classes instead of ad-hoc text-* combinations.
+   Every class bakes in: font family + size + weight + color token.
+
+   .type-display      Hero headings, page titles (h1)
+   .type-section      Section headings (h2)
+   .type-card-title   Card/item headings (h3)
+   .type-body-lead    Intro paragraphs, lede text
+   .type-body         Regular prose body text
+   .type-label        Metadata, dates, captions
+   .type-tag          Pill/tag labels, badges
+───────────────────────────────────────────────────────────────────────────── */
+
+.type-display {
+  font-family: var(--font-family-headline);
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--color-on-surface);
+}
+@media (min-width: 768px) {
+  .type-display { font-size: 4.5rem; }
+}
+
+.type-section {
+  font-family: var(--font-family-headline);
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--color-on-surface);
+}
+
+.type-card-title {
+  font-family: var(--font-family-headline);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.type-body-lead {
+  font-family: var(--font-family-body);
+  font-size: 1.25rem;
+  color: var(--color-on-surface-variant);
+  line-height: 1.7;
+}
+@media (min-width: 768px) {
+  .type-body-lead { font-size: 1.5rem; }
+}
+
+.type-body {
+  font-family: var(--font-family-body);
+  font-size: 1rem;
+  color: var(--color-on-surface-variant);
+  line-height: 1.7;
+}
+
+.type-label {
+  font-family: var(--font-family-headline);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-outline);
+}
+
+.type-tag {
+  font-family: var(--font-family-headline);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+}
+
+/* Glass Effect (for navigation) */
+.glass-nav {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Material Icons Support */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}

@@ -1,0 +1,234 @@
+{
+  "redirects": [
+    {
+      "source": "/what-is-next-for-wrapperjs/",
+      "destination": "/posts/what-is-next-for-wrapperjs",
+      "permanent": true
+    },
+    {
+      "source": "/multiplayer-webxr-readyplayer-me-avatars-part-3/",
+      "destination": "/posts/multiplayer-webxr-readyplayer-me-avatars-part-3",
+      "permanent": true
+    },
+    {
+      "source": "/multiplayer-webxr-readyplayer-me-avatars-part-2/",
+      "destination": "/posts/multiplayer-webxr-readyplayer-me-avatars-part-2",
+      "permanent": true
+    },
+    {
+      "source": "/multiplayer-webxr-readyplayer-me-avatars-part-1/",
+      "destination": "/posts/multiplayer-webxr-readyplayer-me-avatars-part-1",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-build-a-multi-user-metaverse/",
+      "destination": "/posts/multiplayer-metaverse-creation-on-ethereum",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-set-up-auth-with-metamask-using-amazon-cognito-part-2/",
+      "destination": "/posts/how-to-set-up-auth-with-metamask-using-amazon-cognito-part-2",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-set-up-auth-with-metamask-using-amazon-cognito-part-1/",
+      "destination": "/posts/how-to-set-up-auth-with-metamask-using-amazon-cognito-part-1",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-add-amazon-cognito-auth-to-a-web-app-part-4/",
+      "destination": "/posts/how-to-add-amazon-cognito-auth-to-a-web-app-part-4",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-add-amazon-cognito-auth-to-a-web-app-part-3/",
+      "destination": "/posts/how-to-add-amazon-cognito-auth-to-a-web-app-part-3",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-add-amazon-cognito-auth-to-a-web-app-part-2/",
+      "destination": "/posts/how-to-add-amazon-cognito-auth-to-a-web-app-part-2",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-add-amazon-cognito-auth-to-a-web-app-part-1/",
+      "destination": "/posts/how-to-add-amazon-cognito-auth-to-a-web-app-part-1",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-configure-github-actions/",
+      "destination": "/posts/how-to-configure-github-actions",
+      "permanent": true
+    },
+    {
+      "source": "/easy-win-wifi-set-up-on-ubuntu/",
+      "destination": "/posts/easy-win-wifi-set-up-on-ubuntu",
+      "permanent": true
+    },
+    {
+      "source": "/unwrapping-wrapper-js/",
+      "destination": "/posts/wrapper-js-a-new-devops-library",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-make-real-time-multiplayer-webxr-experiences-part-3/",
+      "destination": "/posts/how-to-make-real-time-multiplayer-webxr-experiences-part-3",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-make-real-time-multiplayer-webxr-experiences-part-2/",
+      "destination": "/posts/how-to-make-real-time-multiplayer-webxr-experiences-part-2",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-make-real-time-multiplayer-webxr-experiences-part-1/",
+      "destination": "/posts/how-to-make-real-time-multiplayer-webxr-experiences-part-1",
+      "permanent": true
+    },
+    {
+      "source": "/create-cross-device-compatible-webxr-experiences/",
+      "destination": "/posts/how-to-create-cross-device-compatible-webxr-experiences",
+      "permanent": true
+    },
+    {
+      "source": "/what-is-webxr/",
+      "destination": "/posts/what-is-webxr-and-why-is-it-so-exciting",
+      "permanent": true
+    },
+    {
+      "source": "/5-methods-for-setting-up-a-private-blockchain-network/",
+      "destination": "/posts/5-methods-for-setting-up-a-private-blockchain-network",
+      "permanent": true
+    },
+    {
+      "source": "/what-is-blockchain-and-how-does-it-work/",
+      "destination": "/posts/what-is-blockchain-and-how-does-it-work",
+      "permanent": true
+    },
+    {
+      "source": "/nextjs-serverless-framework-terraform-monorepo/",
+      "destination": "/posts/nextjs-serverless-framework-and-terraform-monorepo",
+      "permanent": true
+    },
+    {
+      "source": "/what-is-the-metaverse/",
+      "destination": "/posts/what-is-the-metaverse",
+      "permanent": true
+    },
+    {
+      "source": "/ai-art/",
+      "destination": "/posts/create-ai-art-in-three-easy-steps",
+      "permanent": true
+    },
+    {
+      "source": "/why-you-should-learn-serverless-framework/",
+      "destination": "/posts/learn-serverless-framework",
+      "permanent": true
+    },
+    {
+      "source": "/combine-terraform-and-serverless-framework/",
+      "destination": "/posts/automating-next-sls-terraform",
+      "permanent": true
+    },
+    {
+      "source": "/set-up-emails-that-dont-get-blocked/",
+      "destination": "/posts/set-up-emails-that-don-t-get-blocked",
+      "permanent": true
+    },
+    {
+      "source": "/terraform-variable-types/",
+      "destination": "/posts/terraform-variable-types-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/top-15-useful-docker-commands/",
+      "destination": "/posts/top-15-useful-docker-commands",
+      "permanent": true
+    },
+    {
+      "source": "/terraform-aws-mac-setup/",
+      "destination": "/posts/setup-terraform-with-aws-on-mac",
+      "permanent": true
+    },
+    {
+      "source": "/why-i-love-serverless-architecture/",
+      "destination": "/posts/why-i-love-serverless-architecture",
+      "permanent": true
+    },
+    {
+      "source": "/web-share-api-sharer-urls/",
+      "destination": "/posts/web-share-api-sharer-urls",
+      "permanent": true
+    },
+    {
+      "source": "/my-ideal-creative-technology-stack/",
+      "destination": "/posts/my-ideal-creative-technology-stack",
+      "permanent": true
+    },
+    {
+      "source": "/thinking-through-serverless-implementations/",
+      "destination": "/posts/thinking-through-serverless",
+      "permanent": true
+    },
+    {
+      "source": "/lambda-function-301-redirects/",
+      "destination": "/posts/lambda-function-301-redirects",
+      "permanent": true
+    },
+    {
+      "source": "/lambda-routing-fix-for-cloudfront/",
+      "destination": "/posts/lambda-routing-fix-for-cloudfront",
+      "permanent": true
+    },
+    {
+      "source": "/lambda-code-pipeline-s3-deployment/",
+      "destination": "/posts/lambda-code-pipeline-s3-deployment",
+      "permanent": true
+    },
+    {
+      "source": "/storing-data-in-s3-with-lambda/",
+      "destination": "/posts/storing-data-in-s3-with-lambda",
+      "permanent": true
+    },
+    {
+      "source": "/add-authentication-to-s3-bucket/",
+      "destination": "/posts/add-authentication-to-s3-bucket",
+      "permanent": true
+    },
+    {
+      "source": "/training-ai-with-tensorflow-js/",
+      "destination": "/posts/training-ai-with-tensorflow-js",
+      "permanent": true
+    },
+    {
+      "source": "/amazon-sumerian-scripting-api-resources/",
+      "destination": "/posts/amazon-sumerian-scripting-api-resources",
+      "permanent": true
+    },
+    {
+      "source": "/state-machine-signals-in-amazon-sumerian/",
+      "destination": "/posts/state-machine-signals-in-amazon-sumerian",
+      "permanent": true
+    },
+    {
+      "source": "/visualise-wordpress-in-amazon-sumerian/",
+      "destination": "/posts/visualise-wordpress-in-amazon-sumerian",
+      "permanent": true
+    },
+    {
+      "source": "/spawning-entities-in-amazon-sumerian/",
+      "destination": "/posts/spawning-entities-in-amazon-sumerian",
+      "permanent": true
+    },
+    {
+      "source": "/set-up-fb-chatbot-with-amazon-lex/",
+      "destination": "/posts/set-up-fb-chatbot-with-amazon-lex",
+      "permanent": true
+    },
+    {
+      "source": "/ssh-onto-an-aws-ec2-instance/",
+      "destination": "/posts/ssh-onto-an-aws-ec2-instance",
+      "permanent": true
+    }
+  ]
+}

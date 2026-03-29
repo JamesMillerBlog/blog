@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "council": {
+      "command": "npx",
+      "args": [
+        "agents-council@latest",
+        "mcp"
+      ]
+    }
+  }
+}

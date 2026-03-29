@@ -1,0 +1,92 @@
+@reference "tailwindcss";
+
+.markdown {
+  font-family: var(--font-family-body);
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--color-on-surface);
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote {
+  @apply my-8;
+}
+
+.markdown h2 {
+  font-family: var(--font-family-headline);
+  color: var(--color-on-background);
+  @apply text-4xl font-bold mt-16 mb-6 leading-tight;
+}
+
+.markdown h3 {
+  font-family: var(--font-family-headline);
+  color: var(--color-on-background);
+  @apply text-3xl font-bold mt-12 mb-4 leading-snug;
+}
+
+.markdown h4 {
+  font-family: var(--font-family-headline);
+  color: var(--color-on-background);
+  @apply text-2xl font-bold mt-8 mb-4 leading-snug;
+}
+
+.markdown a {
+  color: var(--color-primary);
+  text-decoration-color: color-mix(in srgb, var(--color-primary), transparent 70%);
+  @apply font-bold transition-colors underline underline-offset-4;
+}
+
+.markdown a:hover {
+  color: var(--color-secondary);
+  text-decoration-color: var(--color-secondary);
+}
+
+.markdown blockquote {
+  border-left: 4px solid var(--color-secondary);
+  color: var(--color-on-surface-variant);
+  background-color: var(--color-surface-container-lowest);
+  @apply pl-6 italic py-2 pr-4 rounded-r-lg;
+}
+
+.markdown code {
+  background-color: var(--color-surface-container-high);
+  color: var(--color-secondary);
+  @apply font-mono text-[15px] px-1.5 py-0.5 rounded;
+}
+
+.markdown pre {
+  background-color: var(--color-surface-container-highest);
+  @apply p-6 rounded-xl overflow-x-auto my-8 shadow-sm;
+}
+
+.markdown pre code {
+  color: var(--color-on-surface);
+  @apply bg-transparent p-0 text-[14px];
+}
+
+.markdown img {
+  @apply rounded-xl shadow-md my-12 w-full object-cover;
+}
+
+.markdown ul {
+  @apply list-disc list-outside pl-6;
+}
+
+.markdown ul li::marker {
+  color: var(--color-primary);
+}
+
+.markdown ol {
+  @apply list-decimal list-outside pl-6;
+}
+
+.markdown ol li::marker {
+  color: var(--color-primary);
+  @apply font-bold;
+}
+
+.markdown li {
+  @apply mb-3;
+}

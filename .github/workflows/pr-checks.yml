@@ -1,14 +1,18 @@
-name: CI
+name: PR Checks
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
+
+concurrency:
+  group: pr-checks-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     steps:
       - uses: actions/checkout@v4
 
@@ -20,15 +24,23 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
 
       - name: Lint
         run: pnpm lint
 
       - name: Type check
         run: pnpm typecheck
+
+      # TODO: re-enable build once infra work is done
+      # - name: Build
+      #   run: pnpm build
 
       - name: Test
         run: pnpm test

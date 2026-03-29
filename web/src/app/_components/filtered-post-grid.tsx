@@ -1,38 +1,42 @@
-"use client";
+'use client'
 
-import { useMemo, useState, useEffect } from "react";
-import { FEATURED_TAG_MAP } from "@/common/consts/constants";
-import Link from "next/link";
-import Image from "next/image";
-import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { Post } from "@/types/post";
-import { ui } from "@/i18n/en";
+import { useMemo, useState } from 'react'
+import { FEATURED_TAG_MAP } from '@/common/consts/constants'
+import Link from 'next/link'
+import Image from 'next/image'
+import { format } from 'date-fns'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Post } from '@/types/post'
+import { ui } from '@/i18n/en'
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 9
 
 export function FilteredPostGrid({
   posts,
   selectedTag,
-  onTagSelect,
+  onTagSelect: _onTagSelect,
 }: {
-  posts: Post[];
-  selectedTag: string;
-  onTagSelect: (tag: string) => void;
+  posts: Post[]
+  selectedTag: string
+  onTagSelect: (tag: string) => void
 }) {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1)
+  const [prevTag, setPrevTag] = useState(selectedTag)
 
-  // Reset to page 1 whenever the filter changes
-  useEffect(() => { setPage(1); }, [selectedTag]);
+  // Reset to page 1 whenever the filter changes (derived state, avoids useEffect)
+  if (prevTag !== selectedTag) {
+    setPrevTag(selectedTag)
+    setPage(1)
+  }
 
   const filteredPosts = useMemo(() => {
-    if (selectedTag === "All") return posts;
-    const actualTags = FEATURED_TAG_MAP[selectedTag] ?? [selectedTag.toLowerCase()];
-    return posts.filter((post) => post.tags?.some((t) => actualTags.includes(t)));
-  }, [posts, selectedTag]);
+    if (selectedTag === 'All') return posts
+    const actualTags = FEATURED_TAG_MAP[selectedTag] ?? [selectedTag.toLowerCase()]
+    return posts.filter((post) => post.tags?.some((t) => actualTags.includes(t)))
+  }, [posts, selectedTag])
 
-  const totalPages = Math.ceil(filteredPosts.length / PAGE_SIZE);
-  const pagePosts = filteredPosts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(filteredPosts.length / PAGE_SIZE)
+  const pagePosts = filteredPosts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <section className="mb-24">
@@ -45,7 +49,7 @@ export function FilteredPostGrid({
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             >
               <PostCard post={post} />
             </motion.div>
@@ -75,8 +79,8 @@ export function FilteredPostGrid({
               onClick={() => setPage(n)}
               className={`w-9 h-9 rounded-full text-sm font-semibold font-headline transition-all duration-300 cursor-pointer ${
                 n === page
-                  ? "bg-secondary-container text-on-secondary-container"
-                  : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                  ? 'bg-secondary-container text-on-secondary-container'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
               {n}
@@ -93,7 +97,7 @@ export function FilteredPostGrid({
         </div>
       )}
     </section>
-  );
+  )
 }
 
 function PostCard({ post }: { post: Post }) {
@@ -116,8 +120,11 @@ function PostCard({ post }: { post: Post }) {
         <div className="p-6 flex flex-col flex-grow">
           {post.tags && post.tags.length > 0 && (
             <div className="flex gap-2 mb-3 flex-wrap">
-              {post.tags.slice(0, 2).map(tag => (
-                <span key={tag} className="text-[10px] font-bold uppercase tracking-wider text-primary">
+              {post.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[10px] font-bold uppercase tracking-wider text-primary"
+                >
                   {tag}
                 </span>
               ))}
@@ -130,10 +137,10 @@ function PostCard({ post }: { post: Post }) {
             {post.excerpt}
           </p>
           <span className="text-xs font-semibold text-outline font-headline mt-auto">
-            {format(new Date(post.date), "MMM d, yyyy")}
+            {format(new Date(post.date), 'MMM d, yyyy')}
           </span>
         </div>
       </article>
     </Link>
-  );
+  )
 }

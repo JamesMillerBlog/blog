@@ -37,16 +37,16 @@ git fetch origin
 git worktree add -b <branch-name> ../Project.worktrees/<branch-name>
 ```
 
-eg
-
-```bash
-git worktree add -b new-feature ../Blog.worktrees/new-feature
-```
-
 **Check out an already-existing local branch:**
 
 ```bash
 git worktree add ../Project.worktrees/<branch-name> <branch-name>
+```
+
+eg
+
+```bash
+git worktree add -b aws-infrastructure ../Blog.worktrees/new-feature
 ```
 
 ### 2. Work in the Worktree

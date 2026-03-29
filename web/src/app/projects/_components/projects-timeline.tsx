@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Project } from "@/app/projects/data";
-import { motion, AnimatePresence } from "framer-motion";
-import { ui } from "@/i18n/en";
+import { useState } from 'react'
+import { Project } from '@/app/projects/data'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ui } from '@/i18n/en'
 
 function ProjectCard({ project }: { project: Project }) {
   return (
@@ -13,7 +13,7 @@ function ProjectCard({ project }: { project: Project }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
       <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/10">
         <div className="flex items-center mb-4">
@@ -22,9 +22,7 @@ function ProjectCard({ project }: { project: Project }) {
           </span>
         </div>
 
-        <h3 className="font-headline text-2xl font-bold text-on-surface mb-2">
-          {project.title}
-        </h3>
+        <h3 className="font-headline text-2xl font-bold text-on-surface mb-2">{project.title}</h3>
 
         <span className="text-xs font-headline font-bold text-secondary uppercase tracking-widest mb-4 block">
           {project.company}
@@ -58,42 +56,42 @@ function ProjectCard({ project }: { project: Project }) {
         </div>
       </div>
     </motion.div>
-  );
+  )
 }
 
 export function ProjectsTimeline({
   projects,
   categories,
 }: {
-  projects: Project[];
-  categories: string[];
+  projects: Project[]
+  categories: string[]
 }) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("Highlights");
+  const [selectedCategory, setSelectedCategory] = useState<string>('Highlights')
 
-  const isHighlights = selectedCategory === "Highlights";
+  const isHighlights = selectedCategory === 'Highlights'
 
   const filteredProjects =
-    selectedCategory === "All"
+    selectedCategory === 'All'
       ? projects
       : isHighlights
         ? projects.filter((p) => p.portfolio).sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
-        : projects.filter((p) => p.category === selectedCategory);
+        : projects.filter((p) => p.category === selectedCategory)
 
   // Group by year, sorted newest first (used for non-Highlights views)
-  const years = [...new Set(filteredProjects.map((p) => p.year))].sort((a, b) => b - a);
+  const years = [...new Set(filteredProjects.map((p) => p.year))].sort((a, b) => b - a)
   const byYear = years.reduce<Record<number, Project[]>>((acc, year) => {
-    acc[year] = filteredProjects.filter((p) => p.year === year);
-    return acc;
-  }, {});
+    acc[year] = filteredProjects.filter((p) => p.year === year)
+    return acc
+  }, {})
 
   // Global index so alternating left/right continues across year groups
-  const globalIndex: Record<string, number> = {};
-  let counter = 0;
+  const globalIndex: Record<string, number> = {}
+  let counter = 0
   years.forEach((year) => {
     byYear[year].forEach((project) => {
-      globalIndex[project.slug] = counter++;
-    });
-  });
+      globalIndex[project.slug] = counter++
+    })
+  })
 
   return (
     <div>
@@ -105,8 +103,8 @@ export function ProjectsTimeline({
             onClick={() => setSelectedCategory(category)}
             className={`px-4 py-1.5 rounded-full text-sm font-headline font-semibold transition-all duration-300 cursor-pointer ${
               selectedCategory === category
-                ? "bg-secondary-container text-on-secondary-container"
-                : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                ? 'bg-secondary-container text-on-secondary-container'
+                : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
             }`}
           >
             {category}
@@ -156,10 +154,10 @@ export function ProjectsTimeline({
         <div className="relative border-l-4 border-surface-container-high ml-4 md:ml-0 md:border-l-0 md:before:absolute md:before:inset-y-0 md:before:left-1/2 md:before:w-1 md:before:bg-surface-container-high md:before:-ml-0.5">
           <AnimatePresence mode="popLayout">
             {years.map((year, yearIndex) => {
-              const leftProjects = byYear[year].filter((p) => globalIndex[p.slug] % 2 === 0);
-              const rightProjects = byYear[year].filter((p) => globalIndex[p.slug] % 2 === 1);
-              const firstGi = globalIndex[byYear[year][0].slug];
-              const firstIsLeft = firstGi % 2 === 0;
+              const leftProjects = byYear[year].filter((p) => globalIndex[p.slug] % 2 === 0)
+              const rightProjects = byYear[year].filter((p) => globalIndex[p.slug] % 2 === 1)
+              const firstGi = globalIndex[byYear[year][0].slug]
+              const firstIsLeft = firstGi % 2 === 0
 
               return (
                 <motion.div
@@ -168,7 +166,7 @@ export function ProjectsTimeline({
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -30 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   className="mb-20"
                 >
                   {/* Year badge — one per group */}
@@ -177,16 +175,21 @@ export function ProjectsTimeline({
                       <div
                         className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5"
                         style={{
-                          backgroundImage: "repeating-linear-gradient(to right, var(--color-outline-variant) 0, var(--color-outline-variant) 14px, transparent 14px, transparent 32px)",
+                          backgroundImage:
+                            'repeating-linear-gradient(to right, var(--color-outline-variant) 0, var(--color-outline-variant) 14px, transparent 14px, transparent 32px)',
                           opacity: 0.4,
                         }}
                       />
                     )}
                     <div className="absolute left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-primary border-2 border-surface z-10 hidden md:flex items-center justify-center">
-                      <span className="font-headline text-xs font-bold text-on-primary leading-none text-center">{year}</span>
+                      <span className="font-headline text-xs font-bold text-on-primary leading-none text-center">
+                        {year}
+                      </span>
                     </div>
                     <div className="absolute left-0 -translate-x-1/2 w-12 h-12 rounded-full bg-primary border-2 border-surface z-10 md:hidden flex items-center justify-center">
-                      <span className="font-headline text-xs font-bold text-on-primary leading-none text-center">{year}</span>
+                      <span className="font-headline text-xs font-bold text-on-primary leading-none text-center">
+                        {year}
+                      </span>
                     </div>
                   </div>
 
@@ -199,19 +202,19 @@ export function ProjectsTimeline({
 
                   {/* Desktop: two independent flex columns */}
                   <div className="hidden md:flex gap-6 items-start">
-                    <div className={`flex-1 flex flex-col gap-6 ${firstIsLeft ? "" : "mt-20"}`}>
+                    <div className={`flex-1 flex flex-col gap-6 ${firstIsLeft ? '' : 'mt-20'}`}>
                       {leftProjects.map((project) => (
                         <ProjectCard key={project.slug} project={project} />
                       ))}
                     </div>
-                    <div className={`flex-1 flex flex-col gap-6 ${firstIsLeft ? "mt-20" : ""}`}>
+                    <div className={`flex-1 flex flex-col gap-6 ${firstIsLeft ? 'mt-20' : ''}`}>
                       {rightProjects.map((project) => (
                         <ProjectCard key={project.slug} project={project} />
                       ))}
                     </div>
                   </div>
                 </motion.div>
-              );
+              )
             })}
           </AnimatePresence>
 
@@ -223,5 +226,5 @@ export function ProjectsTimeline({
         </div>
       )}
     </div>
-  );
+  )
 }

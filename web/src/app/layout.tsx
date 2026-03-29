@@ -1,10 +1,10 @@
-import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, TWITTER_HANDLE } from "@/common/consts/constants";
-import type { Metadata } from "next";
-import { ThemeProvider } from "@/providers/theme-provider";
-import { Navigation } from "@/components/navigation";
-import { Footer } from "@/components/footer";
+import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, TWITTER_HANDLE } from '@/common/consts/constants'
+import type { Metadata } from 'next'
+import { ThemeProvider } from '@/providers/theme-provider'
+import { Navigation } from '@/components/navigation'
+import { Footer } from '@/components/footer'
 
-import "./globals.css";
+import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -13,19 +13,28 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  keywords: ["WebXR", "Serverless", "AWS", "React", "Three.js", "TypeScript", "DevOps", "Blockchain"],
-  authors: [{ name: "James Miller", url: SITE_URL }],
-  creator: "James Miller",
+  keywords: [
+    'WebXR',
+    'Serverless',
+    'AWS',
+    'React',
+    'Three.js',
+    'TypeScript',
+    'DevOps',
+    'Blockchain',
+  ],
+  authors: [{ name: 'James Miller', url: SITE_URL }],
+  creator: 'James Miller',
   openGraph: {
-    type: "website",
-    locale: "en_US",
+    type: 'website',
+    locale: 'en_US',
     url: SITE_URL,
     siteName: SITE_NAME,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
   twitter: {
-    card: "summary_large_image",
+    card: 'summary_large_image',
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     creator: TWITTER_HANDLE,
@@ -36,23 +45,23 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
     },
   },
   alternates: {
     canonical: SITE_URL,
     types: {
-      "application/rss+xml": `${SITE_URL}/feed.xml`,
+      'application/rss+xml': `${SITE_URL}/feed.xml`,
     },
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -75,5 +84,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

@@ -1,7 +1,7 @@
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;500;600&display=swap');
 
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Design System: "The Whimsical Scholar" */
@@ -192,7 +192,9 @@ body {
   color: var(--color-on-surface);
 }
 @media (min-width: 768px) {
-  .type-display { font-size: 4.5rem; }
+  .type-display {
+    font-size: 4.5rem;
+  }
 }
 
 .type-section {
@@ -216,7 +218,9 @@ body {
   line-height: 1.7;
 }
 @media (min-width: 768px) {
-  .type-body-lead { font-size: 1.5rem; }
+  .type-body-lead {
+    font-size: 1.5rem;
+  }
 }
 
 .type-body {
@@ -250,5 +254,9 @@ body {
 
 /* Material Icons Support */
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
 }

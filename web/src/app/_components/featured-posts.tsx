@@ -1,13 +1,13 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Post } from "@/types/post";
-import { format } from "date-fns";
-import { ui } from "@/i18n/en";
+import Link from 'next/link'
+import Image from 'next/image'
+import { Post } from '@/types/post'
+import { format } from 'date-fns'
+import { ui } from '@/i18n/en'
 
 type Props = {
-  featuredPost: Post;
-  secondaryPosts: Post[];
-};
+  featuredPost: Post
+  secondaryPosts: Post[]
+}
 
 export function FeaturedPosts({ featuredPost, secondaryPosts }: Props) {
   return (
@@ -45,7 +45,7 @@ export function FeaturedPosts({ featuredPost, secondaryPosts }: Props) {
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-secondary-container" />
                 <span className="text-sm font-semibold text-outline font-headline">
-                  {format(new Date(featuredPost.date), "MMM d, yyyy")}
+                  {format(new Date(featuredPost.date), 'MMM d, yyyy')}
                 </span>
               </div>
             </article>
@@ -60,15 +60,15 @@ export function FeaturedPosts({ featuredPost, secondaryPosts }: Props) {
         </div>
       </div>
     </section>
-  );
+  )
 }
 
 function SecondaryCard({ post, variant }: { post: Post; variant: number }) {
   const colors = [
-    { bg: "bg-secondary", text: "text-on-secondary", icon: "text-secondary" },
-    { bg: "bg-tertiary", text: "text-on-tertiary", icon: "text-tertiary" },
-  ];
-  const color = colors[variant % 2];
+    { bg: 'bg-secondary', text: 'text-on-secondary', icon: 'text-secondary' },
+    { bg: 'bg-tertiary', text: 'text-on-tertiary', icon: 'text-tertiary' },
+  ]
+  const color = colors[variant % 2]
 
   return (
     <Link href={`/posts/${post.slug}`}>
@@ -85,22 +85,16 @@ function SecondaryCard({ post, variant }: { post: Post; variant: number }) {
         <h3 className="font-headline text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">
           {post.title}
         </h3>
-        <p className="font-body text-lg text-on-surface-variant line-clamp-3">
-          {post.excerpt}
-        </p>
+        <p className="font-body text-lg text-on-surface-variant line-clamp-3">{post.excerpt}</p>
       </article>
     </Link>
-  );
+  )
 }
 
 function BoltIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={`w-5 h-5 ${className}`}
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className={`w-5 h-5 ${className}`} fill="currentColor" viewBox="0 0 24 24">
       <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
     </svg>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-export const SITE_NAME = "James Miller";
-export const SITE_DESCRIPTION = "Creative Technology Blog - WebXR, Serverless, AWS, and more";
-export const SITE_URL = "https://jamesmiller.blog";
-export const ASSETS_BASE_URL = "https://assets.jamesmiller.blog";
-export const TWITTER_HANDLE = "@JamesMillerBlog";
+export const SITE_NAME = 'James Miller'
+export const SITE_DESCRIPTION = 'Creative Technology Blog - WebXR, Serverless, AWS, and more'
+export const SITE_URL = 'https://jamesmiller.blog'
+export const ASSETS_BASE_URL = 'https://assets.jamesmiller.blog'
+export const TWITTER_HANDLE = '@JamesMillerBlog'
 export const AUTHOR = {
   name: 'James Miller',
   url: 'https://jamesmiller.blog',

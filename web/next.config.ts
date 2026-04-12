@@ -1,11 +1,11 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  output: "export",
+  output: 'export',
   trailingSlash: true,
   images: {
-    loader: "custom",
-    loaderFile: "./src/lib/imageLoader.ts",
+    loader: 'custom',
+    loaderFile: './src/lib/imageLoader.ts',
   },
 }
 

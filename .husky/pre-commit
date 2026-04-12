@@ -1,2 +1,3 @@
 pnpm --dir web precommit
 pnpm typecheck
+pnpm format:check

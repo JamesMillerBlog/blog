@@ -6,7 +6,7 @@ Personal blog and portfolio for [James Miller](https://jamesmiller.blog).
 
 - **Next.js 16** (App Router, static generation)
 - **MDX** — blog posts as `.mdx` files with frontmatter
-- **Tailwind CSS v4** — design system ("The Whimsical Scholar")
+- **Tailwind CSS v4** — design system ("Byte Mark")
 - **Framer Motion** — animated post grid
 - **TypeScript** throughout
 
@@ -21,7 +21,6 @@ Personal blog and portfolio for [James Miller](https://jamesmiller.blog).
 ├── docs/                 # AI workflow documentation
 ├── .claude/              # Claude Code config and custom commands
 ├── AGENTS.md             # AI agent instructions
-├── DESIGN.md             # Design system reference
 └── CLAUDE.md             # Claude Code project config
 ```
 
@@ -59,18 +58,9 @@ pnpm build      # Production build
 pnpm test       # Run unit tests (vitest)
 ```
 
-Custom Claude Code slash commands:
-
-```
-/new-post [topic]   # Scaffold a new blog post
-/review [slug]      # Review and improve a post
-/social [slug]      # Generate social media content
-/ideas              # Brainstorm post ideas
-```
-
 ## Design System
 
-See `DESIGN.md` for the full design system spec. Key tokens:
+See `web/design/DESIGN.md` for the full design system spec. Key tokens:
 
 - **Primary:** `#00675d` (teal)
 - **Secondary:** `#a02d70` (magenta)

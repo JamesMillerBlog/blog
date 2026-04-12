@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/big-pickle",
+  "instructions": [
+    "AGENTS.md",
+    "web/design/DESIGN.md",
+    ".agents/skills/design.md",                                        
+    ".agents/skills/frontend.md",
+    ".agents/skills/infrastructure.md",                                
+    ".agents/skills/security.md"                            
+  ],
+  "tools": {
+    "write": true,
+    "edit": true,
+    "bash": true
+  },
+  "plugin": [
+    "opencode-worktree",
+    "opencode-mystatus",
+    "opencode-background-agents"
+  ]
+}

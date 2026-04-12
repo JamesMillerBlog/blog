@@ -1,38 +1,43 @@
 # Documentation
 
-Welcome to the AI-first blog documentation.
+Welcome to the blog frontend/infrastructure documentation.
 
-## Quick Start
+## Content Workflow
+
+Content-related docs (SEO, social automation, skills) have moved to the `blog-content` repository where they belong. See `blog-content/docs/`.
+
+## Quick Start (Frontend)
 
 1. **First time?** Read [WORKFLOW.md](./WORKFLOW.md)
-2. **Using Claude Code?** Read [SKILLS.md](./SKILLS.md)
-3. **Setting up integrations?** Read [MCP_SERVERS.md](./MCP_SERVERS.md)
+2. **Setting up integrations?** Read [MCP_SERVERS.md](./MCP_SERVERS.md)
 
 ## Documentation Index
 
-| Document | Description |
-|----------|-------------|
-| [SKILLS.md](./SKILLS.md) | Custom Claude Code commands (`/new-post`, `/social`, etc.) |
-| [MCP_SERVERS.md](./MCP_SERVERS.md) | Connecting Claude to external tools |
-| [HOOKS.md](./HOOKS.md) | Automating tasks on events |
-| [GIT_WORKTREES.md](./GIT_WORKTREES.md) | Working on multiple branches |
-| [AI_TOOLS.md](./AI_TOOLS.md) | All AI tools in your ecosystem |
-| [WORKFLOW.md](./WORKFLOW.md) | Daily/weekly workflows |
-| [SEO.md](./SEO.md) | SEO configuration and best practices |
+| Document                               | Description                                             |
+| -------------------------------------- | ------------------------------------------------------- |
+| [AGENTIC_WORKFLOW.md](./AGENTIC_WORKFLOW.md) | Multi-model agentic workflow, agent usage, council, automated PR review |
+| [MCP_SERVERS.md](./MCP_SERVERS.md)     | Connecting Claude to external tools                     |
+| [HOOKS.md](./HOOKS.md)                 | Automating tasks on events                              |
+| [GIT_WORKTREES.md](./GIT_WORKTREES.md) | Working on multiple branches                            |
+| [WORKFLOW.md](./WORKFLOW.md)           | Daily/weekly workflows                                  |
 
 ## Key Files in Project Root
 
-| File | Purpose |
-|------|---------|
-| `AGENTS.md` | Claude Code project configuration (auto-read on startup) |
-| `.claude/commands/` | Custom skills definitions |
+| File                    | Purpose                             |
+| ----------------------- | ----------------------------------- |
+| `opencode.json`         | OpenCode configuration              |
+| `.opencode/`            | OpenCode agents and docs            |
+| `AGENTS.md`             | Cross-tool project instructions     |
+| `.claude/agents/`       | Claude agents (frontend-dev, design-expert, infrastructure, security-auditor, parallel-executor) |
 | `.claude/settings.json` | MCP servers and hooks configuration |
+| `web/design/DESIGN.md`  | Byte Mark design system             |
 
 ## Getting Help
 
 Ask Claude:
+
 ```
-How do I create a new skill?
+How do I create a new component?
 What MCP servers are available?
 Help me set up hooks
 ```

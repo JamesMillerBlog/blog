@@ -30,6 +30,9 @@ build
 # Claude Code local settings (machine-specific paths)
 .claude/settings.local.json
 
+# AI review stamp (local only — written by /pre-push-review command)
+.claude/.review-stamp
+
 # debug
 npm-debug.log*
 

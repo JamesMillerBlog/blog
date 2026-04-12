@@ -1,1 +1,36 @@
 pnpm test
+
+# Verify an AI security review has been run against the current commit
+STAMP_FILE=".claude/.review-stamp"
+CURRENT_HEAD=$(git rev-parse HEAD)
+
+if [ ! -f "$STAMP_FILE" ]; then
+  echo ""
+  echo "╔──────────────────────────────────────────────────────╗"
+  echo "║  ✗  No AI security review found.                    ║"
+  echo "║     Run /pre-push-review in Claude Code first.      ║"
+  echo "║     To bypass: git push --no-verify                 ║"
+  echo "╚──────────────────────────────────────────────────────╝"
+  echo ""
+  exit 1
+fi
+
+STAMP_HASH=$(cat "$STAMP_FILE")
+
+if [ "$STAMP_HASH" != "$CURRENT_HEAD" ]; then
+  echo ""
+  echo "╔──────────────────────────────────────────────────────╗"
+  echo "║  ✗  AI review is stale.                             ║"
+  echo "║     New commits made since last review.             ║"
+  echo "║     Run /pre-push-review in Claude Code again.      ║"
+  echo "║     To bypass: git push --no-verify                 ║"
+  echo "╚──────────────────────────────────────────────────────╝"
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "╔──────────────────────────────────────────────────────╗"
+echo "║  ✓  AI security review verified for this commit.    ║"
+echo "╚──────────────────────────────────────────────────────╝"
+echo ""

@@ -15,7 +15,7 @@ Content-related docs (SEO, social automation, skills) have moved to the `blog-co
 
 | Document                               | Description                                             |
 | -------------------------------------- | ------------------------------------------------------- |
-| [AGENTIC_WORKFLOW.md](./AGENTIC_WORKFLOW.md) | Multi-model agentic workflow — when and how to use each tool |
+| [AGENTIC_WORKFLOW.md](./AGENTIC_WORKFLOW.md) | Multi-model agentic workflow, agent usage, council, automated PR review |
 | [MCP_SERVERS.md](./MCP_SERVERS.md)     | Connecting Claude to external tools                     |
 | [HOOKS.md](./HOOKS.md)                 | Automating tasks on events                              |
 | [GIT_WORKTREES.md](./GIT_WORKTREES.md) | Working on multiple branches                            |

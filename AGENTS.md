@@ -41,6 +41,8 @@ See `web/design/DESIGN.md` for the complete design system ("Byte Mark"):
 
 Use `/agent <name>` to switch:
 
+### Writer agents — implement and build
+
 | Agent | Purpose | Best For |
 |-------|---------|----------|
 | `frontend-dev` | General UI development | Components, pages, styling |
@@ -48,6 +50,17 @@ Use `/agent <name>` to switch:
 | `infrastructure` | Terraform & AWS | Infrastructure as code |
 | `security-auditor` | Security review | Vulnerability scanning |
 | `parallel-executor` | Parallel task execution | Multiple independent tasks |
+
+### Reviewer agents — adversarial, read-only
+
+These agents never write code. They review diffs and flag issues. Dispatched automatically by `/pre-push-review`.
+
+| Agent | Purpose | Checks |
+|-------|---------|--------|
+| `reviewer-security` | Security audit | Secrets, injection, CVEs, exploitable logic |
+| `reviewer-frontend` | Frontend audit | React patterns, TypeScript, accessibility |
+| `reviewer-design` | Design audit | Byte Mark compliance, tokens, typography |
+| `reviewer-infrastructure` | Infra audit | GitHub Actions, IAM, Terraform misconfigs |
 
 ## Gemini Skills (`.gemini/skills/`)
 

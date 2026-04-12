@@ -61,6 +61,7 @@ These agents never write code. They review diffs and flag issues. Dispatched aut
 | `reviewer-frontend` | Frontend audit | React patterns, TypeScript, accessibility |
 | `reviewer-design` | Design audit | Byte Mark compliance, tokens, typography |
 | `reviewer-infrastructure` | Infra audit | GitHub Actions, IAM, Terraform misconfigs |
+| `reviewer-code-quality` | Code quality audit | Syntax, smells, complexity, best practices |
 
 ## Gemini Skills (`.gemini/skills/`)
 

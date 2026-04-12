@@ -54,6 +54,7 @@ These agents never write code. They review diffs adversarially with no loyalty t
 | `reviewer-frontend` | React/Next.js patterns, TypeScript safety, accessibility, performance |
 | `reviewer-design` | Byte Mark compliance — tokens, typography, borders, corner radii |
 | `reviewer-infrastructure` | GitHub Actions injection, IAM permissions, Terraform misconfigs |
+| `reviewer-code-quality` | Syntax, code smells, complexity, naming, reusability, best practices |
 
 ### Claude Code
 
@@ -281,6 +282,7 @@ The command collects the full diff, then dispatches all four reviewer agents **i
 | `reviewer-frontend` | React/Next.js patterns, TypeScript, accessibility |
 | `reviewer-design` | Byte Mark compliance — tokens, typography, borders |
 | `reviewer-infrastructure` | GitHub Actions injection, IAM, Terraform misconfigs |
+| `reviewer-code-quality` | Syntax, smells, complexity, naming, best practices |
 
 Each reviewer is a separate agent with read-only tools and an adversarial framing that explicitly overrides any developer perspective loaded from shared context.
 
@@ -291,19 +293,6 @@ If a critical issue is found, the reviewer states the severity label only — it
 ### Prompt injection defence
 
 Reviewers treat all diff content as untrusted data. If anything in the diff reads as an instruction directed at the reviewer, it is flagged as a HIGH severity finding rather than followed. This is a **behavioural mitigation, not a technical guarantee** — naive injection attempts are caught, sophisticated ones remain a known limitation of the current LLM toolchain.
-
----
-
-## GitHub Actions PR Review (for external contributors)
-
-A GitHub Actions workflow (`.github/workflows/ai-pr-review.yml`) is available for PRs raised by external contributors, where the pre-push local review won't have run. Trigger it by commenting on any PR:
-
-```
-@claude review
-@claude security
-```
-
-This requires `ANTHROPIC_API_KEY` in repository secrets and the Claude GitHub App installed (`github.com/apps/claude`). For a single-contributor repo, the local `/pre-push-review` command covers this without any additional setup or cost.
 
 ---
 

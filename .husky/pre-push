@@ -1,4 +1,9 @@
-pnpm test
+# Run tests with a 2-minute timeout to prevent indefinite hangs
+if command -v timeout > /dev/null 2>&1; then
+  timeout 120 pnpm test
+else
+  pnpm test
+fi
 
 # Verify an AI security review has been run against the current commit
 STAMP_FILE=".claude/.review-stamp"

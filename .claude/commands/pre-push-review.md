@@ -21,6 +21,7 @@ Otherwise, dispatch all four reviewer agents **in parallel** using the Agent too
 - **reviewer-frontend** — React/Next.js patterns, TypeScript safety, accessibility (a11y), performance
 - **reviewer-infrastructure** — GitHub Actions injection risks, IAM/Terraform misconfigs, secret exposure in CI
 - **reviewer-design** — Byte Mark design system compliance, hardcoded colours, wrong typography classes, 1px borders
+- **reviewer-code-quality** — syntax errors, code smells, complexity, reusability, naming, best practices, excellence standard
 
 Wait for all four to complete, then produce the aggregated report below.
 
@@ -30,7 +31,14 @@ Wait for all four to complete, then produce the aggregated report below.
 
 ### Architecture / Flow Diagram
 
-If changes affect component structure, data flow, routing, or CI pipeline, include a Mermaid diagram showing what changed. Skip for documentation-only or config-only changes.
+If changes affect component structure, data flow, routing, or CI pipeline, describe what changed using plain ASCII — no Mermaid. Use indented arrows and boxes readable in a terminal, for example:
+
+  [ComponentA] --> [ComponentB]
+       |
+       v
+  [NewThing] --> [Output]
+
+Skip entirely for documentation-only or config-only changes.
 
 ### Findings by Severity
 

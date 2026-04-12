@@ -15,6 +15,7 @@ For content-related tasks (writing posts, social media, SEO, ideation), work in 
 ## Design System
 
 See `web/design/DESIGN.md` for the complete design system ("Byte Mark"):
+
 - **Primary color:** `#00675d` (teal)
 - **Secondary color:** `#a02d70` (magenta)
 - **Typography:** Plus Jakarta Sans (UI), Newsreader (content)
@@ -43,46 +44,46 @@ Use `/agent <name>` to switch:
 
 ### Writer agents — implement and build
 
-| Agent | Purpose | Best For |
-|-------|---------|----------|
-| `frontend-dev` | General UI development | Components, pages, styling |
-| `design-expert` | Design system compliance | Ensuring design rules |
-| `infrastructure` | Terraform & AWS | Infrastructure as code |
-| `security-auditor` | Security review | Vulnerability scanning |
-| `parallel-executor` | Parallel task execution | Multiple independent tasks |
+| Agent               | Purpose                  | Best For                   |
+| ------------------- | ------------------------ | -------------------------- |
+| `frontend-dev`      | General UI development   | Components, pages, styling |
+| `design-expert`     | Design system compliance | Ensuring design rules      |
+| `infrastructure`    | Terraform & AWS          | Infrastructure as code     |
+| `security-auditor`  | Security review          | Vulnerability scanning     |
+| `parallel-executor` | Parallel task execution  | Multiple independent tasks |
 
 ### Reviewer agents — adversarial, read-only
 
 These agents never write code. They review diffs and flag issues. Dispatched automatically by `/pre-push-review`.
 
-| Agent | Purpose | Checks |
-|-------|---------|--------|
-| `reviewer-security` | Security audit | Secrets, injection, CVEs, exploitable logic |
-| `reviewer-frontend` | Frontend audit | React patterns, TypeScript, accessibility |
-| `reviewer-design` | Design audit | Byte Mark compliance, tokens, typography |
-| `reviewer-infrastructure` | Infra audit | GitHub Actions, IAM, Terraform misconfigs |
-| `reviewer-code-quality` | Code quality audit | Syntax, smells, complexity, best practices |
+| Agent                     | Purpose            | Checks                                      |
+| ------------------------- | ------------------ | ------------------------------------------- |
+| `reviewer-security`       | Security audit     | Secrets, injection, CVEs, exploitable logic |
+| `reviewer-frontend`       | Frontend audit     | React patterns, TypeScript, accessibility   |
+| `reviewer-design`         | Design audit       | Byte Mark compliance, tokens, typography    |
+| `reviewer-infrastructure` | Infra audit        | GitHub Actions, IAM, Terraform misconfigs   |
+| `reviewer-code-quality`   | Code quality audit | Syntax, smells, complexity, best practices  |
 
 ## Gemini Skills (`.gemini/skills/`)
 
 Skills are activated with `activate_skill`:
 
-| Skill | Purpose |
-|-------|---------|
-| `infrastructure` | Terraform & AWS |
+| Skill            | Purpose                       |
+| ---------------- | ----------------------------- |
+| `infrastructure` | Terraform & AWS               |
 | `security-audit` | Security vulnerability review |
-| `design-review` | Design system compliance |
+| `design-review`  | Design system compliance      |
 
 ## Codex Subagents (`.codex/agents/`)
 
 Available as subagents:
 
-| Subagent | Purpose |
-|----------|---------|
-| `frontend-dev` | UI components, Next.js pages |
-| `design-expert` | Design system compliance |
-| `infrastructure` | Terraform & AWS |
-| `security-auditor` | Security review |
+| Subagent           | Purpose                      |
+| ------------------ | ---------------------------- |
+| `frontend-dev`     | UI components, Next.js pages |
+| `design-expert`    | Design system compliance     |
+| `infrastructure`   | Terraform & AWS              |
+| `security-auditor` | Security review              |
 
 ## Key Commands
 
@@ -95,6 +96,7 @@ cd web && pnpm test     # Run unit tests (vitest)
 ## UI Conventions
 
 ### Pill buttons
+
 ```
 px-4 py-1.5 rounded-full text-sm font-headline font-semibold transition-all duration-300 cursor-pointer
 inactive: text-on-surface-variant hover:text-primary hover:bg-surface-container-low
@@ -102,6 +104,7 @@ active:   bg-secondary-container text-on-secondary-container
 ```
 
 ### Semantic type scale
+
 - `.type-display` — hero h1, page titles
 - `.type-section` — section h2 headings
 - `.type-card-title` — card h3 headings

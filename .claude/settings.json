@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd /Users/jamesmiller/Documents/Creative_Technology/Blog/web && pnpm exec tsc --noEmit --skipLibCheck 2>&1 | head -20"
+            "command": "cd web && pnpm exec tsc --noEmit --skipLibCheck 2>&1 | head -20"
           }
         ]
       }

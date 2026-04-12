@@ -1,0 +1,123 @@
+name: Create Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options: [patch, minor, major]
+      notes:
+        description: 'Additional release notes (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release-pr:
+    name: 'Open Release PR'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate next version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          PREVIOUS=${LATEST:-v0.0.0}
+          VERSION=${PREVIOUS#v}
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          MINOR=$(echo $VERSION | cut -d. -f2)
+          PATCH=$(echo $VERSION | cut -d. -f3)
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+          esac
+          echo "tag=v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
+          echo "previous=${PREVIOUS}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog entry
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+          EXTRA_NOTES: ${{ inputs.notes }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+
+          if [ "$PREVIOUS" = "v0.0.0" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREVIOUS}..HEAD"
+          fi
+
+          COMMITS=$(git log ${RANGE} --pretty=format:"- %s (%h)" --no-merges)
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- No changes since ${PREVIOUS}"
+          fi
+
+          if [ -n "$EXTRA_NOTES" ]; then
+            ENTRY="${EXTRA_NOTES}\n\n${COMMITS}"
+          else
+            ENTRY="${COMMITS}"
+          fi
+
+          printf "## ${TAG} (${DATE})\n\n${ENTRY}\n" > /tmp/new_entry.txt
+
+      - name: Update CHANGELOG.md
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            { cat /tmp/new_entry.txt; echo; echo "---"; echo; cat CHANGELOG.md; } > /tmp/CHANGELOG_updated.md
+          else
+            { echo "# Changelog"; echo; cat /tmp/new_entry.txt; } > /tmp/CHANGELOG_updated.md
+          fi
+          cp /tmp/CHANGELOG_updated.md CHANGELOG.md
+
+      - name: Ensure release label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "release" \
+            --color "0075ca" \
+            --description "Release PR" \
+            2>/dev/null || true
+
+      - name: Push release branch and open PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+        run: |
+          BRANCH="release/${TAG}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          git add CHANGELOG.md
+          git commit -m "chore: release ${TAG}"
+          git push origin "${BRANCH}"
+
+          # Build PR body from the generated entry (skip the header line)
+          CHANGES=$(tail -n +3 /tmp/new_entry.txt)
+          PR_BODY="Merging this PR will tag \`${TAG}\` and publish a GitHub Release.
+
+### Changes since ${PREVIOUS}
+
+${CHANGES}"
+
+          gh pr create \
+            --title "Release ${TAG}" \
+            --body "$PR_BODY" \
+            --base main \
+            --head "${BRANCH}" \
+            --label "release"

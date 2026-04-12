@@ -1,0 +1,13 @@
+# backend.hcl.example
+#
+# Copy this file to backend.hcl and fill in your values.
+# backend.hcl is gitignored — it holds account-specific Terraform backend config.
+#
+# backend.hcl is passed at terraform init time (before variables are loaded),
+# so it cannot use Terraform variables — hence the separate file.
+#
+# Environment variables (API tokens) go in .envrc instead.
+# See .envrc.example at the repo root.
+
+bucket = "your-terraform-state-bucket-name"
+region = "eu-west-2"

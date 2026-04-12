@@ -1,0 +1,5 @@
+environment           = "production"
+region                = "eu-west-2"
+domain_name           = "jamesmiller.blog"
+bucket_name           = "jamesmiller-blog-production"
+github_repo           = "JamesMillerBlog/blog"

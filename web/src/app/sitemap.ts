@@ -4,6 +4,8 @@ import { SITE_URL } from '@/common/consts/constants'
 
 export const dynamic = 'force-static'
 
+export const dynamic = "force-static";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPosts()
 

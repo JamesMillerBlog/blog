@@ -1,11 +1,16 @@
 name: 'Infrastructure Deployment'
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'infrastructure/**'
+  workflow_dispatch:
+    inputs:
+      staging:
+        description: 'Apply staging'
+        type: boolean
+        default: false
+      production:
+        description: 'Apply production'
+        type: boolean
+        default: false
   pull_request:
     paths:
       - 'infrastructure/**'
@@ -73,7 +78,7 @@ jobs:
         run: terraform plan -input=false -var-file=../../vars/shared/shared.tfvars -out=tfplan
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -85,6 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ matrix.environment_name }}
     needs: shared
+    if: github.event_name == 'pull_request' || (matrix.environment_name == 'staging' && inputs.staging) || (matrix.environment_name == 'production' && inputs.production)
     strategy:
       matrix:
         environment_name: [production, staging]
@@ -128,7 +134,7 @@ jobs:
         run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file="../../vars/site/${ENVIRONMENT}.tfvars" -out=tfplan
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

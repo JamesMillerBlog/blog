@@ -52,6 +52,9 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | `reviewer-infrastructure` | GitHub Actions, IAM, Terraform |
 | `reviewer-code-quality` | Smells, complexity, best practices |
 
+## Docker
+Claude runs in container via `pnpm claude`. See `docs/DOCKER.md` for security model.
+
 ## Other Tools
 - **Gemini skills** (`.gemini/skills/`): `infrastructure` · `security-audit` · `design-review`
 - **Codex subagents** (`.codex/agents/`): `frontend-dev` · `design-expert` · `infrastructure` · `security-auditor`

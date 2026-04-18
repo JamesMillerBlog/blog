@@ -8,6 +8,9 @@ node_modules
 # temporary files
 temp/
 
+# local docker overrides (contain host paths)
+docker-compose.override.yml
+
 # testing
 coverage
 

@@ -33,3 +33,6 @@ export ASSETS_DOMAIN="your-assets-cdn-domain"
 
 # Terraform state bucket name (S3)
 export TF_STATE_BUCKET="your-terraform-state-bucket-name"
+
+# ntfy.sh topic for Claude Code notifications (https://ntfy.sh)
+export NTFY_TOPIC="your-unique-ntfy-topic"

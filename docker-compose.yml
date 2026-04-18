@@ -8,6 +8,7 @@ services:
       - claude-home:/home/claude
     environment:
       - ANTHROPIC_MODEL=claude-sonnet-4-6
+      - NTFY_TOPIC=${NTFY_TOPIC}
     command: --dangerously-skip-permissions
 
 volumes:

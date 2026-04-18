@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl -s -d 'Claude done' ntfy.sh/$NTFY_TOPIC"
+            "command": "curl -s -d 'Claude done' \"ntfy.sh/${NTFY_TOPIC}\""
           }
         ]
       }

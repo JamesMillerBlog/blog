@@ -1,0 +1,5 @@
+environment = "staging"
+region      = "eu-west-2"
+domain_name = "staging.jamesmiller.blog"
+bucket_name = "jamesmiller-blog-staging"
+github_repo = "JamesMillerBlog/blog"

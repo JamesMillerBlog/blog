@@ -1,4 +1,5 @@
 ---
+model: claude-haiku-4-5-20251001
 name: reviewer-security
 description: Adversarial security reviewer for pre-push and PR review. Reviews diffs for vulnerabilities, secrets, injection risks, and exploitable logic. Never used for writing code.
 tools:

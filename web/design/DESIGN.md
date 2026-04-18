@@ -120,4 +120,5 @@ If a border is required for accessibility, use the `outline-variant` token at **
 - **Don't use 1px lines:** Use white space or color shifts to separate content.
 - **Don't use pure black:** Use `on-surface` for text to maintain the "soft" approachable aesthetic.
 - **Don't use sharp corners:** Every container must have at least a `sm` (`0.5rem`) radius; cards should always be `lg` or `xl`.
+- # **Don't clutter the UI:** If a decorative element doesn't serve the "Byte Mark" vibe, remove it. Use the `tertiary` (yellow/gold) tokens sparingly for "delight" moments only.
 - **Don't clutter the UI:** If a decorative element doesn't serve the "Byte Mark" vibe, remove it. Use the `tertiary` (yellow/gold) tokens sparingly for "delight" moments only.

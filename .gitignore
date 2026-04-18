@@ -5,6 +5,9 @@ node_modules
 .pnp
 .pnp.*
 
+# temporary files
+temp/
+
 # testing
 coverage
 
@@ -46,3 +49,25 @@ next-env.d.ts
 
 # content
 web/_posts/
+
+# terraform
+infrastructure/**/.terraform/*
+infrastructure/**/*.tfstate
+infrastructure/**/*.tfstate.*
+infrastructure/**/crash.log
+infrastructure/**/crash.*.log
+infrastructure/**/*.tfvars
+!infrastructure/vars/**/*.tfvars
+infrastructure/**/override.tf
+infrastructure/**/override.tf.json
+infrastructure/**/*_override.tf
+infrastructure/**/*_override.tf.json
+infrastructure/**/.terraformrc
+infrastructure/**/terraform.rc
+
+# .envrc holds local secrets (API tokens, env vars).
+# backend.hcl holds account-specific Terraform backend config.
+# Both are gitignored so the repo is reusable as a public reference.
+# Copy the .example files and fill in your values.
+.envrc
+infrastructure/vars/backend.hcl

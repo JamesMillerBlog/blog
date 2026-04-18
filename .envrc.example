@@ -1,0 +1,35 @@
+# .envrc.example
+#
+# Copy this file to .envrc and fill in your values.
+# .envrc is gitignored — never commit it.
+#
+# direnv auto-loads these variables whenever you cd into this directory.
+# Install direnv: https://direnv.net
+# After creating .envrc run: direnv allow
+
+# Cloudflare identifiers
+export CLOUDFLARE_ACCOUNT_ID="your-cloudflare-account-id"
+export CLOUDFLARE_ZONE_ID="your-cloudflare-zone-id"
+
+# Cloudflare API token (for Terraform Cloudflare provider and cache purge)
+# Create at: Cloudflare dashboard → My Profile → API Tokens
+# Permissions: Zone / DNS / Edit, Zone / Zone / Read, Zone / Cache Purge / Purge,
+#              Zone / Transform Rules / Edit, Account / Cloudflare R2 Storage / Edit
+export CLOUDFLARE_API_TOKEN="your-cloudflare-api-token"
+
+# R2 API credentials (for deploying static site and assets to R2)
+# Create at: Cloudflare dashboard → R2 → Manage R2 API Tokens
+# Permissions: Object Read & Write
+export R2_ACCESS_KEY_ID="your-r2-access-key-id"
+export R2_SECRET_ACCESS_KEY="your-r2-secret-access-key"
+
+# R2 bucket names
+export STAGING_R2_BUCKET="your-staging-blog-r2-bucket"
+export PRODUCTION_R2_BUCKET="your-production-blog-r2-bucket"
+export ASSETS_R2_BUCKET="your-assets-r2-bucket"
+
+# Assets CDN domain (used by purge.sh for targeted cache purges)
+export ASSETS_DOMAIN="your-assets-cdn-domain"
+
+# Terraform state bucket name (S3)
+export TF_STATE_BUCKET="your-terraform-state-bucket-name"

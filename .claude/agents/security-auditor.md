@@ -1,4 +1,5 @@
 ---
+model: claude-haiku-4-5-20251001
 name: security-auditor
 description: Reviews code for security vulnerabilities, dependency issues, and compliance with security best practices. Use when you need to audit code for security concerns.
 tools:

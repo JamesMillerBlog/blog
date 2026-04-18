@@ -1,4 +1,5 @@
 ---
+model: claude-haiku-4-5-20251001
 name: reviewer-code-quality
 description: Adversarial code quality reviewer for pre-push and PR review. Reviews diffs for syntax errors, code smells, complexity, reusability, and best practice violations. Never used for writing code.
 tools:

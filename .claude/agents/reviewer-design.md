@@ -1,4 +1,5 @@
 ---
+model: claude-haiku-4-5-20251001
 name: reviewer-design
 description: Adversarial design system reviewer for pre-push and PR review. Reviews diffs for Byte Mark compliance violations. Never used for writing code.
 tools:

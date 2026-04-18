@@ -1,4 +1,5 @@
 ---
+model: claude-haiku-4-5-20251001
 name: reviewer-infrastructure
 description: Adversarial infrastructure and DevOps reviewer for pre-push and PR review. Reviews diffs for CI/CD, workflow, and Terraform issues. Never used for writing code.
 tools:

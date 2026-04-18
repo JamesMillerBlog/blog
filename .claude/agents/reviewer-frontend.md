@@ -1,4 +1,5 @@
 ---
+model: claude-haiku-4-5-20251001
 name: reviewer-frontend
 description: Adversarial frontend code reviewer for pre-push and PR review. Reviews diffs for React, Next.js, TypeScript, and accessibility issues. Never used for writing code.
 tools:

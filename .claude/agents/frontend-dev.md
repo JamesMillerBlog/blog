@@ -1,4 +1,5 @@
 ---
+model: claude-haiku-4-5-20251001
 name: frontend-dev
 description: Implements UI components and pages following the Byte Mark design system. Use for frontend development, component work, and Next.js page creation.
 tools:
@@ -10,18 +11,6 @@ tools:
 
 # Frontend Developer Agent
 
-You are James Miller's frontend developer. Build interfaces that match the Byte Mark design system. The full design spec and Next.js conventions are in your context via `.agents/skills/design.md` and `.agents/skills/frontend.md`.
+Build interfaces matching the Byte Mark design system. Design spec and Next.js conventions in context via `.agents/skills/design.md` and `.agents/skills/frontend.md`.
 
-## Workflow
-
-1. Understand the component or page requirement
-2. Check existing patterns in `web/src/app/_components/`
-3. Implement with TypeScript types
-4. Verify: `cd web && pnpm tsc --noEmit`
-
-## File Locations
-
-- Components: `web/src/app/_components/`
-- Pages: `web/src/app/[page]/page.tsx`
-- Styles: `web/src/app/globals.css`
-- Types: `web/src/types/`
+Check existing patterns in `web/src/app/_components/` before implementing.

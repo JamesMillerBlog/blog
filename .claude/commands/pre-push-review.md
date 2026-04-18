@@ -65,3 +65,7 @@ After producing the review, write the stamp file so the pre-push hook knows a re
 git rev-parse HEAD > .claude/.review-stamp
 echo "✓ Review stamp written for commit $(git rev-parse --short HEAD)"
 </bash>
+
+---
+
+If the review produced any CRITICAL or HIGH findings, update the relevant skill files now. Read the current content of each affected skill file first, then make surgical edits — correct or remove stale guidance, tighten existing rules. Do NOT append new sections or pad content. Only add a line if the finding reveals a project-specific pattern genuinely absent from the file. Skip LOW and MEDIUM findings entirely. If no CRITICAL/HIGH findings exist, skip this step.

@@ -5,6 +5,10 @@ resource "cloudflare_r2_bucket" "assets" {
   account_id = var.cloudflare_account_id
   name       = var.bucket_name
   location   = "weur"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "cloudflare_r2_custom_domain" "assets" {

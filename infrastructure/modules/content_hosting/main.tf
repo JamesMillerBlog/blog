@@ -4,6 +4,10 @@
 
 resource "aws_s3_bucket" "content" {
   bucket = var.bucket_name
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "content" {

@@ -254,27 +254,47 @@ Poll for responses with `get_current_session_data`. Once you have what you need,
 
 ---
 
-## Pre-Push Security Review
+## Commit & Push Workflow
 
-Before pushing to a public branch, run a local multi-agent review using your existing Claude subscription — no separate API billing needed.
+### Committing
 
-### How to trigger it
+```bash
+git commit -m "your message"
+```
 
-Inside Claude Code, run:
+The pre-commit hook runs automatically:
+1. Lint, typecheck, format check
+2. AI docs update — reads the staged diff and surgically edits `AGENTS.md`, `CLAUDE.md`, and files under `.agents/skills/` and `.claude/agents/` to reflect what changed. Any updated doc files are staged and included in the commit.
+
+To skip the docs update (e.g. for a quick WIP commit):
+
+```bash
+SKIP_DOCS_UPDATE=1 git commit -m "wip"
+```
+
+### Pushing
+
+Before pushing to a public branch, run a multi-agent review inside Claude Code:
 
 ```
 /pre-push-review
 ```
 
-The command collects the full diff, then dispatches all four reviewer agents **in parallel**. Each agent approaches the diff adversarially with no loyalty to the implementation. The pre-push hook (`.husky/pre-push`) prints a reminder automatically after tests pass.
+Then push:
 
-### What it produces
+```bash
+git push
+```
 
-1. **Architecture / Flow Diagram** — Mermaid diagram if changes affect structure, data flow, or CI
-2. **Findings by severity** — aggregated across all four reviewers (CRITICAL / HIGH / MEDIUM / LOW)
+The pre-push hook runs tests and checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked. Bypass with `git push --no-verify` only if you have a good reason.
+
+### What `/pre-push-review` produces
+
+1. **Architecture / Flow Diagram** — ASCII diagram if changes affect structure, data flow, or CI
+2. **Findings by severity** — aggregated across all five reviewers (CRITICAL / HIGH / MEDIUM / LOW)
 3. **Verdict** — SAFE TO PUSH / DO NOT PUSH / PUSH WITH CAUTION
 
-### The four reviewers
+### The five reviewers
 
 | Reviewer | Focus |
 |----------|-------|

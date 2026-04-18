@@ -1,5 +1,17 @@
 locals {
-  oidc_assume_condition = {
+  # Restricts infra role (AdministratorAccess) to branch refs within this repo only.
+  # Blocks fork pull requests (their sub uses "pull_request", not "ref:refs/heads/…").
+  oidc_assume_condition_infra = {
+    StringEquals = {
+      "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+    }
+    StringLike = {
+      "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/*"
+    }
+  }
+
+  # Deploy role is assumed by workflow_dispatch runs on any branch/tag.
+  oidc_assume_condition_deploy = {
     StringEquals = {
       "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
     }
@@ -20,7 +32,7 @@ resource "aws_iam_role" "github_actions_infra" {
       Action    = "sts:AssumeRoleWithWebIdentity"
       Effect    = "Allow"
       Principal = { Federated = var.oidc_provider_arn }
-      Condition = local.oidc_assume_condition
+      Condition = local.oidc_assume_condition_infra
     }]
   })
 }
@@ -43,7 +55,7 @@ resource "aws_iam_role" "github_actions_deploy" {
       Action    = "sts:AssumeRoleWithWebIdentity"
       Effect    = "Allow"
       Principal = { Federated = var.oidc_provider_arn }
-      Condition = local.oidc_assume_condition
+      Condition = local.oidc_assume_condition_deploy
     }]
   })
 }

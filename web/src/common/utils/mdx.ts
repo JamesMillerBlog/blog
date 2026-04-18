@@ -1,16 +1,12 @@
 import { compileMDX } from 'next-mdx-remote/rsc'
 import { ReactElement } from 'react'
+import type { Root, Element } from 'hast'
+import { visit } from 'unist-util-visit'
 import { ASSETS_BASE_URL } from '@/common/consts/constants'
 
-type Node = {
-  tagName?: string
-  properties?: Record<string, unknown>
-  children?: Node[]
-}
-
 function rewriteAssetImageSources() {
-  return (tree: Node) => {
-    const visit = (node: Node) => {
+  return (tree: Root) => {
+    visit(tree, 'element', (node: Element) => {
       if (
         node.tagName === 'img' &&
         typeof node.properties?.src === 'string' &&
@@ -18,13 +14,7 @@ function rewriteAssetImageSources() {
       ) {
         node.properties.src = `${ASSETS_BASE_URL}${node.properties.src}`
       }
-
-      for (const child of node.children ?? []) {
-        visit(child)
-      }
-    }
-
-    visit(tree)
+    })
   }
 }
 

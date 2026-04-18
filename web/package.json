@@ -34,11 +34,13 @@
     "next": "latest",
     "next-mdx-remote": "^5.0.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/hast": "^3.0.4",
     "@types/node": "^25.0.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",

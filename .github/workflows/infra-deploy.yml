@@ -21,12 +21,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.5
 
       - name: Terraform Format
         working-directory: ./infrastructure
@@ -44,18 +44,18 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.5
 
       - name: Terraform Init
         env:
@@ -70,7 +70,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        run: terraform plan -input=false -var-file=../../vars/shared/shared.tfvars
+        run: terraform plan -input=false -var-file=../../vars/shared/shared.tfvars -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -78,7 +78,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        run: terraform apply -auto-approve -input=false -var-file=../../vars/shared/shared.tfvars
+        run: terraform apply -auto-approve tfplan
 
   site:
     name: 'Terraform Site (${{ matrix.environment_name }})'
@@ -95,35 +95,37 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.5
 
       - name: Terraform Init
         env:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          ENVIRONMENT: ${{ matrix.environment_name }}
         run: |
           terraform init \
             -backend-config="bucket=${TF_STATE_BUCKET}" \
             -backend-config="region=eu-west-2" \
-            -backend-config="key=site/${{ matrix.environment_name }}/terraform.tfstate"
+            -backend-config="key=site/${ENVIRONMENT}/terraform.tfstate"
 
       - name: Terraform Plan
         env:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          ENVIRONMENT: ${{ matrix.environment_name }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file=../../vars/site/${{ matrix.environment_name }}.tfvars
+        run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file="../../vars/site/${ENVIRONMENT}.tfvars" -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -132,4 +134,4 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        run: terraform apply -auto-approve -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file=../../vars/site/${{ matrix.environment_name }}.tfvars
+        run: terraform apply -auto-approve tfplan

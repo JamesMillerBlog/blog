@@ -29,7 +29,7 @@ if git diff --name-only main...HEAD | grep -E "$STRUCTURAL_PATTERNS" > /dev/null
   if ! git diff --quiet AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null; then
     echo "Documentation was updated surgically."
     git add AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null || true
-    git commit -m "docs: surgical update of agents and documentation" --no-verify
+    git commit -m "docs: surgical update of agents and documentation"
     echo "──────────────────────────────────────────────────────"
     echo " ! Documentation updated and committed."
     echo " ! Please run 'git push' again to include the update."

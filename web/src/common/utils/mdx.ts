@@ -12,6 +12,10 @@ function rewriteAssetImageSources() {
         typeof node.properties?.src === 'string' &&
         node.properties.src.startsWith('/assets/')
       ) {
+        // In development, serve from local public folder
+        if (process.env.NODE_ENV === 'development') {
+          return
+        }
         node.properties.src = `${ASSETS_BASE_URL}${node.properties.src}`
       }
     })

@@ -12,6 +12,11 @@ export default function assetImageLoader({ src, width, quality }: ImageLoaderPro
     return src
   }
 
+  // In development, serve from local public folder
+  if (process.env.NODE_ENV === 'development') {
+    return src
+  }
+
   const q = quality ?? 75
   return `${ASSETS_BASE_URL}${src}?w=${width}&q=${q}`
 }

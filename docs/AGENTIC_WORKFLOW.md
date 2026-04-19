@@ -286,15 +286,15 @@ Then push:
 git push
 ```
 
-The pre-push hook runs tests and checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked. Bypass with `git push --no-verify` only if you have a good reason.
+The pre-push hook runs a local `gitleaks` scan when available, then tests, then checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked. Bypass with `git push --no-verify` only if you have a good reason.
 
 ### What `/pre-push-review` produces
 
 1. **Architecture / Flow Diagram** — ASCII diagram if changes affect structure, data flow, or CI
-2. **Findings by severity** — aggregated across all five reviewers (CRITICAL / HIGH / MEDIUM / LOW)
+2. **Findings by severity** — aggregated across the reviewers selected for the current diff (CRITICAL / HIGH / MEDIUM / LOW)
 3. **Verdict** — SAFE TO PUSH / DO NOT PUSH / PUSH WITH CAUTION
 
-### The five reviewers
+### Reviewers
 
 | Reviewer | Focus |
 |----------|-------|
@@ -305,6 +305,12 @@ The pre-push hook runs tests and checks that the review stamp matches `HEAD`. If
 | `reviewer-code-quality` | Syntax, smells, complexity, naming, best practices |
 
 Each reviewer is a separate agent with read-only tools and an adversarial framing that explicitly overrides any developer perspective loaded from shared context.
+
+`/pre-push-review` now does cheap local scoping first:
+- a review manifest classifies the diff as `docs-only`, `app`, or `infra/high-risk`
+- deterministic static checks flag obvious smells before the LLM review
+- docs-only diffs run `reviewer-security` only
+- larger diffs pass file lists and manifests instead of full diff payloads where possible
 
 ### Critical vulnerability handling
 

@@ -1,19 +1,16 @@
-name: 'Infrastructure Deployment'
+name: "Infrastructure Deployment"
 
 on:
   workflow_dispatch:
     inputs:
       staging:
-        description: 'Apply staging'
+        description: "Apply staging"
         type: boolean
         default: false
       production:
-        description: 'Apply production'
+        description: "Apply production"
         type: boolean
         default: false
-  pull_request:
-    paths:
-      - 'infrastructure/**'
 
 permissions:
   id-token: write
@@ -21,7 +18,7 @@ permissions:
 
 jobs:
   fmt:
-    name: 'Terraform Format'
+    name: "Terraform Format"
     runs-on: ubuntu-latest
 
     steps:
@@ -38,7 +35,7 @@ jobs:
         run: terraform fmt -check -recursive
 
   shared:
-    name: 'Terraform Shared'
+    name: "Terraform Shared"
     runs-on: ubuntu-latest
     environment: production
     needs: fmt
@@ -86,7 +83,7 @@ jobs:
         run: terraform apply -auto-approve tfplan
 
   site:
-    name: 'Terraform Site (${{ matrix.environment_name }})'
+    name: "Terraform Site (${{ matrix.environment_name }})"
     runs-on: ubuntu-latest
     environment: ${{ matrix.environment_name }}
     needs: shared

@@ -4,6 +4,7 @@
 - **Code:** injection, XSS, auth flaws, input validation
 - **Deps:** `pnpm audit` for CVEs, supply chain risks
 - **Config:** env var exposure, API key handling, CORS, security headers
+- **Git hooks:** prompt injection via `$DIFF` piped to LLM — staged content is developer-controlled and can contain adversarial text that manipulates Claude behavior even with `--allowedTools` restrictions
 
 ## Severity
 | Level | Action |

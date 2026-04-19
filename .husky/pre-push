@@ -1,3 +1,9 @@
+#!/bin/bash
+set -eo pipefail
+
+# Run a fast local secret scan before heavier checks when available.
+./scripts/pre-push-secret-scan.sh
+
 # Run tests with a 2-minute timeout to prevent indefinite hangs
 if command -v timeout > /dev/null 2>&1; then
   timeout 120 pnpm test
@@ -6,7 +12,7 @@ else
 fi
 
 # Verify an AI security review has been run against the current commit
-STAMP_FILE=".claude/.review-stamp"
+STAMP_FILE=".review-stamp"
 CURRENT_HEAD=$(git rev-parse HEAD)
 
 if [ ! -f "$STAMP_FILE" ]; then
@@ -39,3 +45,15 @@ echo "╔───────────────────────�
 echo "║  ✓  AI security review verified for this commit.    ║"
 echo "╚──────────────────────────────────────────────────────╝"
 echo ""
+
+# Update documentation surgically if structural changes are detected.
+# Skip with SKIP_DOCS_UPDATE=1
+if [ -z "$SKIP_DOCS_UPDATE" ]; then
+  ./scripts/update-docs.sh
+fi
+
+echo "──────────────────────────────────────────────────────"
+echo " 🚀 Push in progress..."
+echo " To auto-generate your PR description after push, run:"
+echo "    pnpm pr:generate"
+echo "──────────────────────────────────────────────────────"

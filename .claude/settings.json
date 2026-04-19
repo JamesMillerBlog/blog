@@ -1,16 +1,47 @@
 {
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "60",
+    "BASH_MAX_OUTPUT_LENGTH": "150000"
+  },
+  "permissions": {
+    "deny": [
+      "Read(**/node_modules/**)",
+      "Read(**/.next/**)",
+      "Read(**/dist/**)",
+      "Read(**/build/**)",
+      "Read(**/coverage/**)",
+      "Read(**/.terraform/**)",
+      "Read(*.lock)",
+      "Read(pnpm-lock.yaml)",
+      "Read(package-lock.json)"
+    ]
+  },
   "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -s -d 'Claude done' \"ntfy.sh/${NTFY_TOPIC}\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "cd web && pnpm exec tsc --noEmit --skipLibCheck 2>&1 | head -20"
+            "command": "bash -lc 'if git status --porcelain --untracked-files=normal -- web | awk \"{print \\$2}\" | rg -q \"(^|/).+\\.(ts|tsx)$|^web/(next\\.config\\.|vitest\\.config\\.|eslint\\.config\\.|tailwind\\.config\\.)\"; then cd web && pnpm exec tsc --noEmit --skipLibCheck 2>&1 | head -20; fi'"
           }
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c 'f=(~/.claude/plugins/cache/caveman/caveman/*/hooks/caveman-statusline.sh); [ -f \"${f[0]}\" ] && bash \"${f[0]}\"'"
   },
   "enabledPlugins": {
     "playwright@claude-plugins-official": true,
@@ -23,12 +54,22 @@
     "typescript-lsp@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true,
-    "hookify@claude-plugins-official": true
+    "hookify@claude-plugins-official": true,
+    "caveman@caveman": true
   },
-  "mcpServers": {},
-  "permissions": {
-    "deny": [
-      "Read(infrastructure/**/.terraform/**)"
-    ]
-  }
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
+  },
+  "mcpServers": {}
 }

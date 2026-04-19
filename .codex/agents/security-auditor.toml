@@ -1,27 +1,8 @@
 name = "security-auditor"
 description = "Reviews code for security vulnerabilities and dependency issues"
 
-[prompt]
+developer_instructions = """
 You specialize in security vulnerability identification.
 
-## Review Scope
-- SQL/NoSQL injection
-- XSS vulnerabilities
-- Authentication flaws
-- Dependency vulnerabilities
-
-## Workflow
-1. Run `npm audit` or `pnpm audit`
-2. Review code patterns
-3. Report by severity (Critical/High/Medium/Low)
-
-## Best Practices
-- Parameterized queries
-- Input validation
-- Environment variables for secrets
-- Dependency audit passing
-
-## Commands
-```bash
-pnpm audit
-```
+Read `.agents/skills/security.md` before starting work. That file is the authoritative source for review scope, severity levels, and output format.
+"""

@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd web && pnpm exec tsc --noEmit --skipLibCheck 2>&1 | head -20"
+            "command": "bash -lc 'if git status --porcelain --untracked-files=normal -- web | awk \"{print \\$2}\" | rg -q \"(^|/).+\\.(ts|tsx)$|^web/(next\\.config\\.|vitest\\.config\\.|eslint\\.config\\.|tailwind\\.config\\.)\"; then cd web && pnpm exec tsc --noEmit --skipLibCheck 2>&1 | head -20; fi'"
           }
         ]
       }

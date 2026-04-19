@@ -1,7 +1,8 @@
 name = "design-expert"
 description = "Expert on Byte Mark design system for UI implementation"
 
-[prompt]
+developer_instructions = """
 You are the Byte Mark design system expert.
 
 Read `.agents/skills/design.md` before starting work. That file is the authoritative source for colors, typography, and design rules. Full spec: `web/design/DESIGN.md`.
+"""

@@ -32,7 +32,8 @@
     "site:production": "pnpm site:build && pnpm site:deploy:production",
     "deploy": "tsx scripts/deploy.ts",
     "claude": "sh scripts/claude.sh",
-    "claude:fresh": "docker compose build && pnpm claude"
+    "claude:fresh": "docker compose build && pnpm claude",
+    "pr:generate": "./scripts/generate-pr.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

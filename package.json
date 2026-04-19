@@ -31,7 +31,7 @@
     "site:staging": "pnpm site:build && pnpm site:deploy:staging",
     "site:production": "pnpm site:build && pnpm site:deploy:production",
     "deploy": "tsx scripts/deploy.ts",
-    "claude": "echo \"\\033[1;36m▶ Notifications: https://ntfy.sh/$NTFY_TOPIC\\033[0m\" && docker compose run --rm claude",
+    "claude": "sh scripts/claude.sh",
     "claude:fresh": "docker compose build && pnpm claude"
   },
   "devDependencies": {

@@ -42,15 +42,15 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | `security-auditor` | Vulnerability scanning |
 | `parallel-executor` | Independent parallel tasks |
 
-**Reviewer agents** — read-only, auto-dispatched by `/pre-push-review`:
+**Reviewer agents** — read-only, dispatched by `/pre-push-review` based on changed file types:
 
-| Agent | Checks |
-|-------|--------|
-| `reviewer-security` | Secrets, injection, CVEs |
-| `reviewer-frontend` | React, TypeScript, a11y |
-| `reviewer-design` | Byte Mark tokens, typography |
-| `reviewer-infrastructure` | GitHub Actions, IAM, Terraform |
-| `reviewer-code-quality` | Smells, complexity, best practices |
+| Agent | Dispatched when | Checks |
+|-------|-----------------|--------|
+| `reviewer-security` | always | Secrets, injection, CVEs |
+| `reviewer-code-quality` | always | Smells, complexity, best practices |
+| `reviewer-frontend` | `*.tsx/ts/jsx/js/css` | React, TypeScript, a11y |
+| `reviewer-design` | `*.tsx/jsx/css` | Byte Mark tokens, typography |
+| `reviewer-infrastructure` | `*.yml/yaml/tf/tfvars` | GitHub Actions, IAM, Terraform |
 
 ## Docker
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). See `docs/DOCKER.md` for security model.

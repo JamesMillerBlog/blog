@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Bash(**)",
+      "Read(*)",
+      "Read(**)",
+      "Write(*)",
+      "Write(**)",
+      "Edit(*)",
+      "Edit(**)",
+      "MultiEdit(*)",
+      "MultiEdit(**)"
+    ]
+  }
+}

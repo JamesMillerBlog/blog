@@ -37,7 +37,7 @@ build
 .claude/settings.local.json
 
 # AI review stamp (local only — written by /pre-push-review command)
-.claude/.review-stamp
+.review-stamp
 
 # debug
 npm-debug.log*

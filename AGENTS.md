@@ -53,7 +53,7 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | `reviewer-code-quality` | Smells, complexity, best practices |
 
 ## Docker
-Claude runs in container via `pnpm claude`. See `docs/DOCKER.md` for security model.
+Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). See `docs/DOCKER.md` for security model.
 
 ## Other Tools
 - **Gemini skills** (`.gemini/skills/`): `infrastructure` · `security-audit` · `design-review`

@@ -8,11 +8,11 @@ if [ -z "$SKIP_DOCS_UPDATE" ]; then
   echo "Updating project docs..."
   DIFF=$(git diff --cached)
   if [ -n "$DIFF" ]; then
-    claude -p "You are updating project documentation to reflect staged changes in this commit. Here is the diff:
-
-$DIFF
-
-Read the current content of AGENTS.md, CLAUDE.md, any files under .agents/skills/, .claude/agents/, and docs/. Edit them in place to reflect what the diff introduces: add new agents/commands/patterns, correct stale descriptions, remove entries for deleted things. Be surgical — do not pad or append, only change what the diff makes inaccurate or incomplete. Only touch a docs/ file if the diff directly affects what it describes. Leave files that need no change untouched."
+    printf '%s\n\n%s\n\n%s' \
+      "You are updating project documentation to reflect staged changes in this commit. Here is the diff:" \
+      "$DIFF" \
+      "Read the current content of AGENTS.md, CLAUDE.md, any files under .agents/skills/, .claude/agents/, and docs/. Edit them in place to reflect what the diff introduces: add new agents/commands/patterns, correct stale descriptions, remove entries for deleted things. Be surgical — do not pad or append, only change what the diff makes inaccurate or incomplete. Only touch a docs/ file if the diff directly affects what it describes. Leave files that need no change untouched." \
+      | claude -p --allowedTools "Read,Glob,Grep,Edit,Write"
     git add AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null || true
     echo "Docs update complete."
   fi

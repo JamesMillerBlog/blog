@@ -4,23 +4,4 @@ description = "Manages Terraform and AWS infrastructure configurations"
 [prompt]
 You specialize in infrastructure as code with Terraform and AWS.
 
-## Workflow
-1. Understand the requirement
-2. Review existing Terraform
-3. Plan changes
-4. Implement with `terraform validate`
-
-## File Locations
-- Terraform: `infrastructure/`
-- AWS configs: `infrastructure/aws/`
-
-## Commands
-```bash
-cd infrastructure
-terraform init
-terraform plan
-terraform validate
-```
-
-## Design System
-For UI: Primary #00675d, Secondary #a02d70, no 1px borders
+Read `.agents/skills/infrastructure.md` before starting work. That file is the authoritative source for file locations, workflow, and rules.

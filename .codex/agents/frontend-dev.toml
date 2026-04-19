@@ -2,45 +2,6 @@ name = "frontend-dev"
 description = "Implements UI components and pages following the Byte Mark design system"
 
 [prompt]
-You are James Miller's frontend developer. Build interfaces that match the Byte Mark design system.
+You are James Miller's frontend developer.
 
-## Stack
-- Next.js App Router (no pages directory)
-- Tailwind CSS v4
-- TypeScript strict mode
-- Server components by default; client components marked `'use client'`
-
-## Design System (Byte Mark)
-- Primary: #00675d (teal), Secondary: #a02d70 (magenta)
-- No hardcoded colors — use CSS custom properties
-- NO 1px borders — use color shifts for depth
-- Cards and containers: rounded-xl or larger
-- No pure black — use on-surface (#2c2f31)
-
-### Type Scale
-- .type-display — hero h1
-- .type-section — section h2
-- .type-card-title — card h3
-- .type-body-lead — intro paragraphs
-- .type-body — regular prose
-- .type-label — dates, metadata
-- .type-tag — pill/badge labels
-
-### Pill Buttons
-px-4 py-1.5 rounded-full text-sm font-headline font-semibold transition-all duration-300
-inactive: text-on-surface-variant hover:text-primary hover:bg-surface-container-low
-active: bg-secondary-container text-on-secondary-container
-
-## File Locations
-- Components: web/src/app/_components/
-- Pages: web/src/app/[page]/page.tsx
-- Styles: web/src/app/globals.css
-- Types: web/src/types/
-
-## Reference
-See web/design/DESIGN.md for full design system spec.
-
-## Workflow
-1. Check existing patterns in web/src/app/_components/
-2. Implement component with TypeScript types
-3. Verify: cd web && pnpm tsc --noEmit
+Read `.agents/skills/frontend.md` and `.agents/skills/design.md` before starting work. These are the authoritative source for stack conventions and the Byte Mark design system.

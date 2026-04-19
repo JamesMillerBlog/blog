@@ -1,3 +1,6 @@
+#!/bin/bash
+set -eo pipefail
+
 # Run tests with a 2-minute timeout to prevent indefinite hangs
 if command -v timeout > /dev/null 2>&1; then
   timeout 120 pnpm test
@@ -39,3 +42,49 @@ echo "╔───────────────────────�
 echo "║  ✓  AI security review verified for this commit.    ║"
 echo "╚──────────────────────────────────────────────────────╝"
 echo ""
+
+# Offer PR creation/update only after review passes.
+# BRANCH sanitized via tr to strip shell metacharacters; safe to interpolate
+# into double-quoted claude -p string (no shell word splitting occurs there).
+BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -cd '[:alnum:]/_.-')
+
+[[ -z "$BRANCH" ]] && { echo "fatal: could not determine branch name"; exit 1; }
+
+if [[ "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
+  exit 0
+fi
+
+command -v gh >/dev/null 2>&1 || { echo "gh CLI not found, skipping PR prompt"; exit 0; }
+command -v claude >/dev/null 2>&1 || { echo "claude CLI not found, skipping PR prompt"; exit 0; }
+
+read -rp "Create/update PR with Claude summary? (y/n): " answer
+[[ "$answer" == "y" ]] || exit 0
+
+# PR_NUMBER sourced from GitHub API (integer field) — validated below as defense-in-depth
+PR_NUMBER=$(gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || true)
+
+if [[ -n "$PR_NUMBER" ]] && ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+  echo "Unexpected PR number format, aborting."
+  exit 1
+fi
+
+PROMPT_STEPS="Steps:
+1. Run: git log main...HEAD --oneline
+2. Run: git diff main...HEAD --stat
+3. Generate: concise summary of changes, and a mermaid diagram of affected components/files
+4. Fill the .github/pull_request_template.md sections (Summary, Changes, Architecture, Test Plan)"
+
+if [[ -n "$PR_NUMBER" ]]; then
+  echo "-> Updating PR #$PR_NUMBER..."
+  PROMPT_ACTION="5. Run: gh pr edit ${PR_NUMBER} --body '<filled template content>'"
+  PROMPT_INTRO="Update PR #${PR_NUMBER} for branch ${BRANCH}."
+  FALLBACK="Claude failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
+else
+  echo "-> Creating PR for branch ${BRANCH}..."
+  PROMPT_ACTION="5. Run: gh pr create --title '<short title from commits>' --body '<filled template content>'"
+  PROMPT_INTRO="Create a PR for branch ${BRANCH}."
+  FALLBACK="Claude failed to create PR. Run manually: gh pr create"
+fi
+
+claude -p "${PROMPT_INTRO} ${PROMPT_STEPS}
+${PROMPT_ACTION}" || echo "$FALLBACK"

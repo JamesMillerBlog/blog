@@ -19,7 +19,9 @@ export function ImageCaption({ src, alt, caption }: Props) {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 980px"
         />
       </div>
-      <figcaption className="mt-3 text-center text-sm italic text-[#595c5e]">{caption}</figcaption>
+      <figcaption className="mt-3 text-center text-sm italic text-on-surface-variant">
+        {caption}
+      </figcaption>
     </figure>
   )
 }

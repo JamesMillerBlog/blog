@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getAllPosts, getPostBySlug } from '@/common/utils/posts'
+import { getAllPosts, getPostBySlug, isPostVisible } from '@/common/utils/posts'
 import { SITE_URL, TWITTER_HANDLE, AUTHOR } from '@/common/consts/constants'
 import { ui } from '@/i18n/en'
 import { compileMDXContent } from '@/common/utils/mdx'
@@ -18,11 +18,7 @@ export default async function Post(props: Params) {
     return notFound()
   }
 
-  if (
-    post.draft &&
-    process.env.NODE_ENV !== 'development' &&
-    process.env.NEXT_PUBLIC_ENVIRONMENT !== 'staging'
-  ) {
+  if (!isPostVisible(post)) {
     return notFound()
   }
 

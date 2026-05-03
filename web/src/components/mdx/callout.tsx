@@ -19,30 +19,30 @@ type CalloutConfig = {
 const configs: Record<CalloutType, CalloutConfig> = {
   info: {
     icon: Info,
-    borderColor: 'border-[#00675d]',
-    bgColor: 'bg-[#f0faf9]',
-    iconColor: 'text-[#00675d]',
+    borderColor: 'border-primary',
+    bgColor: 'bg-primary/8',
+    iconColor: 'text-primary',
     label: 'Info',
   },
   tip: {
     icon: Lightbulb,
-    borderColor: 'border-[#755600]',
-    bgColor: 'bg-[#fff8e6]',
-    iconColor: 'text-[#755600]',
+    borderColor: 'border-tertiary',
+    bgColor: 'bg-tertiary/8',
+    iconColor: 'text-tertiary',
     label: 'Tip',
   },
   warning: {
     icon: AlertTriangle,
-    borderColor: 'border-[#a02d70]',
-    bgColor: 'bg-[#fff0f6]',
-    iconColor: 'text-[#a02d70]',
+    borderColor: 'border-secondary',
+    bgColor: 'bg-secondary/8',
+    iconColor: 'text-secondary',
     label: 'Warning',
   },
   note: {
     icon: StickyNote,
-    borderColor: 'border-[#595c5e]',
-    bgColor: 'bg-[#f5f7f9]',
-    iconColor: 'text-[#595c5e]',
+    borderColor: 'border-on-surface-variant',
+    bgColor: 'bg-surface',
+    iconColor: 'text-on-surface-variant',
     label: 'Note',
   },
 }
@@ -52,14 +52,14 @@ export function Callout({ type = 'note', children }: Props) {
 
   return (
     <div
-      className={`my-8 flex gap-4 rounded-r-xl border-l-4 px-5 py-4 ${borderColor} ${bgColor}`}
+      className={`my-8 flex gap-4 rounded-xl border-l-4 px-5 py-4 ${borderColor} ${bgColor}`}
       role="note"
       aria-label={label}
     >
       <div className={`mt-0.5 shrink-0 ${iconColor}`}>
         <Icon size={20} aria-hidden="true" />
       </div>
-      <div className="min-w-0 flex-1 text-[17px] leading-relaxed text-[#2c2f31] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+      <div className="min-w-0 flex-1 text-[17px] leading-relaxed text-on-surface [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
         {children}
       </div>
     </div>

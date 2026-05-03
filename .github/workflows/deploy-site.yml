@@ -22,6 +22,15 @@ on:
         description: 'Target environment'
         required: true
         type: string
+    secrets:
+      R2_ACCESS_KEY_ID:
+        required: true
+      R2_SECRET_ACCESS_KEY:
+        required: true
+      CLOUDFLARE_ACCOUNT_ID:
+        required: true
+      CLOUDFLARE_API_TOKEN:
+        required: true
 
 permissions:
   id-token: write
@@ -38,6 +47,16 @@ jobs:
         working-directory: ./web
 
     steps:
+      - name: Validate ref input
+        if: inputs.ref != ''
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          if [[ "$REF" =~ \.\. ]] || [[ "$REF" =~ ^- ]] || [[ "$REF" =~ [[:space:]] ]]; then
+            echo "Invalid ref: '$REF'"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:

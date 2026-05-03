@@ -84,7 +84,7 @@ describe('getPostBySlug', () => {
       content: 'body',
     } as unknown as ReturnType<typeof matter>)
     const { getPostBySlug } = await import('./posts')
-    expect((await getPostBySlug('hello-world.mdx')).slug).toBe('hello-world')
+    expect((await getPostBySlug('hello-world.mdx'))?.slug).toBe('hello-world')
   })
 
   it('strips the .md extension from the slug', async () => {
@@ -94,7 +94,7 @@ describe('getPostBySlug', () => {
       content: 'body',
     } as unknown as ReturnType<typeof matter>)
     const { getPostBySlug } = await import('./posts')
-    expect((await getPostBySlug('hello-world.md')).slug).toBe('hello-world')
+    expect((await getPostBySlug('hello-world.md'))?.slug).toBe('hello-world')
   })
 
   it('prefers the .mdx file when .mdx exists', async () => {
@@ -105,7 +105,7 @@ describe('getPostBySlug', () => {
     } as unknown as ReturnType<typeof matter>)
     const { getPostBySlug } = await import('./posts')
     const post = await getPostBySlug('hello-world')
-    expect(post.title).toBe('MDX Post')
+    expect(post?.title).toBe('MDX Post')
     const readPath = vi.mocked(fs.readFileSync).mock.calls[0][0] as string
     expect(readPath).toMatch(/\.mdx$/)
   })
@@ -118,7 +118,7 @@ describe('getPostBySlug', () => {
     } as unknown as ReturnType<typeof matter>)
     const { getPostBySlug } = await import('./posts')
     const post = await getPostBySlug('hello-world')
-    expect(post.title).toBe('MD Post')
+    expect(post?.title).toBe('MD Post')
     const readPath = vi.mocked(fs.readFileSync).mock.calls[0][0] as string
     expect(readPath).toMatch(/\.md$/)
   })
@@ -131,11 +131,11 @@ describe('getPostBySlug', () => {
     } as unknown as ReturnType<typeof matter>)
     const { getPostBySlug } = await import('./posts')
     const post = await getPostBySlug('deep-dive')
-    expect(post.slug).toBe('deep-dive')
-    expect(post.title).toBe('Deep Dive')
-    expect(post.date).toBe('2023-06-15')
-    expect(post.tags).toEqual(['serverless'])
-    expect(post.content).toBe('# Intro\nBody.')
+    expect(post?.slug).toBe('deep-dive')
+    expect(post?.title).toBe('Deep Dive')
+    expect(post?.date).toBe('2023-06-15')
+    expect(post?.tags).toEqual(['serverless'])
+    expect(post?.content).toBe('# Intro\nBody.')
   })
 })
 

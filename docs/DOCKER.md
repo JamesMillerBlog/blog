@@ -28,7 +28,11 @@ BLOG_GIT_DIR=$(git rev-parse --git-common-dir) pnpm claude
 
 ## Persistence
 
-`claude-home` named volume persists `~/.claude/projects/` (memory) across restarts. The image ships a default `~/.claude/settings.json` baked in at build time from `docker/claude-settings.json`; the named volume can override it if a `settings.json` exists there. Repo changes are live in both directions.
+Host mounts persist `~/.claude/` (memory and settings) across restarts:
+- `${HOME}/.claude` — mounted at `/home/claude/.claude` (memory, preferences)
+- `${HOME}/.claude.json` — mounted at `/home/claude/.claude.json` (if it exists)
+
+The image ships a default `~/.claude/settings.json` at build time; host mounts override it if present. Repo changes are live in both directions.
 
 ## API Key
 

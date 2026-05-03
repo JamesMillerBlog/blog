@@ -5,11 +5,9 @@ services:
     tty: true
     volumes:
       - .:/workspace
-      - claude-home:/home/claude
+      - ${HOME}/.claude:/home/claude/.claude
+      - ${HOME}/.claude.json:/home/claude/.claude.json
     environment:
       - ANTHROPIC_MODEL=claude-sonnet-4-6
       - NTFY_TOPIC=${NTFY_TOPIC}
     command: --dangerously-skip-permissions
-
-volumes:
-  claude-home:

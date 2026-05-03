@@ -10,7 +10,14 @@ The blog uses a fully serverless, statically hosted architecture split into shar
 * **Assets (`assets.jamesmiller.blog`):** Shared R2 bucket and Cloudflare CDN for images and heavy media.
 * **Content (`posts.jamesmiller.blog`):** Shared S3 bucket for MDX blog post files, read at build time.
 
-## 2. Terraform Layout
+## 2. GitHub Actions IAM Role
+
+The `github_actions_roles` module grants GitHub Actions permission to:
+* Deploy to R2 buckets and purge Cloudflare cache
+* Sync posts to the S3 bucket
+* Invoke Bedrock Claude for AI features (cross-region inference profiles via us-east-1/us-west-2)
+
+## 3. Terraform Layout
 
 Terraform is organized around:
 
@@ -55,7 +62,7 @@ infrastructure/
 
 The `site` stack reads outputs from `shared` via `terraform_remote_state`, so `shared` must be applied first.
 
-## 3. Running Locally
+## 4. Running Locally
 
 Use the convenience scripts in `package.json`:
 
@@ -81,7 +88,7 @@ Bootstrap note:
 * The first-ever `shared` apply creates the GitHub OIDC provider.
 * That initial bootstrap must be run manually with AWS credentials that already have IAM permissions.
 
-## 4. Content Repository Model
+## 5. Content Repository Model
 
 Blog posts live in a separate content repo. That repo is the source of truth for content and owns:
 
@@ -94,7 +101,7 @@ This repo:
 * consumes the shared posts bucket during builds
 * optionally pulls posts locally into the ignored `web/_posts/` directory for development
 
-## 5. Application Configuration
+## 6. Application Configuration
 
 The Next.js app in `web/` is configured for static export:
 
@@ -119,10 +126,16 @@ export POSTS_S3_BUCKET="<your-posts-bucket-name>"
 * Syncs the output to the environment's R2 bucket with appropriate cache headers
 * Purges the Cloudflare zone cache after each deploy
 * Supports both `production` and `staging` environments
+* Requires `deployment_environment` input (routing via `NEXT_PUBLIC_ENVIRONMENT` env var during build)
 
 The separate content repo triggers this workflow after syncing posts to S3.
 
-## 7. Scripts
+### `content-deploy.yml`
+
+* Triggered by the content repo via `repository_dispatch` with `content-update` type
+* Calls `deploy-site.yml` with the environment specified in `client_payload.environment`
+
+## 8. Scripts
 
 Asset scripts:
 

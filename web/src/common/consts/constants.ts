@@ -9,6 +9,9 @@ export const AUTHOR = {
   twitter: '@JamesMillerBlog',
 }
 
+export const STAGING_ENVIRONMENT = 'staging'
+export const PRODUCTION_ENVIRONMENT = 'production'
+
 export const FEATURED_TAGS = [
   'Artificial Intelligence',
   'Amazon Web Services',

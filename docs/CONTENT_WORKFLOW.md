@@ -21,8 +21,14 @@ This repo owns:
 1. Edit or add posts in the content repo.
 2. Push to `main` in the content repo.
 3. `publish-posts.yml` syncs `posts/` to the shared posts S3 bucket.
-4. That workflow triggers `deploy-site.yml` in this repo for `staging` and `production`.
-5. The app rebuild reads posts from S3 and republishes the static site.
+4. That workflow dispatches this repo's `content-deploy.yml` with the target environment.
+5. `content-deploy.yml` triggers `deploy-site.yml` for each environment in `client_payload.environment`.
+6. The app rebuild reads posts from S3 and republishes the static site.
+
+## Environment Support
+
+* **Staging**: Shows draft posts (where `post.draft === true`)
+* **Production**: Only shows published posts (where `post.draft === false`)
 
 ## Local Development Flow
 

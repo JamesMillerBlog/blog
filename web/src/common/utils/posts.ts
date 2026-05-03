@@ -3,10 +3,18 @@ import fs from 'fs'
 import matter from 'gray-matter'
 import { join } from 'path'
 import { Post } from '@/types/post'
+import { STAGING_ENVIRONMENT, PRODUCTION_ENVIRONMENT } from '@/common/consts/constants'
 
 const POSTS_BUCKET = process.env.POSTS_BUCKET
 const POSTS_BUCKET_REGION = process.env.POSTS_BUCKET_REGION ?? 'us-east-1'
 const POSTS_PREFIX = process.env.POSTS_PREFIX ?? ''
+
+if (process.env.NEXT_PUBLIC_ENVIRONMENT === PRODUCTION_ENVIRONMENT && !POSTS_BUCKET) {
+  console.warn('POSTS_BUCKET is not set in production — falling back to local _posts directory')
+}
+
+// Allowlist: lowercase/uppercase letters, digits, hyphens. Blocks ../ traversal.
+const VALID_SLUG = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/
 
 // Local filesystem fallback for development
 const postsDirectory = join(process.cwd(), '_posts')
@@ -39,8 +47,9 @@ export async function getPostSlugs(): Promise<string[]> {
     .map((key) => key.slice(POSTS_PREFIX.length))
 }
 
-export async function getPostBySlug(slug: string): Promise<Post> {
+export async function getPostBySlug(slug: string): Promise<Post | null> {
   const realSlug = slug.replace(/\.(md|mdx)$/, '')
+  if (!VALID_SLUG.test(realSlug)) return null
 
   let fileContents: string
 
@@ -49,12 +58,20 @@ export async function getPostBySlug(slug: string): Promise<Post> {
     if (!fs.existsSync(fullPath)) {
       fullPath = join(postsDirectory, `${realSlug}.md`)
     }
-    fileContents = fs.readFileSync(fullPath, 'utf8')
+    try {
+      fileContents = fs.readFileSync(fullPath, 'utf8')
+    } catch {
+      return null
+    }
   } else {
     try {
       fileContents = await fetchS3Object(`${POSTS_PREFIX}${realSlug}.mdx`)
     } catch {
-      fileContents = await fetchS3Object(`${POSTS_PREFIX}${realSlug}.md`)
+      try {
+        fileContents = await fetchS3Object(`${POSTS_PREFIX}${realSlug}.md`)
+      } catch {
+        return null
+      }
     }
   }
 
@@ -62,10 +79,18 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   return { ...data, slug: realSlug, content } as Post
 }
 
+export function isPostVisible(post: Post): boolean {
+  return (
+    process.env.NODE_ENV === 'development' ||
+    process.env.NEXT_PUBLIC_ENVIRONMENT === STAGING_ENVIRONMENT ||
+    !post.draft
+  )
+}
+
 export async function getAllPosts(): Promise<Post[]> {
   const slugs = await getPostSlugs()
   const posts = await Promise.all(slugs.map((slug) => getPostBySlug(slug)))
-  return posts
-    .filter((post) => process.env.NODE_ENV === 'development' || !post.draft)
+  return (posts.filter(Boolean) as Post[])
+    .filter(isPostVisible)
     .sort((a, b) => (a.date > b.date ? -1 : 1))
 }

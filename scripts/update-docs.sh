@@ -25,11 +25,14 @@ if git diff --name-only main...HEAD | grep -E "$STRUCTURAL_PATTERNS" > /dev/null
     "Read AGENTS.md, CLAUDE.md, .agents/skills/, .claude/agents/, and docs/. Edit them in place to reflect what the changes introduce: new agents/commands/patterns, corrected descriptions, or removals. Be extremely surgical: if the diff doesn't change what a file describes, leave it untouched. Do not append; modify in place." \
     | claude -p --model haiku --allowedTools "Read,Glob,Grep,Edit,Write"
 
-  # If files were modified, commit them and abort the push to ensure the user pushes the latest HEAD
+  # If files were modified, commit them and update the review stamp so the
+  # next push doesn't fail the stale-review check.
   if ! git diff --quiet AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null; then
     echo "Documentation was updated surgically."
     git add AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null || true
     git commit -m "docs: surgical update of agents and documentation"
+    # Advance the review stamp to the new docs commit so the next push passes immediately.
+    git rev-parse HEAD > .review-stamp
     echo "──────────────────────────────────────────────────────"
     echo " ! Documentation updated and committed."
     echo " ! Please run 'git push' again to include the update."

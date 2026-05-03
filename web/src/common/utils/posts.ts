@@ -66,6 +66,11 @@ export async function getAllPosts(): Promise<Post[]> {
   const slugs = await getPostSlugs()
   const posts = await Promise.all(slugs.map((slug) => getPostBySlug(slug)))
   return posts
-    .filter((post) => process.env.NODE_ENV === 'development' || !post.draft)
+    .filter(
+      (post) =>
+        process.env.NODE_ENV === 'development' ||
+        process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging' ||
+        !post.draft
+    )
     .sort((a, b) => (a.date > b.date ? -1 : 1))
 }

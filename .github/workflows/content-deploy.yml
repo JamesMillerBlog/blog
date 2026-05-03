@@ -1,0 +1,12 @@
+name: Content Deploy
+
+on:
+  repository_dispatch:
+    types: [content-update]
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-site.yml
+    with:
+      deployment_environment: ${{ github.event.client_payload.environment }}
+    secrets: inherit

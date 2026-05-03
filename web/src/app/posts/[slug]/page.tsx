@@ -18,7 +18,11 @@ export default async function Post(props: Params) {
     return notFound()
   }
 
-  if (post.draft && process.env.NODE_ENV !== 'development') {
+  if (
+    post.draft &&
+    process.env.NODE_ENV !== 'development' &&
+    process.env.NEXT_PUBLIC_ENVIRONMENT !== 'staging'
+  ) {
     return notFound()
   }
 

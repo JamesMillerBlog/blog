@@ -79,6 +79,19 @@ resource "aws_iam_role_policy" "deploy_policy" {
         Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
         Resource = local.deploy_object_arns
       },
+      {
+        Sid    = "BedrockClaudeAccess"
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+        ]
+        # Cross-region inference profiles route eu-west-2 calls through us-east-1/us-west-2
+        Resource = [
+          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-*",
+          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-*",
+        ]
+      },
     ]
   })
 }

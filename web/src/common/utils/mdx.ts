@@ -3,6 +3,7 @@ import { ReactElement } from 'react'
 import type { Root, Element } from 'hast'
 import { visit } from 'unist-util-visit'
 import { ASSETS_BASE_URL } from '@/common/consts/constants'
+import { mdxComponents } from '@/components/mdx'
 
 function rewriteAssetImageSources() {
   return (tree: Root) => {
@@ -25,6 +26,7 @@ function rewriteAssetImageSources() {
 export async function compileMDXContent(source: string): Promise<ReactElement> {
   const { content } = await compileMDX({
     source,
+    components: mdxComponents,
     options: {
       parseFrontmatter: false,
       mdxOptions: {

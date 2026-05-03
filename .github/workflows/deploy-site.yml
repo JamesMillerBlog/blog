@@ -20,8 +20,7 @@ on:
     inputs:
       deployment_environment:
         description: 'Target environment'
-        required: false
-        default: production
+        required: true
         type: string
 
 permissions:
@@ -32,7 +31,7 @@ jobs:
   deploy:
     name: 'Build & Deploy'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.deployment_environment || 'production' }}
+    environment: ${{ inputs.deployment_environment }}
 
     defaults:
       run:
@@ -80,6 +79,7 @@ jobs:
         env:
           POSTS_BUCKET: ${{ vars.POSTS_S3_BUCKET }}
           POSTS_BUCKET_REGION: eu-west-2
+          NEXT_PUBLIC_ENVIRONMENT: ${{ inputs.deployment_environment }}
         run: pnpm build
 
       - name: Sync static files to R2

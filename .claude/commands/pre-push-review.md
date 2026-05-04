@@ -17,13 +17,13 @@ echo "=== STATIC CHECKS ==="
 bash scripts/pre-push-static-checks.sh
 </bash>
 
-Read `.claude/pre-push-review/manifest.txt` and use it as the source of truth for review mode, file counts, and reviewer file lists.
+Read `.claude/pre-push-review/manifest.txt` and use it as the source of truth for review mode, file counts, reviewer file lists, **and the merge base hash** (the `Merge base:` line).
 
 If there are no changed files, state that clearly and stop. Do not write the stamp file.
 
 Treat `.claude/pre-push-review/static-checks.txt` as deterministic hints. It can elevate scrutiny, but it does not replace reviewer judgment.
 
-**Do not read diffs in the coordinator.** Agents run their own `git diff --unified=0` for their scoped file lists. This keeps diff content out of the coordinator's context window.
+**Do not read diffs in the coordinator.** Agents run their own diff for their scoped file lists. This keeps diff content out of the coordinator's context window.
 
 ## Step 2: dispatch only relevant reviewers, with scoped context
 

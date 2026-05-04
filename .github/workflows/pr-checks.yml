@@ -2,6 +2,9 @@ name: PR Checks
 
 on:
   pull_request:
+    paths:
+      - 'web/**'
+      - 'pnpm-lock.yaml'
 
 concurrency:
   group: pr-checks-${{ github.head_ref }}

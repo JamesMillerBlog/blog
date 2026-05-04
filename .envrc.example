@@ -34,6 +34,9 @@ export ASSETS_DOMAIN="your-assets-cdn-domain"
 # Terraform state bucket name (S3)
 export TF_STATE_BUCKET="your-terraform-state-bucket-name"
 
+# GitHub repo for the content
+export CONTENT_GITHUB_REPO="your-org/your-content-repo"
+
 # ntfy.sh topic for Claude Code notifications (https://ntfy.sh)
 # Treat as a secret — topic is your auth. Use a cryptographically random value.
 export NTFY_TOPIC="your-unique-ntfy-topic"

@@ -96,10 +96,21 @@ is_design_path() {
 
 is_quality_path() {
   case "$1" in
-    *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.yml|*.yaml|*.sh|*.tf|*.tfvars|Dockerfile|docker-compose*|package.json|pnpm-workspace.yaml|*.mdx|*.css)
+    *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.yml|*.yaml|*.sh|Dockerfile|docker-compose*)
       return 0
       ;;
     scripts/*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+is_app_code_path() {
+  case "$1" in
+    *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs)
       return 0
       ;;
     *)
@@ -114,6 +125,7 @@ has_high_risk=false
 has_frontend=false
 has_design=false
 has_infra=false
+has_app_code=false
 
 while IFS= read -r file; do
   [ -z "$file" ] && continue
@@ -136,6 +148,10 @@ while IFS= read -r file; do
 
   if is_quality_path "$file" && ! is_docs_only_path "$file"; then
     printf '%s\n' "$file" >>"$quality_files"
+  fi
+
+  if is_app_code_path "$file"; then
+    has_app_code=true
   fi
 
   if is_frontend_path "$file"; then
@@ -180,6 +196,7 @@ fi
   echo "Changed files: $file_count"
   echo "Changed lines: $diff_lines"
   echo "Large change: $large_change"
+  echo "Has app code: $has_app_code"
   echo "Has frontend files: $has_frontend"
   echo "Has design files: $has_design"
   echo "Has infrastructure files: $has_infra"

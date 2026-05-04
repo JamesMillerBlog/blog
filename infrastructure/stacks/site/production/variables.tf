@@ -28,6 +28,11 @@ variable "github_repo" {
   description = "GitHub repository in org/repo format"
 }
 
+variable "content_github_repo" {
+  type        = string
+  description = "GitHub repo for the content repo in org/repo format"
+}
+
 variable "state_bucket" {
   type        = string
   description = "S3 bucket name used for Terraform remote state (needed to read shared stack outputs)"

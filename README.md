@@ -35,7 +35,7 @@ Personal blog and portfolio for [James Miller](https://jamesmiller.blog).
 - [Terraform](https://developer.hashicorp.com/terraform/install) — if working on infrastructure
 
 ```bash
-brew install direnv pnpm terraform
+brew install direnv pnpm terraform terramate
 ```
 
 Add direnv to your shell (add to `~/.zshrc` then restart your terminal):

@@ -12,11 +12,6 @@ terraform {
     }
   }
 
-  # Partial backend config — bucket and region come from vars/backend.hcl.
-  # Init: terraform init -backend-config=../../vars/backend.hcl
-  backend "s3" {
-    key = "shared/terraform.tfstate"
-  }
 }
 
 provider "aws" {

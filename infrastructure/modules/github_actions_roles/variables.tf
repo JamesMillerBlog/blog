@@ -17,3 +17,8 @@ variable "deploy_bucket_arns" {
   type        = list(string)
   description = "S3 bucket ARNs the deploy role may read or write"
 }
+
+variable "content_github_repo" {
+  type        = string
+  description = "GitHub repo for the content repo in org/repo format (e.g. JamesMillerBlog/blog-content)"
+}

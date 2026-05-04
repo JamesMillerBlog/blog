@@ -11,12 +11,6 @@ terraform {
       version = "~> 5.0"
     }
   }
-
-  # Partial backend config — bucket and region come from vars/backend.hcl,
-  # key is passed per-environment at init time.
-  # Init: terraform init -backend-config=../../vars/backend.hcl \
-  #                      -backend-config="key=site/production/terraform.tfstate"
-  backend "s3" {}
 }
 
 provider "aws" {
@@ -38,7 +32,7 @@ data "terraform_remote_state" "shared" {
 }
 
 module "static_site" {
-  source = "../../modules/static_hosting"
+  source = "../../../modules/static_hosting"
 
   bucket_name           = var.bucket_name
   domain_name           = var.domain_name
@@ -47,11 +41,12 @@ module "static_site" {
 }
 
 module "github_actions_roles" {
-  source = "../../modules/github_actions_roles"
+  source = "../../../modules/github_actions_roles"
 
-  environment       = var.environment
-  github_repo       = var.github_repo
-  oidc_provider_arn = data.terraform_remote_state.shared.outputs.oidc_provider_arn
+  environment         = var.environment
+  github_repo         = var.github_repo
+  content_github_repo = var.content_github_repo
+  oidc_provider_arn   = data.terraform_remote_state.shared.outputs.oidc_provider_arn
   deploy_bucket_arns = [
     data.terraform_remote_state.shared.outputs.posts_bucket_arn,
   ]

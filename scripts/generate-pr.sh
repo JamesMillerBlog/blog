@@ -41,7 +41,6 @@ else
   FALLBACK="Claude failed to create PR. Run manually: gh pr create"
 fi
 
-claude -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" \
-  "${PROMPT_INTRO}
-${PROMPT_STEPS}
-${PROMPT_ACTION}" 2>&1 || echo "$FALLBACK"
+printf '%s\n%s\n%s' "${PROMPT_INTRO}" "${PROMPT_STEPS}" "${PROMPT_ACTION}" \
+  | claude -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" \
+  2>&1 || echo "$FALLBACK"

@@ -22,6 +22,16 @@ locals {
     }
   }
 
+  # Claude role is assumed by the content repo, not the app repo.
+  oidc_assume_condition_claude = {
+    StringEquals = {
+      "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+    }
+    StringLike = {
+      "token.actions.githubusercontent.com:sub" = "repo:${var.content_github_repo}:ref:refs/heads/*"
+    }
+  }
+
   deploy_object_arns = [for bucket_arn in var.deploy_bucket_arns : "${bucket_arn}/*"]
 }
 
@@ -97,7 +107,7 @@ resource "aws_iam_role" "github_actions_claude" {
       Action    = "sts:AssumeRoleWithWebIdentity"
       Effect    = "Allow"
       Principal = { Federated = var.oidc_provider_arn }
-      Condition = local.oidc_assume_condition_deploy
+      Condition = local.oidc_assume_condition_claude
     }]
   })
 }

@@ -16,6 +16,10 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  TERRAMATE_VERSION: "0.12.1"
+  TF_VERSION: "1.9.5"
+
 jobs:
   fmt:
     name: "Terraform Format"
@@ -28,21 +32,26 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: 1.9.5
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terramate
+        run: |
+          curl -fsSL "https://github.com/terramate-io/terramate/releases/download/v${TERRAMATE_VERSION}/terramate_${TERRAMATE_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin terramate
+
+      - name: Terramate Generate Check
+        working-directory: ./infrastructure
+        run: terramate generate --check
 
       - name: Terraform Format
         working-directory: ./infrastructure
-        run: terraform fmt -check -recursive
+        run: terramate run -- terraform fmt -check
 
   shared:
     name: "Terraform Shared"
     runs-on: ubuntu-latest
     environment: production
     needs: fmt
-
-    defaults:
-      run:
-        working-directory: ./infrastructure/stacks/shared
 
     steps:
       - name: Checkout
@@ -57,21 +66,29 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: 1.9.5
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terramate
+        run: |
+          curl -fsSL "https://github.com/terramate-io/terramate/releases/download/v${TERRAMATE_VERSION}/terramate_${TERRAMATE_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin terramate
+
+      - name: Terramate Generate
+        working-directory: ./infrastructure
+        run: terramate generate
 
       - name: Terraform Init
         env:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
-        run: |
-          terraform init \
-            -backend-config="bucket=${TF_STATE_BUCKET}" \
-            -backend-config="region=eu-west-2"
+        working-directory: ./infrastructure/stacks/shared
+        run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
 
       - name: Terraform Plan
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        working-directory: ./infrastructure/stacks/shared
         run: terraform plan -input=false -var-file=../../vars/shared/shared.tfvars -out=tfplan
 
       - name: Terraform Apply
@@ -80,21 +97,15 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        working-directory: ./infrastructure/stacks/shared
         run: terraform apply -auto-approve tfplan
 
-  site:
-    name: "Terraform Site (${{ matrix.environment_name }})"
+  staging:
+    name: "Terraform Site (staging)"
     runs-on: ubuntu-latest
-    environment: ${{ matrix.environment_name }}
+    environment: staging
     needs: shared
-    if: github.event_name == 'pull_request' || (matrix.environment_name == 'staging' && inputs.staging) || (matrix.environment_name == 'production' && inputs.production)
-    strategy:
-      matrix:
-        environment_name: [production, staging]
-
-    defaults:
-      run:
-        working-directory: ./infrastructure/stacks/site
+    if: inputs.staging
 
     steps:
       - name: Checkout
@@ -109,26 +120,28 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: 1.9.5
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terramate
+        run: |
+          curl -fsSL "https://github.com/terramate-io/terramate/releases/download/v${TERRAMATE_VERSION}/terramate_${TERRAMATE_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin terramate
 
       - name: Terraform Init
         env:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
-          ENVIRONMENT: ${{ matrix.environment_name }}
-        run: |
-          terraform init \
-            -backend-config="bucket=${TF_STATE_BUCKET}" \
-            -backend-config="region=eu-west-2" \
-            -backend-config="key=site/${ENVIRONMENT}/terraform.tfstate"
+        working-directory: ./infrastructure/stacks/site/staging
+        run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
 
       - name: Terraform Plan
         env:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
-          ENVIRONMENT: ${{ matrix.environment_name }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file="../../vars/site/${ENVIRONMENT}.tfvars" -out=tfplan
+          TF_VAR_content_github_repo: ${{ secrets.CONTENT_GITHUB_REPO }}
+        working-directory: ./infrastructure/stacks/site/staging
+        run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file=../../../vars/site/staging.tfvars -out=tfplan
 
       - name: Terraform Apply
         if: github.event_name == 'workflow_dispatch'
@@ -137,4 +150,60 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_content_github_repo: ${{ secrets.CONTENT_GITHUB_REPO }}
+        working-directory: ./infrastructure/stacks/site/staging
+        run: terraform apply -auto-approve tfplan
+
+  production:
+    name: "Terraform Site (production)"
+    runs-on: ubuntu-latest
+    environment: production
+    needs: shared
+    if: inputs.production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terramate
+        run: |
+          curl -fsSL "https://github.com/terramate-io/terramate/releases/download/v${TERRAMATE_VERSION}/terramate_${TERRAMATE_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin terramate
+
+      - name: Terraform Init
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        working-directory: ./infrastructure/stacks/site/production
+        run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
+
+      - name: Terraform Plan
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_content_github_repo: ${{ secrets.CONTENT_GITHUB_REPO }}
+        working-directory: ./infrastructure/stacks/site/production
+        run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file=../../../vars/site/production.tfvars -out=tfplan
+
+      - name: Terraform Apply
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_content_github_repo: ${{ secrets.CONTENT_GITHUB_REPO }}
+        working-directory: ./infrastructure/stacks/site/production
         run: terraform apply -auto-approve tfplan

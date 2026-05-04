@@ -23,7 +23,6 @@ jobs:
 
   deploy:
     needs: validate
-    timeout-minutes: 30
     uses: ./.github/workflows/deploy-site.yml
     with:
       deployment_environment: ${{ github.event.client_payload.environment }}

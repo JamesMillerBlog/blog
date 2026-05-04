@@ -46,12 +46,6 @@ echo "║  ✓  AI security review verified for this commit.    ║"
 echo "╚──────────────────────────────────────────────────────╝"
 echo ""
 
-# Update documentation surgically if structural changes are detected.
-# Skip with SKIP_DOCS_UPDATE=1
-if [ -z "$SKIP_DOCS_UPDATE" ]; then
-  ./scripts/update-docs.sh
-fi
-
 echo "──────────────────────────────────────────────────────"
 echo " 🚀 Push in progress..."
 echo " To auto-generate your PR description after push, run:"

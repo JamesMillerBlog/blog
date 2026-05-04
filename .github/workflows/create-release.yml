@@ -111,9 +111,9 @@ jobs:
           CHANGES=$(tail -n +3 /tmp/new_entry.txt)
           PR_BODY="Merging this PR will tag \`${TAG}\` and publish a GitHub Release.
 
-### Changes since ${PREVIOUS}
+          ### Changes since ${PREVIOUS}
 
-${CHANGES}"
+          ${CHANGES}"
 
           gh pr create \
             --title "Release ${TAG}" \

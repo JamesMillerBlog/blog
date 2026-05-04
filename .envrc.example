@@ -45,3 +45,7 @@ export NTFY_TOPIC="your-unique-ntfy-topic"
 # Required when running Claude Code inside the dev container — the worktree .git file
 # points to this path, which must be mounted for git to work inside the container.
 export BLOG_GIT_DIR="../Blog/.git"
+
+# Claude credentials file path (used when running Claude Code inside Docker)
+# Overrides the default ~/.claude/.credentials.json location.
+export CLAUDE_CREDENTIALS_FILE="${HOME}/.claude/.credentials.json"

@@ -35,7 +35,8 @@
     "claude": "sh scripts/claude.sh",
     "claude:fresh": "docker compose build && pnpm claude",
     "pr:generate": "./scripts/generate-pr.sh",
-    "push": "git push -u origin HEAD && ./scripts/generate-pr.sh"
+    "push": "git push -u origin HEAD && ./scripts/generate-pr.sh",
+    "push:force": "git push --force-with-lease -u origin HEAD && ./scripts/generate-pr.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

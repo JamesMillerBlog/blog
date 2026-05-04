@@ -10,4 +10,3 @@ services:
     environment:
       - ANTHROPIC_MODEL=claude-sonnet-4-6
       - NTFY_TOPIC=${NTFY_TOPIC}
-    command: --dangerously-skip-permissions

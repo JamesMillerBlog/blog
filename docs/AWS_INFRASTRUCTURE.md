@@ -12,10 +12,13 @@ The blog uses a fully serverless, statically hosted architecture split into shar
 
 ## 2. GitHub Actions IAM Role
 
-The `github_actions_roles` module grants GitHub Actions permission to:
+The `github_actions_roles` module in site stacks grants the app repo's GitHub Actions permission to:
 
 - Deploy to R2 buckets and purge Cloudflare cache
 - Sync posts to the S3 bucket
+
+The shared stack creates a separate `github_actions_content_claude` role that the content repo's GitHub Actions assumes to:
+
 - Invoke Bedrock Claude for AI features (cross-region inference profiles via us-east-1/us-west-2)
 
 ## 3. Terraform Layout
@@ -69,9 +72,9 @@ infrastructure/
 
 Stacks are managed with [Terramate](https://terramate.io), which handles stack ordering, backend config generation, and orchestration.
 
-`shared` owns the assets/posts infrastructure and the GitHub OIDC provider.
+`shared` owns the assets/posts infrastructure, the GitHub OIDC provider, and the content repo's Bedrock Claude IAM role.
 
-`site/staging` and `site/production` own the environment-specific blog site infrastructure and environment-scoped IAM roles. Both depend on `shared` and will always run after it.
+`site/staging` and `site/production` own the environment-specific blog site infrastructure and the app repo's IAM deploy role. Both depend on `shared` and will always run after it.
 
 The site stacks read outputs from `shared` via `terraform_remote_state`, so `shared` must be applied first — Terramate enforces this ordering automatically.
 

@@ -43,10 +43,9 @@ module "static_site" {
 module "github_actions_roles" {
   source = "../../../modules/github_actions_roles"
 
-  environment         = var.environment
-  github_repo         = var.github_repo
-  content_github_repo = var.content_github_repo
-  oidc_provider_arn   = data.terraform_remote_state.shared.outputs.oidc_provider_arn
+  environment       = var.environment
+  github_repo       = var.github_repo
+  oidc_provider_arn = data.terraform_remote_state.shared.outputs.oidc_provider_arn
   deploy_bucket_arns = [
     data.terraform_remote_state.shared.outputs.posts_bucket_arn,
   ]

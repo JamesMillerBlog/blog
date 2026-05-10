@@ -22,16 +22,6 @@ locals {
     }
   }
 
-  # Claude role is assumed by the content repo, not the app repo.
-  oidc_assume_condition_claude = {
-    StringEquals = {
-      "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-    }
-    StringLike = {
-      "token.actions.githubusercontent.com:sub" = "repo:${var.content_github_repo}:ref:refs/heads/*"
-    }
-  }
-
   deploy_object_arns = [for bucket_arn in var.deploy_bucket_arns : "${bucket_arn}/*"]
 }
 
@@ -96,45 +86,3 @@ resource "aws_iam_role_policy" "deploy_policy" {
   })
 }
 
-# Dedicated role for workflows that invoke Claude via Bedrock.
-# Kept separate from the deploy role so S3 deployments never carry model access.
-resource "aws_iam_role" "github_actions_claude" {
-  name = "github-actions-${var.environment}-claude-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action    = "sts:AssumeRoleWithWebIdentity"
-      Effect    = "Allow"
-      Principal = { Federated = var.oidc_provider_arn }
-      Condition = local.oidc_assume_condition_claude
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "claude_policy" {
-  name = "github-actions-${var.environment}-claude-policy"
-  role = aws_iam_role.github_actions_claude.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "BedrockClaudeAccess"
-        Effect = "Allow"
-        Action = [
-          "bedrock:InvokeModel",
-          "bedrock:InvokeModelWithResponseStream",
-        ]
-        # Cross-region inference profiles route eu-west-2 calls through us-east-1/us-west-2.
-        # Pin to explicit versioned model IDs — update here when upgrading models.
-        Resource = [
-          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
-          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0",
-          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
-          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0",
-        ]
-      },
-    ]
-  })
-}

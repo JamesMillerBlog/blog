@@ -17,3 +17,8 @@ output "posts_bucket_arn" {
   description = "Shared posts S3 bucket ARN"
   value       = module.content_hosting.bucket_arn
 }
+
+output "content_claude_role_arn" {
+  description = "ARN of the shared IAM role assumed by blog-content CI for Bedrock access"
+  value       = aws_iam_role.github_actions_content_claude.arn
+}

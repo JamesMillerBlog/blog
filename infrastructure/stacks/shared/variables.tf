@@ -32,3 +32,8 @@ variable "cloudflare_zone_id" {
   type        = string
   description = "Cloudflare zone ID for jamesmiller.blog"
 }
+
+variable "content_github_repo" {
+  type        = string
+  description = "GitHub repo for the blog content repo in org/repo format (e.g. JamesMillerBlog/blog-content)"
+}

@@ -15,7 +15,7 @@ export function PostCard({
     <Link href={`/posts/${post.slug}`} className="block h-full">
       <article
         className={`group h-full flex flex-col bg-surface-container-lowest rounded-xl overflow-hidden hover:scale-[1.02] transition-all duration-300 ${
-          variant === 'default' ? 'border border-outline-variant/10 hover:shadow-lg' : ''
+          variant === 'default' ? 'bg-surface-container hover:shadow-lg' : ''
         }`}
         style={
           variant === 'glow'

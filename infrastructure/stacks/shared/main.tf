@@ -60,6 +60,18 @@ resource "aws_iam_role_policy" "content_claude_policy" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "PostsBucketWrite"
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:DeleteObject",
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.posts_bucket_name}",
+          "arn:aws:s3:::${var.posts_bucket_name}/*",
+        ]
+      },
+      {
         Sid    = "BedrockClaudeAccess"
         Effect = "Allow"
         Action = [

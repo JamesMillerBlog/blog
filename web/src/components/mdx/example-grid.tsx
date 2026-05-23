@@ -22,7 +22,6 @@ export function ExampleCard({ src, alt, title, href, children }: CardProps) {
       className="flex flex-col rounded-lg overflow-hidden"
       style={{
         backgroundColor: 'var(--color-surface-container)',
-        border: '1px solid color-mix(in srgb, var(--color-outline-variant), transparent 80%)',
       }}
     >
       <figure className="h-[32rem] overflow-hidden m-0 p-0">

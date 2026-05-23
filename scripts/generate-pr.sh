@@ -27,7 +27,8 @@ PROMPT_STEPS="Steps:
 2. Run: git log main...HEAD --oneline
 3. Run: git diff main...HEAD --stat
 4. Generate: concise summary of changes, and a mermaid diagram of affected components/files
-5. Fill the template sections (Summary, Changes, Architecture, Test Plan)"
+5. Fill the template sections (Summary, Changes, Architecture, Test Plan)
+Note: PR title must follow conventional commits — start with feat:, fix:, chore:, docs:, refactor:, perf:, or test:"
 
 if [[ -n "$PR_NUMBER" ]]; then
   echo "-> Requesting Claude to update PR #$PR_NUMBER..."
@@ -36,7 +37,7 @@ if [[ -n "$PR_NUMBER" ]]; then
   FALLBACK="Claude failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
 else
   echo "-> Requesting Claude to create PR for branch ${BRANCH}..."
-  PROMPT_ACTION="6. Run: gh pr create --title '<short title from commits>' --body '<filled template content>'"
+  PROMPT_ACTION="6. Run: gh pr create --title '<conventional commit title: must start with feat:|fix:|chore:|docs:|refactor:|perf:|test: followed by short description>' --body '<filled template content>'"
   PROMPT_INTRO="Create a PR for branch: ${BRANCH}."
   FALLBACK="Claude failed to create PR. Run manually: gh pr create"
 fi

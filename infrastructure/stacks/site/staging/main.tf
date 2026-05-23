@@ -40,6 +40,34 @@ module "static_site" {
   cloudflare_zone_id    = var.cloudflare_zone_id
 }
 
+resource "cloudflare_workers_script" "site_auth" {
+  account_id  = var.cloudflare_account_id
+  script_name = "blog-site-auth"
+  content     = file("${path.module}/auth.js")
+  main_module = "auth.js"
+
+  compatibility_date = "2024-01-01"
+
+  bindings = [
+    {
+      name = "USERNAME"
+      type = "secret_text"
+      text = var.basic_auth_username
+    },
+    {
+      name = "PASSWORD"
+      type = "secret_text"
+      text = var.basic_auth_password
+    }
+  ]
+}
+
+resource "cloudflare_workers_route" "site_auth" {
+  zone_id = var.cloudflare_zone_id
+  pattern = "${var.domain_name}/*"
+  script  = cloudflare_workers_script.site_auth.id
+}
+
 module "github_actions_roles" {
   source = "../../../modules/github_actions_roles"
 

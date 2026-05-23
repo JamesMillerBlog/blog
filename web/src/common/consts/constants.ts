@@ -1,3 +1,8 @@
+export const BRAND_COLOR_PRIMARY = '#00675d'
+export const BRAND_COLOR_SECONDARY = '#a02d70'
+export const BRAND_COLOR_TERTIARY = '#6b3fa0'
+export const BRAND_GRADIENT = `linear-gradient(90deg, ${BRAND_COLOR_PRIMARY}, ${BRAND_COLOR_SECONDARY}, ${BRAND_COLOR_TERTIARY}, ${BRAND_COLOR_PRIMARY})`
+
 export const SITE_NAME = 'James Miller'
 export const SITE_DESCRIPTION = 'Creative Technology Blog - WebXR, Serverless, AWS, and more'
 export const SITE_URL = 'https://jamesmiller.blog'

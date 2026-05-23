@@ -35,5 +35,5 @@ variable "cloudflare_zone_id" {
 
 variable "content_github_repo" {
   type        = string
-  description = "GitHub repo for the blog content repo in org/repo format (e.g. JamesMillerBlog/blog-content)"
+  description = "GitHub repo for the blog content repo in org/repo format"
 }

@@ -19,7 +19,7 @@ The `github_actions_roles` module in site stacks grants the app repo's GitHub Ac
 
 The shared stack creates a separate `github_actions_content_claude` role that the content repo's GitHub Actions assumes to:
 
-- Invoke Bedrock Claude for AI features (cross-region inference profiles via us-east-1/us-west-2)
+- Invoke Bedrock Claude for AI features (EU cross-region inference profiles: eu-west-2 and eu-central-1)
 
 ## 3. Terraform Layout
 

@@ -7,14 +7,13 @@ interface ImageLoaderProps {
 }
 
 export default function assetImageLoader({ src, width, quality }: ImageLoaderProps): string {
-  // Absolute URLs (e.g. external images) pass through unchanged
   if (src.startsWith('http://') || src.startsWith('https://')) {
-    return src
+    return `${src}${src.includes('?') ? '&' : '?'}w=${width}`
   }
 
   // In development, serve from local public folder
   if (process.env.NODE_ENV === 'development') {
-    return src
+    return `${src}?w=${width}`
   }
 
   const q = quality ?? 75

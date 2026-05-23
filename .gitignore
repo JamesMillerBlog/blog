@@ -75,3 +75,4 @@ infrastructure/**/terraform.rc
 # Copy the .example files and fill in your values.
 .envrc
 infrastructure/vars/backend.hcl
+package-lock.json

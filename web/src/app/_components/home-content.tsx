@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useState } from 'react'
 import { HeroSection } from './hero-section'
-import { FeaturedPosts } from './featured-posts'
 import { TagCloudSection } from './tag-cloud-section'
 import { FilteredPostGrid } from './filtered-post-grid'
+import { WordFilteredPosts } from './word-filtered-posts'
 import { Post } from '@/types/post'
 
 type Props = {
@@ -13,29 +14,49 @@ type Props = {
 }
 
 export function HomeContent({ allPosts, featuredTags }: Props) {
-  const [selectedTag, setSelectedTag] = useState('All')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [heroWord, setHeroWord] = useState('software')
+  const [optimisticTag, setOptimisticTag] = useState<string | null>(null)
 
-  const featuredPost = allPosts[0]
-  const secondaryPosts = allPosts.slice(1, 3)
-  const morePosts = allPosts.slice(3)
+  const routerTag = searchParams.get('tag') ?? 'Everything'
+  const selectedTag = optimisticTag ?? routerTag
 
-  function handleTagSelect(tag: string) {
-    setSelectedTag(tag)
-  }
+  const handleTagSelect = useCallback(
+    (tag: string) => {
+      setOptimisticTag(tag)
+      if (tag !== 'Everything') setHeroWord('software')
+      const params = new URLSearchParams(searchParams.toString())
+      if (tag === 'Everything') {
+        params.delete('tag')
+      } else {
+        params.set('tag', tag)
+      }
+      params.delete('page')
+      router.replace(`/?${params.toString()}`, { scroll: false })
+    },
+    [router, searchParams]
+  )
 
   return (
     <>
-      <HeroSection />
-      <FeaturedPosts featuredPost={featuredPost} secondaryPosts={secondaryPosts} />
+      <HeroSection
+        word={heroWord}
+        onWordChange={(word) => {
+          setHeroWord(word)
+          handleTagSelect('Everything')
+        }}
+      />
       <TagCloudSection
         tags={featuredTags}
-        posts={morePosts}
+        posts={allPosts}
         selectedTag={selectedTag}
         onTagSelect={handleTagSelect}
       />
-      {morePosts.length > 0 && (
+      {selectedTag === 'Everything' && <WordFilteredPosts posts={allPosts} word={heroWord} />}
+      {allPosts.length > 0 && (
         <FilteredPostGrid
-          posts={morePosts}
+          posts={allPosts}
           selectedTag={selectedTag}
           onTagSelect={handleTagSelect}
         />

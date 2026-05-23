@@ -1,8 +1,7 @@
 export const ui = {
   nav: {
-    play: 'Play',
-    work: 'Work',
-    hard: 'Hard',
+    posts: 'Posts',
+    projects: 'Projects',
     logoAlt: 'James Miller Logo',
     searchLabel: 'Search',
     toggleTheme: 'Toggle theme',
@@ -20,31 +19,11 @@ export const ui = {
   },
 
   home: {
-    hero: {
-      badge: 'HELLO, WORLD',
-      heading: "I'm James Miller.",
-      body: {
-        intro: 'This blog is a space for',
-        explore: 'exploration of',
-        midText: '- ideas, experiments, and thinking on how to',
-        thenText: ', then',
-        andText: 'and',
-        creative: 'creative',
-        technology: 'technology',
-        solveProblems: 'solve problems',
-        ship: 'ship',
-        products: 'products',
-        build: 'build',
-        experiences: 'experiences',
-      },
-    },
-    featuredPosts: {
-      badge: 'Featured',
-      secondaryBadges: ['Thought', 'Guide'] as const,
+    wordPosts: {
+      postsAbout: (word: string) => `Posts about ${word}`,
     },
     tagCloud: {
-      heading: 'Explore Topics',
-      subheading: "Filter by what you're curious about",
+      heading: 'What are you curious about?',
     },
     postGrid: {
       empty: 'No articles found for the selected tag.',
@@ -59,10 +38,9 @@ export const ui = {
   },
 
   projects: {
-    heading: 'Built &',
-    headingEmphasis: 'Shipped',
+    heading: "Things I've",
     description:
-      'Over ten years of building products and experiences, each one powered by the technology that made it possible.',
+      'A decade of products and experiments across web, AI, extended reality, and connected hardware.',
     empty: 'No projects found for the selected category.',
   },
 

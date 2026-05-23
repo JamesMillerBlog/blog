@@ -66,22 +66,30 @@ resource "aws_iam_role_policy" "content_claude_policy" {
           "bedrock:InvokeModel",
           "bedrock:InvokeModelWithResponseStream",
         ]
-        # Cross-region inference profiles route eu-west-2 calls through us-east-1/us-west-2.
-        # Pin to explicit versioned model IDs — update here when upgrading models.
-        # Include both foundation-model ARNs and inference-profile ARNs (required for cross-region profiles).
+        # CI runner is in eu-west-2 — use EU cross-region inference profiles.
+        # Both foundation-model and inference-profile ARNs are required for cross-region profiles.
+        # Update model IDs here when upgrading; match ANTHROPIC_DEFAULT_*_MODEL in workflow files.
         Resource = [
-          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
-          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0",
-          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
-          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0",
-          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-6",
-          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-6",
-          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
-          "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
-          "arn:aws:bedrock:us-east-1:*:inference-profile/us.anthropic.claude-sonnet-4-6",
-          "arn:aws:bedrock:us-west-2:*:inference-profile/us.anthropic.claude-sonnet-4-6",
-          "arn:aws:bedrock:us-east-1:*:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0",
-          "arn:aws:bedrock:us-west-2:*:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0",
+          # Claude 3.5 Sonnet v2 — EU cross-region
+          "arn:aws:bedrock:eu-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
+          "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
+          "arn:aws:bedrock:eu-west-2:*:inference-profile/eu.anthropic.claude-3-5-sonnet-20241022-v2:0",
+          "arn:aws:bedrock:eu-central-1:*:inference-profile/eu.anthropic.claude-3-5-sonnet-20241022-v2:0",
+          # Claude 3.5 Haiku v1 — EU cross-region
+          "arn:aws:bedrock:eu-west-2::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0",
+          "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0",
+          "arn:aws:bedrock:eu-west-2:*:inference-profile/eu.anthropic.claude-3-5-haiku-20241022-v1:0",
+          "arn:aws:bedrock:eu-central-1:*:inference-profile/eu.anthropic.claude-3-5-haiku-20241022-v1:0",
+          # Claude Sonnet 4 (4-5-20250929) — EU cross-region
+          "arn:aws:bedrock:eu-west-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "arn:aws:bedrock:eu-west-2:*:inference-profile/eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "arn:aws:bedrock:eu-central-1:*:inference-profile/eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          # Claude Haiku 4 (4-5-20251001) — EU cross-region
+          "arn:aws:bedrock:eu-west-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
+          "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
+          "arn:aws:bedrock:eu-west-2:*:inference-profile/eu.anthropic.claude-haiku-4-5-20251001-v1:0",
+          "arn:aws:bedrock:eu-central-1:*:inference-profile/eu.anthropic.claude-haiku-4-5-20251001-v1:0",
         ]
       },
     ]

@@ -4,15 +4,17 @@ import DateFormatter from '@/components/ui/date-formatter'
 import { PostTitle } from '@/components/ui/post-title'
 import { type Author } from '@/types/author'
 import { ui } from '@/i18n/en'
+import { ClockIcon } from 'lucide-react'
 
 type Props = {
   title: string
   coverImage: string
   date: string
   author: Author
+  readingTime: number
 }
 
-export function PostHeader({ title, coverImage, date, author }: Props) {
+export function PostHeader({ title, coverImage, date, author, readingTime }: Props) {
   return (
     <header className="max-w-[980px] mx-auto mb-16">
       <div className="mb-8">
@@ -28,6 +30,11 @@ export function PostHeader({ title, coverImage, date, author }: Props) {
           <span className="text-primary">
             <DateFormatter dateString={date} />
           </span>
+        </div>
+        <div className="w-px h-8 bg-outline-variant/30 hidden sm:block"></div>
+        <div className="text-sm font-headline font-semibold text-on-surface-variant flex items-center gap-2">
+          <ClockIcon className="w-4 h-4 opacity-70" />
+          <span>{readingTime} min read</span>
         </div>
       </div>
 

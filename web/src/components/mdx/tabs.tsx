@@ -22,7 +22,7 @@ export function Tabs({ children }: TabsProps) {
   const [activeIndex, setActiveIndex] = useState(0)
 
   return (
-    <div className="my-6 overflow-hidden rounded-xl border border-outline-variant/20">
+    <div className="my-6 overflow-hidden rounded-xl">
       <div className="flex gap-1 bg-surface-container-low p-1">
         {tabs.map((tab, i) => (
           <button

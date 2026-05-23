@@ -97,7 +97,7 @@ export function InlineTableOfContents() {
   if (headings.length === 0) return null
 
   return (
-    <nav className="xl:hidden mb-10 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest overflow-hidden font-headline">
+    <nav className="xl:hidden mb-10 rounded-2xl bg-surface-container-lowest overflow-hidden font-headline">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between px-5 py-4 text-sm font-bold text-on-surface"

@@ -19,7 +19,7 @@ export function RelatedPosts({ posts }: Props) {
           <Link
             key={post.slug}
             href={`/posts/${post.slug}`}
-            className="group overflow-hidden rounded-xl border border-outline-variant/10 bg-surface-container-lowest transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+            className="group overflow-hidden rounded-xl bg-surface-container-lowest transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
           >
             <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
               {post.coverImage ? (

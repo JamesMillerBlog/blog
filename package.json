@@ -1,5 +1,8 @@
 {
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"]
+  },
   "scripts": {
     "prepare": "husky",
     "dev": "pnpm --dir web dev",

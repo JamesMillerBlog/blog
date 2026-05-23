@@ -22,8 +22,13 @@ Personal blog and portfolio for [James Miller](https://jamesmiller.blog).
 ├── scripts/              # Asset and local content helper scripts
 ├── docs/                 # AI workflow documentation
 ├── .claude/              # Claude Code config and custom commands
+├── .pi/                  # pi (fallback AI harness) config and extensions
+├── Dockerfile            # Claude Code Docker image
+├── Dockerfile.pi         # pi Docker image
+├── docker/               # Docker config files (claude-settings, pi-settings)
 ├── AGENTS.md             # AI agent instructions
-└── CLAUDE.md             # Claude Code project config
+├── CLAUDE.md             # Claude Code project config
+└── .envrc.example        # Environment variables template
 ```
 
 ## Getting Started
@@ -113,7 +118,18 @@ Useful scripts:
 pnpm dev        # Development server
 pnpm build      # Production build
 pnpm test       # Run unit tests (vitest)
+pnpm claude     # Claude Code (primary AI harness, Docker)
+pnpm pi         # pi (fallback AI harness, Docker)
 ```
+
+## AI Tools
+
+This repo supports two AI coding assistants:
+
+- **Claude Code** (`pnpm claude`) — primary harness using your Claude Pro subscription
+- **pi** (`pnpm pi`) — fallback harness using OpenCode Go (DeepSeek, Kimi, etc.)
+
+Both run in Docker with full tool access. See `docs/DOCKER.md` for details.
 
 ## Design System
 

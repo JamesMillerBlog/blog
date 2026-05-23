@@ -1,0 +1,19 @@
+{
+  "defaultProvider": "opencode-go",
+  "defaultModel": "deepseek-v4-pro",
+  "skills": [
+    ".agents/skills"
+  ],
+  "enabledModels": [
+    "opencode-go/*"
+  ],
+  "packages": [
+    "npm:pi-multiagent",
+    "npm:pi-gh-cli",
+    "npm:pi-powerline-footer"
+  ],
+  "compaction": {
+    "reserveTokens": 16384,
+    "keepRecentTokens": 20000
+  }
+}

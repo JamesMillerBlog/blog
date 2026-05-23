@@ -1,20 +1,51 @@
-# Running Claude in Docker
+# Running AI Tools in Docker
 
-Runs Claude Code with `--dangerously-skip-permissions` (no prompts, full tool access) inside a sandboxed container. Claude can only reach `/workspace` (repo mount) and `/home/claude` (named volume). Non-root `claude` user adds a second layer.
+Two AI coding assistants are available via Docker, both running with full tool access inside a sandboxed container. The container boundary is the primary isolation — neither tool can reach host paths outside `/workspace` (repo mount) and the tool's home directory (`/home/claude` or `/home/pi`).
 
-**Trust model:** `docker/claude-settings.json` grants `Bash(*)` with no restrictions — arbitrary command execution inside the container is intentional for an AI coding agent. The container boundary is the primary isolation. Do not mount sensitive host paths or directories outside the repo.
+## Claude Code
+
+Runs Claude with `--dangerously-skip-permissions` (no prompts, full tool access). Claude can only reach `/workspace` and `/home/claude`.
+
+**Trust model:** `docker/claude-settings.json` grants `Bash(*)` with no restrictions — arbitrary command execution inside the container is intentional for an AI coding agent.
 
 **Known limitation:** The pre-commit hook passes `$DIFF` content to Claude with `--allowedTools` restricted, but staged content is developer-controlled and can contain adversarial text. This is an architectural constraint of LLM-based git hooks, not a configuration error.
 
-## Usage
+### Usage
 
 ```bash
-docker compose up                                          # interactive session
-docker compose run --rm claude                            # one-off, no persist
-ANTHROPIC_MODEL=claude-opus-4-7 docker compose run --rm claude  # override model
+pnpm claude                              # interactive session
+pnpm claude:fresh                        # rebuild image then interactive
+ANTHROPIC_MODEL=claude-opus-4-7 pnpm claude  # override model
 ```
 
 Default model: `claude-sonnet-4-6` (set in `docker-compose.yml`).
+
+## Pi
+
+Runs pi in Docker with the same sandboxed approach. Pi can only reach `/workspace` and `/home/pi`.
+
+### Usage
+
+```bash
+pnpm pi                                  # interactive session (default: opencode-go/deepseek-v4-flash)
+pnpm pi:fresh                            # rebuild image then interactive
+docker compose run --rm pi --model google  # use Gemini model
+docker compose run --rm pi -p "list all TypeScript files"  # one-shot prompt
+```
+
+Inside pi, use `/model` or Ctrl+L to switch models interactively.
+
+### Available Models
+
+Pi has built-in support for these providers (auth via env vars or `/login` in interactive mode):
+
+| Provider | Auth | Models |
+|----------|------|--------|
+| OpenCode Go | `OPENCODE_API_KEY` env var | DeepSeek V4 Flash/Pro, Kimi K2.5/2.6, MiniMax M2.5/2.7, GLM |
+| Google Gemini | `GEMINI_API_KEY` env var | Gemini 2.5 Pro/Flash |
+| OpenAI Codex | `/login openai` (ChatGPT Plus/Pro) | GPT-4o, o-series |
+| DeepSeek | `DEEPSEEK_API_KEY` env var | DeepSeek V3, R1 |
+| OpenRouter | `OPENROUTER_API_KEY` env var | Many models via routing |
 
 ## Git Worktrees
 
@@ -22,23 +53,27 @@ When running inside a git worktree, set `$BLOG_GIT_DIR` to the main repo's `.git
 
 ```bash
 BLOG_GIT_DIR=$(git rev-parse --git-common-dir) pnpm claude
+BLOG_GIT_DIR=$(git rev-parse --git-common-dir) pnpm pi
 ```
 
-`pnpm claude` mounts it read-only when the variable is set.
+Both `pnpm claude` and `pnpm pi` mount the `.git` directory read-only when the variable is set.
 
 ## Persistence
 
-Host mounts persist `~/.claude/` (memory and settings) across restarts:
-- `${HOME}/.claude` — mounted at `/home/claude/.claude` (memory, preferences)
-- `${HOME}/.claude.json` — mounted at `/home/claude/.claude.json` (if it exists)
+Host mounts persist credentials and settings across restarts:
+- **Claude:** `${HOME}/.claude` → `/home/claude/.claude`, `${HOME}/.claude.json` → `/home/claude/.claude.json`
+- **Pi:** `${HOME}/.pi` → `/home/pi/.pi` (settings, auth, sessions)
 
-The image ships a default `~/.claude/settings.json` at build time; host mounts override it if present. Repo changes are live in both directions.
+The images ship default settings at build time; host mounts override them if present. Repo changes are live in both directions.
 
-## API Key
+## API Keys
+
+Set API keys via environment variables (compose inherits from host env):
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-docker compose up
+export OPENCODE_API_KEY=sk-...
+export GEMINI_API_KEY=...
+pnpm pi
 ```
 
-Compose inherits from host env. Do not add to `docker-compose.yml` — it's committed.
+Do not add keys to `docker-compose.yml` — it's committed to git.

@@ -1,8 +1,0 @@
-name = "infrastructure"
-description = "Manages Terraform and AWS infrastructure configurations"
-
-developer_instructions = """
-You specialize in infrastructure as code with Terraform and AWS.
-
-Read `.agents/skills/infrastructure.md` before starting work. That file is the authoritative source for file locations, workflow, and rules.
-"""

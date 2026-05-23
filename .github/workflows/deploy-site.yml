@@ -116,6 +116,18 @@ jobs:
             --cache-control "public, max-age=86400" \
             --delete
 
+      - name: Sync site assets to assets CDN
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ''
+          R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          aws s3 sync out/assets/ s3://assets-jamesmiller-blog/assets/ \
+            --endpoint-url ${R2_ENDPOINT} \
+            --region auto \
+            --cache-control "public, max-age=86400"
+
       - name: Purge Cloudflare cache
         env:
           CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}

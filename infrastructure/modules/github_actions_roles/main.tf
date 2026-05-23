@@ -1,24 +1,33 @@
 locals {
-  # Restricts infra role (AdministratorAccess) to branch refs within this repo only.
-  # Blocks fork pull requests (their sub uses "pull_request", not "ref:refs/heads/…").
+  # Restricts infra role (AdministratorAccess) to branch refs and named environments
+  # within this repo only. infra-deploy.yml jobs specify `environment:`, which changes
+  # the sub claim from "ref:refs/heads/…" to "environment:<name>", so both patterns
+  # are required. Fork pull requests use "pull_request" and match neither.
   oidc_assume_condition_infra = {
     StringEquals = {
       "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
     }
     StringLike = {
-      "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/*"
+      "token.actions.githubusercontent.com:sub" = [
+        "repo:${var.github_repo}:ref:refs/heads/*",
+        "repo:${var.github_repo}:environment:*",
+      ]
     }
   }
 
-  # Deploy role is assumed by workflow_dispatch and repository_dispatch runs on
-  # branch refs only. Explicitly excludes fork pull requests whose sub claim
-  # uses "pull_request" rather than "ref:refs/heads/…".
+  # Deploy role is assumed by workflow_dispatch runs. When a job specifies
+  # `environment:`, GitHub changes the sub claim from "ref:refs/heads/…" to
+  # "environment:<name>", so both patterns must be allowed. Fork pull requests
+  # use "pull_request" in the sub and match neither pattern, so they are blocked.
   oidc_assume_condition_deploy = {
     StringEquals = {
       "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
     }
     StringLike = {
-      "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/*"
+      "token.actions.githubusercontent.com:sub" = [
+        "repo:${var.github_repo}:ref:refs/heads/*",
+        "repo:${var.github_repo}:environment:*",
+      ]
     }
   }
 

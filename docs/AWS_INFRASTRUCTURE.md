@@ -17,6 +17,8 @@ The `github_actions_roles` module in site stacks grants the app repo's GitHub Ac
 - Deploy to R2 buckets and purge Cloudflare cache
 - Sync posts to the S3 bucket
 
+OIDC assume conditions allow workflow jobs on branch pushes or jobs specifying GitHub Deployments environments (via `environment:` in workflow YAML). Fork pull requests are blocked.
+
 The shared stack creates a separate `github_actions_content_claude` role that the content repo's GitHub Actions assumes to:
 
 - Invoke Bedrock Claude for AI features (EU cross-region inference profiles: eu-west-2 and eu-central-1)

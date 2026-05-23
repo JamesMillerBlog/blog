@@ -12,8 +12,9 @@ export default function (pi: ExtensionAPI) {
         body: "pi done",
         signal: ctx.signal,
       });
-    } catch {
-      // best-effort notification
+    } catch (err) {
+      // best-effort notification — log for debugging, don't throw
+      console.error("pi notification failed:", err);
     }
   });
 }

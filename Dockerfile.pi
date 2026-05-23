@@ -17,9 +17,9 @@ USER pi
 RUN npm install \
       --prefix /home/pi/.pi/agent/npm \
       --no-save \
-      pi-multiagent \
-      pi-gh-cli \
-      pi-powerline-footer
+      pi-multiagent@0.9.0 \
+      pi-gh-cli@0.2.4 \
+      pi-powerline-footer@0.5.4
 USER root
 RUN rm -rf /home/pi/.npm/_cacache && chown -R pi:pi /home/pi/.npm
 

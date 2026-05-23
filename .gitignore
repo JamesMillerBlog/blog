@@ -40,6 +40,12 @@ build
 .pi/sessions/
 .pi/npm/
 
+# pi permission system — yoloMode config is Docker-only, created by scripts/pi.sh
+.pi/extensions/pi-permission-system/
+
+# pi runtime cache
+.pi-lens/
+
 # AI review stamp (local only — written by /pre-push-review command)
 .review-stamp
 .claude/pre-push-review/

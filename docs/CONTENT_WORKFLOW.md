@@ -49,7 +49,6 @@ pnpm dev
 
 * `R2_ACCESS_KEY_ID` — Cloudflare R2 API key ID
 * `R2_SECRET_ACCESS_KEY` — Cloudflare R2 API secret
-* `CLOUDFLARE_ACCOUNT_ID` — Cloudflare account ID
 * `CLOUDFLARE_API_TOKEN` — Cloudflare API token (cache purge permission)
 
 ### This repo — GitHub Environment variables
@@ -58,6 +57,7 @@ pnpm dev
 * `BLOG_R2_BUCKET` — R2 bucket name for the environment (staging or production)
 * `POSTS_S3_BUCKET` — S3 bucket name for MDX post content
 * `CLOUDFLARE_ZONE_ID` — Cloudflare zone ID
+* `CLOUDFLARE_ACCOUNT_ID` — Cloudflare account ID
 
 ### Content repo — GitHub secrets
 

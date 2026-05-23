@@ -143,7 +143,8 @@ export POSTS_S3_BUCKET="<your-posts-bucket-name>"
 
 - Triggers on pushes to `main` that touch `web/`, or manually via `workflow_dispatch`
 - Builds the static site, reading posts from the shared posts S3 bucket
-- Syncs the output to the environment's R2 bucket with appropriate cache headers
+- Syncs HTML output to the environment's R2 bucket with appropriate cache headers
+- Syncs `out/assets/` to the shared assets R2 bucket
 - Purges the Cloudflare zone cache after each deploy
 - Supports both `production` and `staging` environments
 - Requires `deployment_environment` input (routing via `NEXT_PUBLIC_ENVIRONMENT` env var during build)

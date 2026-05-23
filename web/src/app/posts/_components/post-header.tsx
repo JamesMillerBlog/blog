@@ -4,15 +4,17 @@ import DateFormatter from '@/components/ui/date-formatter'
 import { PostTitle } from '@/components/ui/post-title'
 import { type Author } from '@/types/author'
 import { ui } from '@/i18n/en'
+import { ClockIcon } from 'lucide-react'
 
 type Props = {
   title: string
   coverImage: string
   date: string
   author: Author
+  readingTime: number
 }
 
-export function PostHeader({ title, coverImage, date, author }: Props) {
+export function PostHeader({ title, coverImage, date, author, readingTime }: Props) {
   return (
     <header className="max-w-[980px] mx-auto mb-16">
       <div className="mb-8">
@@ -20,7 +22,7 @@ export function PostHeader({ title, coverImage, date, author }: Props) {
       </div>
 
       {/* Meta info block */}
-      <div className="flex flex-wrap items-center gap-6 mb-12 bg-surface-container-low p-4 rounded-2xl border border-outline-variant/10">
+      <div className="flex flex-wrap items-center gap-6 mb-12 bg-surface-container-low p-4 rounded-2xl">
         <Avatar name={author.name} picture={author.picture} />
         <div className="w-px h-8 bg-outline-variant/30 hidden sm:block"></div>
         <div className="text-sm font-headline font-semibold text-on-surface-variant flex items-center gap-2">
@@ -29,10 +31,15 @@ export function PostHeader({ title, coverImage, date, author }: Props) {
             <DateFormatter dateString={date} />
           </span>
         </div>
+        <div className="w-px h-8 bg-outline-variant/30 hidden sm:block"></div>
+        <div className="text-sm font-headline font-semibold text-on-surface-variant flex items-center gap-2">
+          <ClockIcon className="w-4 h-4 opacity-70" />
+          <span>{readingTime} min read</span>
+        </div>
       </div>
 
-      <div className="mb-8 sm:mx-0 rounded-3xl overflow-hidden shadow-xl shadow-primary/5 border border-outline-variant/5">
-        <CoverImage title={title} src={coverImage} />
+      <div className="mb-8 sm:mx-0 rounded-3xl overflow-hidden shadow-xl shadow-primary/5">
+        <CoverImage title={title} src={coverImage} priority />
       </div>
     </header>
   )

@@ -81,6 +81,14 @@ If a border is required for accessibility, use the `outline-variant` token at **
 
 ## 5. Components
 
+### Brand Gradient Animation
+
+Interactive gradient cycling used on hero headings and premium text elements. The gradient animates through the primary, secondary, and tertiary color palette with `gBoost` animation (4s loop). On hover, the gradient responds to mouse movement. Filter adjustments provide visual feedback:
+
+- Default: `saturate(0.6) brightness(0.9)` — subtle, elegant
+- Hover: `saturate(1.8) brightness(1.15)` — high-contrast, inviting
+- Animation: `blur(12px) saturate(0.6) brightness(0.9)` — smooth transitions
+
 ### Navigation Bar
 
 - **Style:** Sticky, floating pill-shape.
@@ -105,6 +113,15 @@ If a border is required for accessibility, use the `outline-variant` token at **
 - **Secondary:** `surface-container-high` background. No border.
 - **States:** On press, apply a `4px` vertical "squish" (transform: scaleY(0.96)) to mimic physical feedback.
 
+### Theme Toggle
+
+The theme toggle uses animated icon transitions (`themeSweepRight`, `themeSweepLeft`) to guide the eye as the color scheme changes. Icons respond with color shifts and glow effects on hover:
+
+- Sun icon (light mode): Yellow/gold glow (`#fbbf24`)
+- Moon icon (dark mode): Blue/slate glow (`#a8c4f0`)
+
+Apply `theme-transitioning` class during theme switch to fade all color properties smoothly across the entire page.
+
 ---
 
 ## 6. Do's and Don'ts
@@ -120,5 +137,4 @@ If a border is required for accessibility, use the `outline-variant` token at **
 - **Don't use 1px lines:** Use white space or color shifts to separate content.
 - **Don't use pure black:** Use `on-surface` for text to maintain the "soft" approachable aesthetic.
 - **Don't use sharp corners:** Every container must have at least a `sm` (`0.5rem`) radius; cards should always be `lg` or `xl`.
-- # **Don't clutter the UI:** If a decorative element doesn't serve the "Byte Mark" vibe, remove it. Use the `tertiary` (yellow/gold) tokens sparingly for "delight" moments only.
 - **Don't clutter the UI:** If a decorative element doesn't serve the "Byte Mark" vibe, remove it. Use the `tertiary` (yellow/gold) tokens sparingly for "delight" moments only.

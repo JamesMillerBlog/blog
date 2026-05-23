@@ -25,6 +25,8 @@ if has_structural_changes; then
 
   if $PRECOMMIT_MODE; then
     { git diff main...HEAD 2>/dev/null; git diff --cached; } > "$DIFF_FILE"
+    # Capture staged .md files now — re-staged after claude runs in case it modifies them
+    STAGED_MD_FILES=$(git diff --cached --name-only -- '*.md' 2>/dev/null)
   else
     git diff main...HEAD > "$DIFF_FILE"
   fi
@@ -40,6 +42,8 @@ if has_structural_changes; then
     git add AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null || true
 
     if $PRECOMMIT_MODE; then
+      # Re-stage any .md files that were already staged before claude ran
+      [ -n "$STAGED_MD_FILES" ] && echo "$STAGED_MD_FILES" | tr '\n' '\0' | xargs -0 git add 2>/dev/null || true
       echo "✓ Documentation changes staged and included in this commit."
     else
       git commit -m "docs: surgical update of agents and documentation"
@@ -52,6 +56,10 @@ if has_structural_changes; then
     fi
   else
     echo "✓ Documentation is already up to date."
+    # Still re-stage staged .md files — claude may have touched them even with no net diff
+    if $PRECOMMIT_MODE && [ -n "$STAGED_MD_FILES" ]; then
+      echo "$STAGED_MD_FILES" | tr '\n' '\0' | xargs -0 git add 2>/dev/null || true
+    fi
   fi
 else
   echo "✓ No structural changes detected; skipping docs update."

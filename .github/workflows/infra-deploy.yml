@@ -16,8 +16,12 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
-  TERRAMATE_VERSION: "0.12.1"
+  TERRAMATE_VERSION: "0.17.0"
   TF_VERSION: "1.9.5"
 
 jobs:

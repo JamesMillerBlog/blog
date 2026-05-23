@@ -14,8 +14,8 @@ export interface Project {
   youtubeId?: string
 }
 
-function ytThumb(id: string) {
-  return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
+function ytThumb(id: string, quality: 'hqdefault' | 'maxresdefault' = 'hqdefault') {
+  return `https://img.youtube.com/vi/${id}/${quality}.jpg`
 }
 
 export const projects: Project[] = [
@@ -205,7 +205,7 @@ export const projects: Project[] = [
     year: 2015,
     category: 'Internet of Things',
     tags: ['IoT', 'Arduino', 'Node.js', 'Web'],
-    image: ytThumb('d_NQcNYMKG8'),
+    image: ytThumb('d_NQcNYMKG8', 'maxresdefault'),
     youtubeId: 'd_NQcNYMKG8',
   },
   {

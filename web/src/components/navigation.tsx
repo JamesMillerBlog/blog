@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
 import { Post } from '@/types/post'
@@ -15,6 +15,63 @@ export function Navigation() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [posts] = useState<Post[]>([])
+  const logoRef = useRef<HTMLDivElement>(null)
+  const searchIconRef = useRef<HTMLDivElement>(null)
+  const themeIconRef = useRef<HTMLDivElement>(null)
+  const themeAnimating = useRef(false)
+  // Tracks which icon SVG to show — allows mid-animation swap ahead of theme state
+  const [iconDark, setIconDark] = useState(false)
+
+  useEffect(() => {
+    setIconDark(theme === 'dark')
+  }, [theme])
+
+  const triggerLogoAnim = (type: 'hover' | 'click') => {
+    const el = logoRef.current
+    if (!el) return
+    el.style.animation = 'none'
+    void el.offsetHeight
+    el.style.animation =
+      type === 'click' ? 'wobble 0.4s ease forwards' : 'rubberBand 0.35s ease forwards'
+  }
+
+  const triggerSearchAnim = (type: 'hover' | 'click') => {
+    const el = searchIconRef.current
+    if (!el) return
+    el.style.animation = 'none'
+    void el.offsetHeight
+    el.style.animation =
+      type === 'click' ? 'searchFound 0.4s ease forwards' : 'searchZoomIn 0.4s ease forwards'
+  }
+
+  const handleThemeToggle = () => {
+    if (themeAnimating.current) return
+    themeAnimating.current = true
+    const goingDark = theme === 'light'
+
+    // Icon: sky sweep (sun sets west/right → moon rises east/left, reversed for sunrise)
+    const el = themeIconRef.current
+    if (el) {
+      el.style.animation = 'none'
+      void el.offsetHeight
+      el.style.animation = goingDark
+        ? 'themeSweepRight 0.42s ease forwards, themeSweepLeftIn 0.42s ease forwards'
+        : 'themeSweepLeft 0.42s ease forwards, themeSweepRightIn 0.42s ease forwards'
+      setTimeout(() => setIconDark(goingDark), 210)
+      // Clear animation after it finishes so hover transform isn't blocked by fill-mode
+      setTimeout(() => {
+        if (themeIconRef.current) themeIconRef.current.style.animation = ''
+      }, 440)
+    }
+
+    // Page: crossfade by briefly adding transition to all elements while theme class swaps
+    document.documentElement.classList.add('theme-transitioning')
+    toggleTheme()
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning')
+      themeAnimating.current = false
+    }, 320)
+  }
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
@@ -36,10 +93,15 @@ export function Navigation() {
   return (
     <>
       <header className="fixed top-4 left-0 right-0 z-50 mx-auto w-[95%] max-w-7xl">
-        <nav className="flex items-center justify-between px-6 py-2 rounded-full bg-surface-container-lowest/80 dark:bg-surface-container/80 backdrop-blur-xl shadow-xl shadow-on-surface/5 border border-outline-variant/10">
+        <nav className="flex items-center justify-between px-6 py-2 rounded-full bg-surface-container-lowest/60 dark:bg-surface-container/60 backdrop-blur-xl shadow-xl shadow-on-surface/5 border border-outline-variant/10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative w-10 h-10">
+            <div
+              ref={logoRef}
+              className="relative w-10 h-10"
+              onMouseEnter={() => triggerLogoAnim('hover')}
+              onClick={() => triggerLogoAnim('click')}
+            >
               <Image
                 src="/assets/james-miller-blog-logo.png"
                 alt={ui.nav.logoAlt}
@@ -59,29 +121,37 @@ export function Navigation() {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-1">
-            <NavLink href="/" active={isActive('/') && pathname === '/'} showHard>
-              {ui.nav.play}
+            <NavLink href="/" active={isActive('/') && pathname === '/'}>
+              {ui.nav.posts}
             </NavLink>
-            <NavLink href="/projects" active={isActive('/projects')} showHard>
-              {ui.nav.work}
+            <NavLink href="/projects" active={isActive('/projects')}>
+              {ui.nav.projects}
             </NavLink>
           </div>
 
           {/* Actions & Mobile Menu Toggle */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setSearchOpen(true)}
-              className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all"
+              onClick={() => {
+                triggerSearchAnim('click')
+                setSearchOpen(true)
+              }}
+              onMouseEnter={() => triggerSearchAnim('hover')}
+              className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors duration-150 focus:outline-none"
               aria-label={ui.nav.searchLabel}
             >
-              <SearchIcon />
+              <div ref={searchIconRef} className="w-5 h-5">
+                <SearchIcon />
+              </div>
             </button>
             <button
-              onClick={toggleTheme}
-              className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all"
+              onClick={handleThemeToggle}
+              className="theme-toggle-btn p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all"
               aria-label={ui.nav.toggleTheme}
             >
-              {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+              <div ref={themeIconRef} data-theme-icon={iconDark ? 'sun' : 'moon'}>
+                {iconDark ? <SunIcon /> : <MoonIcon />}
+              </div>
             </button>
 
             {/* Mobile Menu Button */}
@@ -103,14 +173,14 @@ export function Navigation() {
               onClick={() => setMobileMenuOpen(false)}
               className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/') && pathname === '/' ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface'}`}
             >
-              {ui.nav.play}
+              {ui.nav.posts}
             </Link>
             <Link
               href="/projects"
               onClick={() => setMobileMenuOpen(false)}
               className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/projects') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface'}`}
             >
-              {ui.nav.work}
+              {ui.nav.projects}
             </Link>
           </div>
         )}
@@ -125,20 +195,14 @@ function NavLink({
   href,
   active,
   children,
-  showHard,
 }: {
   href: string
   active: boolean
   children: React.ReactNode
-  showHard?: boolean
 }) {
-  const [hovered, setHovered] = useState(false)
-
   return (
     <Link
       href={href}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       className={`px-4 py-1.5 rounded-full font-semibold transition-colors duration-300 font-headline text-sm inline-flex items-center ${
         active
           ? 'bg-secondary-container text-on-secondary-container'
@@ -146,18 +210,6 @@ function NavLink({
       }`}
     >
       {children}
-      {showHard && (
-        <span
-          className="inline-block overflow-hidden whitespace-nowrap transition-all duration-200 ease-out"
-          style={{
-            maxWidth: hovered ? '2.5rem' : '0',
-            marginLeft: hovered ? '0.2rem' : '0',
-            opacity: hovered ? 1 : 0,
-          }}
-        >
-          {ui.nav.hard}
-        </span>
-      )}
     </Link>
   )
 }

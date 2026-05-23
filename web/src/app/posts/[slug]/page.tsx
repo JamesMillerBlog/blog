@@ -1,14 +1,16 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { getAllPosts, getPostBySlug, isPostVisible } from '@/common/utils/posts'
 import { SITE_URL, TWITTER_HANDLE, AUTHOR } from '@/common/consts/constants'
 import { ui } from '@/i18n/en'
 import { compileMDXContent } from '@/common/utils/mdx'
+import { readingTime } from '@/common/utils/reading-time'
 import { PostBody } from '@/app/posts/_components/post-body'
 import { PostHeader } from '@/app/posts/_components/post-header'
+import { AuthorBio } from '@/app/posts/_components/author-bio'
+import { RelatedPosts } from '@/app/posts/_components/related-posts'
 import { JsonLd } from '@/components/ui/json-ld'
-import { ArrowLeftIcon } from 'lucide-react'
+import { BackButton } from '@/app/posts/_components/back-button'
 
 export default async function Post(props: Params) {
   const params = await props.params
@@ -23,6 +25,13 @@ export default async function Post(props: Params) {
   }
 
   const content = await compileMDXContent(post.content || '')
+  const minutes = readingTime(post.content || '')
+
+  const allPosts = await getAllPosts()
+  const relatedPosts = allPosts
+    .filter((p) => p.slug !== post.slug)
+    .filter((p) => post.tags?.some((tag) => p.tags?.includes(tag)))
+    .slice(0, 3)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -55,20 +64,20 @@ export default async function Post(props: Params) {
         <article>
           {/* Breadcrumb */}
           <div className="max-w-[980px] mx-auto mb-10 px-6">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-primary font-headline font-bold text-sm hover:text-secondary transition-colors px-4 py-2 bg-primary/5 hover:bg-secondary/5 rounded-full"
-            >
-              <ArrowLeftIcon className="w-4 h-4" /> {ui.posts.backToBlog}
-            </Link>
+            <BackButton label={ui.posts.backToBlog} />
           </div>
           <PostHeader
             title={post.title}
             coverImage={post.coverImage}
             date={post.date}
             author={post.author}
+            readingTime={minutes}
           />
           <PostBody content={content} />
+          <div className="max-w-[1100px] mx-auto px-6">
+            <AuthorBio author={post.author} />
+            <RelatedPosts posts={relatedPosts} />
+          </div>
         </article>
       </main>
     </>

@@ -36,6 +36,10 @@ build
 # Claude Code local settings (machine-specific paths)
 .claude/settings.local.json
 
+# pi — local session storage and package cache
+.pi/sessions/
+.pi/npm/
+
 # AI review stamp (local only — written by /pre-push-review command)
 .review-stamp
 .claude/pre-push-review/

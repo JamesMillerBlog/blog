@@ -18,14 +18,38 @@ Read extra skill files only when relevant:
 - `web/src/app/_components/` — shared components
 - `web/_posts/` — local MDX preview
 - `.agents/skills/` — on-demand cross-tool skills
-- `.claude/agents/` — Claude agents
+- `.claude/agents/` — Claude Code agents
 
-## Commands
+## AI Tools
+
+| Tool | Config | When to Use |
+|------|--------|-------------|
+| **Claude Code** (`pnpm claude`) | `.claude/` | Primary — uses Claude Pro subscription |
+| **pi** (`pnpm pi`) | `.pi/` | Fallback — OpenCode, Gemini, Codex, DeepSeek models |
+
+### Claude Code
+Primary AI harness. Uses your Claude Pro subscription via OAuth. Run in Docker:
 ```bash
-cd web && pnpm dev      # dev server
-cd web && pnpm build    # production build
-cd web && pnpm test     # unit tests (vitest)
+pnpm claude                          # interactive
+pnpm claude:fresh                    # rebuild image then interactive
 ```
+
+### pi
+Fallback AI harness for when Claude usage runs out. Supports multiple model providers:
+- **OpenCode Go** (DeepSeek V4 Flash/Pro, Kimi, MiniMax, GLM) — default
+- **Google Gemini** — set `GEMINI_API_KEY` in `.envrc`
+- **OpenAI Codex** — requires ChatGPT Plus/Pro subscription (`/login openai`)
+- **DeepSeek** — set `DEEPSEEK_API_KEY` in `.envrc`
+- **OpenRouter** — set `OPENROUTER_API_KEY` in `.envrc`
+
+```bash
+pnpm pi                              # interactive (default: opencode-go/deepseek-v4-flash)
+pnpm pi:fresh                        # rebuild image then interactive
+pi --model google                    # switch to Gemini from CLI
+pi --model opencode-go/deepseek-v4-pro  # switch model inline
+```
+
+Inside pi, use `/model` or Ctrl+L to switch providers at any time.
 
 ## Design System — Byte Mark
 Full spec: `web/design/DESIGN.md`. Key tokens:
@@ -56,8 +80,13 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | `reviewer-infrastructure` | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform |
 
 ## Docker
-Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). See `docs/DOCKER.md` for security model.
+Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.
 
-## Other Tools
-- **Gemini skills** (`.gemini/skills/`): `infrastructure` · `security-audit` · `design-review`
-- **Codex subagents** (`.codex/agents/`): `frontend-dev` · `design-expert` · `infrastructure` · `security-auditor`
+## Commands
+```bash
+cd web && pnpm dev      # dev server
+cd web && pnpm build    # production build
+cd web && pnpm test     # unit tests (vitest)
+pnpm claude             # Claude Code (Docker)
+pnpm pi                 # pi (Docker)
+```

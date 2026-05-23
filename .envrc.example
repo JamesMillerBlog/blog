@@ -7,6 +7,8 @@
 # Install direnv: https://direnv.net
 # After creating .envrc run: direnv allow
 
+# ── Cloudflare ─────────────────────────────────────────────
+
 # Cloudflare identifiers
 export CLOUDFLARE_ACCOUNT_ID="your-cloudflare-account-id"
 export CLOUDFLARE_ZONE_ID="your-cloudflare-zone-id"
@@ -37,15 +39,27 @@ export TF_STATE_BUCKET="your-terraform-state-bucket-name"
 # GitHub repo for the content
 export CONTENT_GITHUB_REPO="your-org/your-content-repo"
 
-# ntfy.sh topic for Claude Code notifications (https://ntfy.sh)
+# ── Notifications ──────────────────────────────────────────
+
+# ntfy.sh topic for AI tool notifications (https://ntfy.sh)
 # Treat as a secret — topic is your auth. Use a cryptographically random value.
 export NTFY_TOPIC="your-unique-ntfy-topic"
 
-# Absolute path to the main repo .git directory (used by docker-compose.override.yml)
-# Required when running Claude Code inside the dev container — the worktree .git file
+# ── Git Worktrees ──────────────────────────────────────────
+
+# Absolute path to the main repo .git directory (used by docker-compose services)
+# Required when running inside a git worktree — the worktree .git file
 # points to this path, which must be mounted for git to work inside the container.
 export BLOG_GIT_DIR="../Blog/.git"
+
+# ── Claude Code ────────────────────────────────────────────
 
 # Claude credentials file path (used when running Claude Code inside Docker)
 # Overrides the default ~/.claude/.credentials.json location.
 export CLAUDE_CREDENTIALS_FILE="${HOME}/.claude/.credentials.json"
+
+# ── pi (Fallback AI Harness) ───────────────────────────────
+
+# OpenCode Go API key (for DeepSeek V4 Flash/Pro, Kimi, MiniMax, GLM models)
+# Used when running `pnpm pi` with the opencode-go provider.
+export OPENCODE_API_KEY="your-opencode-api-key"

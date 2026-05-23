@@ -10,3 +10,15 @@ services:
     environment:
       - ANTHROPIC_MODEL=claude-sonnet-4-6
       - NTFY_TOPIC=${NTFY_TOPIC}
+
+  pi:
+    build:
+      context: .
+      dockerfile: Dockerfile.pi
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/workspace
+      - ${HOME}/.pi:/home/pi/.pi
+    environment:
+      - NTFY_TOPIC=${NTFY_TOPIC}

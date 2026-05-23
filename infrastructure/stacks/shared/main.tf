@@ -66,6 +66,7 @@ resource "aws_iam_role_policy" "content_claude_policy" {
         Sid    = "PostsBucketWrite"
         Effect = "Allow"
         Action = [
+          "s3:ListBucket",
           "s3:PutObject",
           "s3:DeleteObject",
         ]

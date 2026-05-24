@@ -1,4 +1,6 @@
 #!/bin/bash
+set -o pipefail
+
 # Source .envrc for non-interactive shells (git hooks) where direnv hasn't loaded it
 if [ -z "${CI:-}" ] && [ -f .envrc ]; then
 	set -a

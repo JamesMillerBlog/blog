@@ -22,8 +22,10 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch PR head for diff context
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          git fetch origin "${{ github.event.pull_request.head.ref }}"
+          git fetch origin -- "$HEAD_REF"
 
       - name: Install pi
         run: npm install -g --ignore-scripts @earendil-works/pi-coding-agent

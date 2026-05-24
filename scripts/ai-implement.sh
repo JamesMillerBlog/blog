@@ -16,7 +16,7 @@ trap 'rm -f "$PROMPT_FILE"' EXIT
 # Escape XML delimiters in user-provided inputs to neutralise prompt
 # injection attacks that try to break out of <issue_body> boundaries.
 # Also truncate body to limit token spend and blast radius.
-safe_title() { printf '%s\n' "$1" | sed 's/</\&lt;/g; s/>/\&gt;/g'; }
+safe_title() { printf '%s\n' "$1" | sed 's/</\&lt;/g; s/>/\&gt;/g; s/\$/\\$/g; s/`/\\`/g; s/\\/\\\\/g; s/"/\\"/g'; }
 safe_body() { printf '%s\n' "$1" | head -c 8000 | sed 's/</\&lt;/g; s/>/\&gt;/g'; }
 SAFE_TITLE=$(safe_title "$ISSUE_TITLE")
 SAFE_BODY=$(safe_body "$ISSUE_BODY")

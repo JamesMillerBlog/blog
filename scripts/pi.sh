@@ -18,9 +18,6 @@ printf '\033[0;33m  Tip: use pnpm pi:fresh if Dockerfile.pi or deps changed\033[
 OPTS=()
 [ ! -t 0 ] && OPTS+=(-T)
 
-[ -n "${OPENCODE_API_KEY:-}" ] && OPTS+=(-e OPENCODE_API_KEY)
-[ -n "${ANTHROPIC_API_KEY:-}" ] && OPTS+=(-e ANTHROPIC_API_KEY)
-
 # Mount the main git directory so worktree .git pointers resolve inside Docker.
 GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null) || true
 if [ -n "$GIT_COMMON_DIR" ]; then

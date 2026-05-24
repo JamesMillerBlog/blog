@@ -1,34 +1,40 @@
 #!/bin/bash
 set -eo pipefail
 
+# Source .envrc for non-interactive shells (git hooks) where direnv hasn't loaded it
+if [ -z "${CI:-}" ] && [ -f .envrc ]; then
+	set -a
+	source .envrc
+	set +a
+fi
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -cd '[:alnum:]/_.-' | cut -c1-80)
 
-[[ -z "$BRANCH" ]] && { echo "fatal: could not determine branch name"; exit 1; }
+[[ -z "$BRANCH" ]] && {
+	echo "fatal: could not determine branch name"
+	exit 1
+}
 
 if [[ "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
-  echo "On main/master, skipping PR generation."
-  exit 0
+	echo "On main/master, skipping PR generation."
+	exit 0
 fi
 
-command -v gh >/dev/null 2>&1 || { echo "gh CLI not found. Please install it."; exit 1; }
-gh auth status >/dev/null 2>&1 || { echo "gh not authenticated. Please run 'gh auth login'."; exit 1; }
-
-# Detect available AI: prefer claude, fall back to pi
-if command -v claude >/dev/null 2>&1; then
-  AI=claude
-elif command -v pi >/dev/null 2>&1 && [[ -n "${OPENCODE_API_KEY:-}" ]]; then
-  AI=pi
-else
-  echo "No AI available (claude not found, pi not found or OPENCODE_API_KEY not set). Skipping PR generation."
-  exit 0
-fi
+command -v gh >/dev/null 2>&1 || {
+	echo "gh CLI not found. Please install it."
+	exit 1
+}
+gh auth status >/dev/null 2>&1 || {
+	echo "gh not authenticated. Please run 'gh auth login'."
+	exit 1
+}
 
 # PR_NUMBER sourced from GitHub API (integer field) — validated below as defense-in-depth
 PR_NUMBER=$(gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || true)
 
 if [[ -n "$PR_NUMBER" ]] && ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
-  echo "Unexpected PR number format, aborting."
-  exit 1
+	echo "Unexpected PR number format, aborting."
+	exit 1
 fi
 
 PROMPT_STEPS="Steps:
@@ -40,28 +46,45 @@ PROMPT_STEPS="Steps:
 Note: PR title must follow conventional commits — start with feat:, fix:, chore:, docs:, refactor:, perf:, or test:"
 
 if [[ -n "$PR_NUMBER" ]]; then
-  echo "-> Requesting ${AI} to update PR #$PR_NUMBER..."
-  PROMPT_ACTION="6. Run: gh pr edit \"${PR_NUMBER}\" --body '<filled template content>'"
-  PROMPT_INTRO="Update PR #${PR_NUMBER} for branch: ${BRANCH}."
-  FALLBACK="${AI} failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
+	echo "-> Generating PR update for #$PR_NUMBER..."
+	PROMPT_ACTION="6. Run: gh pr edit \"${PR_NUMBER}\" --body '<filled template content>'"
+	PROMPT_INTRO="Update PR #${PR_NUMBER} for branch: ${BRANCH}."
+	FALLBACK="AI failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
 else
-  echo "-> Requesting ${AI} to create PR for branch ${BRANCH}..."
-  PROMPT_ACTION="6. Run: gh pr create --title '<conventional commit title: must start with feat:|fix:|chore:|docs:|refactor:|perf:|test: followed by short description>' --body '<filled template content>'"
-  PROMPT_INTRO="Create a PR for branch: ${BRANCH}."
-  FALLBACK="${AI} failed to create PR. Run manually: gh pr create"
+	echo "-> Generating PR for branch ${BRANCH}..."
+	PROMPT_ACTION="6. Run: gh pr create --title '<conventional commit title: must start with feat:|fix:|chore:|docs:|refactor:|perf:|test: followed by short description>' --body '<filled template content>'"
+	PROMPT_INTRO="Create a PR for branch: ${BRANCH}."
+	FALLBACK="AI failed to create PR. Run manually: gh pr create"
 fi
 
 PROMPT=$(printf '%s\n%s\n%s' "${PROMPT_INTRO}" "${PROMPT_STEPS}" "${PROMPT_ACTION}")
 
-if [[ "$AI" == "claude" ]]; then
-  echo "$PROMPT" \
-    | claude -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" \
-    2>&1 || echo "$FALLBACK"
+# Run AI with fallback chain: Docker claude → Docker pi
+run_ai() {
+	local prompt="$1"
+	local prompt_file
+	prompt_file=$(mktemp /tmp/pr-prompt-XXXXXX)
+	echo "$prompt" >"$prompt_file"
+
+	echo "→ Using claude (Docker) for PR generation..."
+	if bash scripts/claude.sh -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" <"$prompt_file"; then
+		rm -f "$prompt_file"
+		return 0
+	fi
+	echo "✗ Docker claude failed — trying pi..."
+
+	echo "→ Using pi (Docker) for PR generation..."
+	if bash scripts/pi.sh --print --no-extensions --provider opencode-go <"$prompt_file"; then
+		rm -f "$prompt_file"
+		return 0
+	fi
+
+	rm -f "$prompt_file"
+	return 1
+}
+
+if run_ai "$PROMPT"; then
+	:
 else
-  pi --print \
-    --no-extensions \
-    --provider opencode-go \
-    --api-key "$OPENCODE_API_KEY" \
-    "$PROMPT" \
-    2>&1 || echo "$FALLBACK"
+	echo "$FALLBACK"
 fi

@@ -15,13 +15,18 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout
+      - name: Checkout (base ref — safe for script execution)
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
 
+      - name: Fetch PR head for diff context
+        run: |
+          git fetch origin "${{ github.event.pull_request.head.ref }}"
+
       - name: Install pi
-        run: npm install -g @earendil-works/pi-coding-agent
+        run: npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 
       - name: Run AI review
         env:

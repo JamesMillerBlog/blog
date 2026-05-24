@@ -8,14 +8,13 @@ set -euo pipefail
 PROMPT=$(cat .pi/prompts/pr-review.md)
 
 REVIEW_OUTPUT=$(pi --print \
-  --provider opencode-go \
-  --api-key "$OPENCODE_API_KEY" \
-  --agent-team-subagent-skills disabled \
-  "$PROMPT" 2>&1) || true
+	--provider opencode-go \
+	--agent-team-subagent-skills disabled \
+	"$PROMPT" 2>/tmp/pr-review-stderr.log) || true
 
 if [[ -z "$REVIEW_OUTPUT" ]]; then
-  echo "pi produced no output — skipping PR comment."
-  exit 0
+	echo "pi produced no output — skipping PR comment."
+	exit 0
 fi
 
 gh pr review "$PR_NUMBER" --comment --body "$REVIEW_OUTPUT"

@@ -86,3 +86,4 @@ infrastructure/**/terraform.rc
 .envrc
 infrastructure/vars/backend.hcl
 package-lock.json
+.pnpm-store/

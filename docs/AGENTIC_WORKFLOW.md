@@ -211,11 +211,12 @@ git push
 ```
 
 **Local workflow:**
-- Pre-push hook validates the review stamp and runs `gitleaks` + tests
-- If blocked, run `/pre-push-review` first
+- Pre-push hook runs `gitleaks` + tests, then the iterative review loop (`scripts/pre-push-iterate.sh` — up to 10 passes)
+- The loop runs the full multi-agent review (Claude or pi fallback), then auto-fixes CRITICAL/HIGH findings and re-reviews
+- If blocked after all passes, fix issues manually or use `git push --no-verify`
 - After push, the local git alias automatically runs `scripts/generate-pr.sh` to create/update the PR
 
-**When using pi:** You can run the review scripts manually (`bash scripts/pre-push-review-manifest.sh`, `bash scripts/pre-push-static-checks.sh`) and ask pi to review the output, but pi has no equivalent of the full multi-agent `/pre-push-review` command. Use `git push --no-verify` or run the review in Claude before switching.
+**When using pi:** The pre-push review loop works with pi as a fallback (set `OPENCODE_API_KEY`). You can also run `bash scripts/pre-push-iterate.sh` directly. If you need to skip: `git push --no-verify`.
 
 **Note:** The local git push alias runs `generate-pr.sh`, which uses Claude if available, falling back to pi if `OPENCODE_API_KEY` is set. In CI, separate workflows handle issue implementation and PR review via pi.
 

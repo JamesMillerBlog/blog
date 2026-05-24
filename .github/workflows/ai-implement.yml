@@ -9,9 +9,13 @@ permissions:
   pull-requests: write
   issues: write
 
+concurrency:
+  group: ai-implement-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
 jobs:
   implement:
-    if: github.event.label.name == 'ai'
+    if: github.event.label.name == 'ai' && github.actor == github.repository_owner
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -24,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -32,7 +36,7 @@ jobs:
           version: 10
 
       - name: Install pi
-        run: npm install -g @earendil-works/pi-coding-agent
+        run: npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 
       - name: Configure git
         run: |
@@ -45,6 +49,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
+          set -euo pipefail
           SLUG=$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-\|-$//g' | cut -c1-40)
           BRANCH="ai/issue-${ISSUE_NUMBER}-${SLUG}"
           echo "name=${BRANCH}" >> "$GITHUB_OUTPUT"
@@ -61,7 +66,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
-          HUSKY: '0'
+          HUSKY: "0"
         run: bash scripts/ai-implement.sh
 
       - name: Check for commits
@@ -80,7 +85,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HUSKY: '0'
+          HUSKY: "0"
         run: bash scripts/pre-push-iterate.sh
 
       - name: Push branch

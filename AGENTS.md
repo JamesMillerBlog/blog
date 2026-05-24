@@ -82,6 +82,49 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 ## Docker
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.
 
+## Automated Workflows
+
+Two GitHub Actions workflows automate AI-driven development:
+
+### Issue Implementation (`ai-implement`)
+
+**Trigger:** Label an issue with `ai`
+
+**What it does:**
+1. Creates a branch `ai/issue-{number}-{slug}`
+2. Runs pi to implement the issue autonomously
+3. Stages changes, commits with `feat: #{number} {title}`, and creates a PR
+
+**Process inside pi:**
+- Read AGENTS.md for project context
+- Implement code changes needed
+- Run typecheck and tests
+- Run pre-push security/quality review
+- Fix any CRITICAL or HIGH findings
+- Commit and let CI handle the PR
+
+**When to use:** For well-scoped issues with clear requirements. Complex or ambiguous issues may need manual implementation.
+
+### PR Review (`ai-pr-review`)
+
+**Trigger:** Automatically on PR open/update (skips drafts)
+
+**What it does:**
+1. Runs parallel reviewers via pi's `agent_team` tool
+2. Assigns different models to each reviewer for diversity:
+   - Security: `deepseek-v4-pro` (different vendor from pre-push)
+   - Code quality, frontend, design, infrastructure: `kimi-k2.6/k2.5`
+3. Posts consolidated report as PR comment
+
+**Reviewers:**
+- Security — secrets, injection, CVEs
+- Code quality — syntax, smells, complexity
+- Frontend — React/Next.js patterns, TypeScript, a11y
+- Design — Byte Mark compliance
+- Infrastructure — GitHub Actions, IAM, Terraform
+
+**Note:** This is *separate* from `/pre-push-review` (local Claude). The CI review runs even if you don't run the local review.
+
 ## Commands
 ```bash
 cd web && pnpm dev      # dev server

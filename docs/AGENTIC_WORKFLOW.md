@@ -133,6 +133,51 @@ In pi with the `pi-multiagent` extension installed, the `agent_team` tool can sp
 
 ---
 
+## Automated Issue Implementation
+
+Instead of manually implementing an issue, you can ask the AI to do it autonomously via the `ai-implement` GitHub Actions workflow.
+
+### How it works
+
+1. Write a detailed issue with clear requirements
+2. Label it with `ai`
+3. The workflow:
+   - Creates a branch `ai/issue-{number}-{slug}`
+   - Runs pi to implement the issue
+   - Posts progress comments to the issue
+   - Commits changes with `feat: #{number} {title}`
+   - Pushes and creates a PR automatically
+
+### What pi does inside the workflow
+
+1. Read AGENTS.md for project context
+2. Implement all code changes
+3. Post a summary comment of what changed
+4. Run `typecheck` and `test` — fix failures and re-run until clean
+5. Run the pre-push review script and fix CRITICAL/HIGH findings
+6. Commit with conventional message format
+7. The PR is created by CI after the branch is pushed
+
+### When to use
+
+**Good for:**
+- Well-scoped, clearly-defined issues ("Add dark mode toggle to header")
+- Issues with acceptance criteria and examples
+- Bugs with clear reproduction steps
+- Features aligned with existing patterns
+
+**Not ideal for:**
+- Ambiguous or open-ended issues
+- Issues requiring design decisions or trade-offs
+- Complex multi-file refactors
+- When you're still figuring out the approach
+
+### Result
+
+The workflow creates a PR automatically. You review it and merge if it's good, or request changes if it needs iteration.
+
+---
+
 ## Commit & Push Workflow
 
 ### Committing
@@ -165,15 +210,24 @@ Then push:
 git push
 ```
 
-The pre-push hook runs a local `gitleaks` scan when available, then tests, then checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked. Bypass with `git push --no-verify` only if you have a good reason.
+**Local workflow:**
+- Pre-push hook validates the review stamp and runs `gitleaks` + tests
+- If blocked, run `/pre-push-review` first
+- After push, the local git alias automatically runs `scripts/generate-pr.sh` to create/update the PR
 
-**When using pi:** You can still run the review scripts manually (`bash scripts/pre-push-review-manifest.sh`, `bash scripts/pre-push-static-checks.sh`) and ask pi to review the output, but pi has no equivalent of the full multi-agent `/pre-push-review` command. Use `git push --no-verify` or run the review in Claude before switching.
+**When using pi:** You can run the review scripts manually (`bash scripts/pre-push-review-manifest.sh`, `bash scripts/pre-push-static-checks.sh`) and ask pi to review the output, but pi has no equivalent of the full multi-agent `/pre-push-review` command. Use `git push --no-verify` or run the review in Claude before switching.
+
+**Note:** The local git push alias runs `generate-pr.sh`, which uses Claude if available, falling back to pi if `OPENCODE_API_KEY` is set. In CI, separate workflows handle issue implementation and PR review via pi.
 
 ### What `/pre-push-review` produces
 
+**Local review (Claude Code):**
 1. **Architecture / Flow Diagram** — ASCII diagram if changes affect structure, data flow, or CI
 2. **Findings by severity** — aggregated across the reviewers selected for the current diff (CRITICAL / HIGH / MEDIUM / LOW)
 3. **Verdict** — SAFE TO PUSH / DO NOT PUSH / PUSH WITH CAUTION
+
+**CI review (GitHub Actions, runs automatically):**
+Separate from the local review, the `ai-pr-review` workflow runs when a PR is opened/updated. It uses pi with different models (deepseek-v4-pro for security, kimi for others) to catch different vulnerability classes. Results are posted as a PR comment.
 
 ### Reviewers
 

@@ -1,0 +1,106 @@
+name: AI Issue Implementation
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  implement:
+    if: github.event.label.name == 'ai'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+
+      - name: Install pi
+        run: npm install -g @earendil-works/pi-coding-agent
+
+      - name: Configure git
+        run: |
+          git config user.name "pi[bot]"
+          git config user.email "pi[bot]@users.noreply.github.com"
+
+      - name: Create branch
+        id: branch
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          SLUG=$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-\|-$//g' | cut -c1-40)
+          BRANCH="ai/issue-${ISSUE_NUMBER}-${SLUG}"
+          echo "name=${BRANCH}" >> "$GITHUB_OUTPUT"
+          git checkout -b "$BRANCH"
+
+      - name: Save HEAD before pi
+        id: before
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Run pi
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          HUSKY: '0'
+        run: bash scripts/ai-implement.sh
+
+      - name: Check for commits
+        id: committed
+        env:
+          BEFORE_SHA: ${{ steps.before.outputs.sha }}
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$BEFORE_SHA" ]; then
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Review and fix
+        if: steps.committed.outputs.committed == 'true'
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HUSKY: '0'
+        run: bash scripts/pre-push-iterate.sh
+
+      - name: Push branch
+        if: steps.committed.outputs.committed == 'true'
+        env:
+          BRANCH: ${{ steps.branch.outputs.name }}
+        run: git push origin "$BRANCH"
+
+      - name: Generate PR
+        if: steps.committed.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: bash scripts/generate-pr.sh
+
+      - name: Comment if nothing committed
+        if: steps.committed.outputs.committed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" \
+            --body "pi ran but made no commits. The issue may need more detail, or this requires manual implementation."

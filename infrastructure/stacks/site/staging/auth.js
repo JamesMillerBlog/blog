@@ -12,8 +12,18 @@ export default {
     const authHeader = request.headers.get("Authorization");
 
     if (authHeader && authHeader.startsWith("Basic ")) {
-      const encoded = authHeader.slice(6);
-      const decoded = atob(encoded);
+      let decoded;
+      try {
+        decoded = atob(authHeader.slice(6));
+      } catch {
+        return new Response("Unauthorized", {
+          status: 401,
+          headers: {
+            "WWW-Authenticate": 'Basic realm="Blog", charset="UTF-8"',
+            "Content-Type": "text/plain",
+          },
+        });
+      }
       const colonIndex = decoded.indexOf(":");
       const username = colonIndex >= 0 ? decoded.slice(0, colonIndex) : "";
       const password = colonIndex >= 0 ? decoded.slice(colonIndex + 1) : decoded;

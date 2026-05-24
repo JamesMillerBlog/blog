@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Required env vars: ISSUE_NUMBER, ISSUE_TITLE, ISSUE_BODY, OPENCODE_API_KEY, GH_TOKEN
+# Required env vars: ISSUE_NUMBER, ISSUE_TITLE, ISSUE_BODY_FILE, OPENCODE_API_KEY, GH_TOKEN
 
 : "${ISSUE_NUMBER:?ISSUE_NUMBER is required}"
 : "${ISSUE_TITLE:?ISSUE_TITLE is required}"
-: "${ISSUE_BODY:?ISSUE_BODY is required}"
+: "${ISSUE_BODY_FILE:?ISSUE_BODY_FILE is required}"
 : "${OPENCODE_API_KEY:?OPENCODE_API_KEY is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
+
+[ -f "$ISSUE_BODY_FILE" ] || { echo "ISSUE_BODY_FILE not found: $ISSUE_BODY_FILE" >&2; exit 1; }
 
 PROMPT_FILE=$(mktemp -t "ai-implement.XXXXXX")
 trap 'rm -f "$PROMPT_FILE"' EXIT
@@ -16,10 +18,11 @@ trap 'rm -f "$PROMPT_FILE"' EXIT
 # Escape XML delimiters in user-provided inputs to neutralise prompt
 # injection attacks that try to break out of <issue_body> boundaries.
 # Also truncate body to limit token spend and blast radius.
+# Issue body is read from a file to avoid shell expansion of untrusted content.
 safe_title() { printf '%s\n' "$1" | sed 's/</\&lt;/g; s/>/\&gt;/g; s/\$/\\$/g; s/`/\\`/g; s/\\/\\\\/g; s/"/\\"/g'; }
-safe_body() { printf '%s\n' "$1" | head -c 8000 | sed 's/</\&lt;/g; s/>/\&gt;/g'; }
+safe_body() { head -c 8000 "$1" | sed 's/</\&lt;/g; s/>/\&gt;/g'; }
 SAFE_TITLE=$(safe_title "$ISSUE_TITLE")
-SAFE_BODY=$(safe_body "$ISSUE_BODY")
+SAFE_BODY=$(safe_body "$ISSUE_BODY_FILE")
 
 cat >"$PROMPT_FILE" <<SYSPROMPT
 You are implementing a GitHub issue for a blog project. Work autonomously and post progress comments as you go.

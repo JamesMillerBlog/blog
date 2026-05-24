@@ -18,7 +18,7 @@ printf '\033[0;33m  Tip: use pnpm pi:fresh if Dockerfile.pi or deps changed\033[
 cleanup() {
 	docker compose down --timeout 3 2>/dev/null || true
 }
-trap cleanup EXIT INT TERM HUP
+trap cleanup EXIT INT TERM
 
 OPTS=()
 

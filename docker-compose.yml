@@ -7,6 +7,7 @@ services:
       - .:/workspace
       - ${HOME}/.claude:/home/claude/.claude
       - ${HOME}/.claude.json:/home/claude/.claude.json
+      - ${HOME}/.config/gh:/home/claude/.config/gh:ro
     environment:
       - ANTHROPIC_MODEL=claude-sonnet-4-6
       - NTFY_TOPIC=${NTFY_TOPIC}

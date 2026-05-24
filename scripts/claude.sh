@@ -13,7 +13,7 @@ printf '\033[0;33m  Tip: use pnpm claude:fresh if Dockerfile or deps changed\033
 cleanup() {
 	docker compose down --timeout 3 2>/dev/null || true
 }
-trap cleanup EXIT INT TERM HUP
+trap cleanup EXIT INT TERM
 
 VOL_OPTS=()
 if [ -n "$BLOG_GIT_DIR" ]; then

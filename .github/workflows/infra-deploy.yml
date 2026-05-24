@@ -145,8 +145,10 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          BASIC_AUTH_USERNAME: ${{ secrets.BASIC_AUTH_USERNAME }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
         working-directory: ./infrastructure/stacks/site/staging
-        run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var-file=../../../vars/site/staging.tfvars -out=tfplan
+        run: terraform plan -input=false -var="state_bucket=${TF_STATE_BUCKET}" -var="basic_auth_username=${BASIC_AUTH_USERNAME}" -var="basic_auth_password=${BASIC_AUTH_PASSWORD}" -var-file=../../../vars/site/staging.tfvars -out=tfplan
 
       - name: Terraform Apply
         if: github.event_name == 'workflow_dispatch'
@@ -155,6 +157,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          BASIC_AUTH_USERNAME: ${{ secrets.BASIC_AUTH_USERNAME }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
         working-directory: ./infrastructure/stacks/site/staging
         run: terraform apply -auto-approve tfplan
 

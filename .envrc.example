@@ -52,6 +52,14 @@ export NTFY_TOPIC="your-unique-ntfy-topic"
 # points to this path, which must be mounted for git to work inside the container.
 export BLOG_GIT_DIR="../Blog/.git"
 
+# ── Basic Auth ─────────────────────────────────────────────
+
+# Credentials for the Basic Auth password wall on the site.
+# Set matching values as BASIC_AUTH_USERNAME / BASIC_AUTH_PASSWORD in the
+# GitHub Actions environment secrets.
+export BASIC_AUTH_USERNAME="your-username"
+export BASIC_AUTH_PASSWORD='your-password'
+
 # ── Claude Code ────────────────────────────────────────────
 
 # Claude credentials file path (used when running Claude Code inside Docker)

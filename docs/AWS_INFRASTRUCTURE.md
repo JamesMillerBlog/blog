@@ -6,7 +6,7 @@ This document outlines the architecture, Terraform layout, and deployment workfl
 
 The blog uses a fully serverless, statically hosted architecture split into shared resources and environment-specific infrastructure:
 
-- **Blog (`jamesmiller.blog` / `staging.jamesmiller.blog`):** Next.js static export served from environment-specific Cloudflare R2 buckets with custom domains.
+- **Blog (`jamesmiller.blog` / `staging.jamesmiller.blog`):** Next.js static export served from environment-specific Cloudflare R2 buckets with custom domains. The staging site is protected by HTTP Basic Auth via a Cloudflare Worker.
 - **Assets (`assets.jamesmiller.blog`):** Shared R2 bucket and Cloudflare CDN for images and heavy media.
 - **Content (`posts.jamesmiller.blog`):** Shared S3 bucket for MDX blog post files, read at build time.
 
@@ -63,7 +63,8 @@ infrastructure/
         │   ├── backend_generated.tf
         │   ├── main.tf
         │   ├── variables.tf
-        │   └── outputs.tf
+        │   ├── outputs.tf
+        │   └── auth.js  # Cloudflare Worker for Basic Auth
         └── production/
             ├── stack.tm.hcl
             ├── backend_generated.tf
@@ -80,7 +81,20 @@ Stacks are managed with [Terramate](https://terramate.io), which handles stack o
 
 The site stacks read outputs from `shared` via `terraform_remote_state`, so `shared` must be applied first — Terramate enforces this ordering automatically.
 
-## 4. Running Locally
+## 4. Staging Basic Auth
+
+`staging.jamesmiller.blog` is protected by a Cloudflare Worker (`auth.js`) that enforces HTTP Basic Auth. The Worker also handles Next.js static export URL rewriting (extensionless paths → `.html`).
+
+Credentials are stored as Cloudflare Worker secrets, injected via Terraform variables:
+
+| Terraform variable    | Source (CI)                         | Source (local)                    |
+| --------------------- | ----------------------------------- | --------------------------------- |
+| `basic_auth_username` | `BASIC_AUTH_USERNAME` GitHub secret | `BASIC_AUTH_USERNAME` in `.envrc` |
+| `basic_auth_password` | `BASIC_AUTH_PASSWORD` GitHub secret | `BASIC_AUTH_PASSWORD` in `.envrc` |
+
+To change the password: update the GitHub Actions secret in the `staging` environment, update `.envrc`, then re-run the staging infra deploy.
+
+## 5. Running Locally
 
 Use the convenience scripts in `package.json`:
 
@@ -108,7 +122,7 @@ Bootstrap note:
 - The first-ever `shared` apply creates the GitHub OIDC provider.
 - That initial bootstrap must be run manually with AWS credentials that already have IAM permissions.
 
-## 5. Content Repository Model
+## 6. Content Repository Model
 
 Blog posts live in a separate content repo. That repo is the source of truth for content and owns:
 
@@ -121,7 +135,7 @@ This repo:
 - consumes the shared posts bucket during builds
 - optionally pulls posts locally into the ignored `web/_posts/` directory for development
 
-## 6. Application Configuration
+## 7. Application Configuration
 
 The Next.js app in `web/` is configured for static export:
 
@@ -137,7 +151,7 @@ export POSTS_S3_BUCKET="<your-posts-bucket-name>"
 ./scripts/pull-posts.sh ./web/_posts
 ```
 
-## 6. CI/CD Workflows
+## 8. CI/CD Workflows
 
 ### `deploy-site.yml`
 
@@ -156,7 +170,7 @@ The separate content repo triggers this workflow after syncing posts to S3.
 - Triggered by the content repo via `repository_dispatch` with `content-update` type
 - Calls `deploy-site.yml` with the environment specified in `client_payload.environment`
 
-## 8. Scripts
+## 9. Scripts
 
 Asset scripts:
 

@@ -42,3 +42,15 @@ variable "cloudflare_zone_id" {
   type        = string
   description = "Cloudflare zone ID for jamesmiller.blog"
 }
+
+variable "basic_auth_username" {
+  type        = string
+  description = "Username for Basic Auth on the site"
+  sensitive   = true
+}
+
+variable "basic_auth_password" {
+  type        = string
+  description = "Password for Basic Auth on the site"
+  sensitive   = true
+}

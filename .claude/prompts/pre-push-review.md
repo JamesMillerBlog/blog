@@ -157,3 +157,13 @@ ALWAYS write the stamp after producing the report, regardless of verdict:
 ```bash
 git rev-parse HEAD > .review-stamp
 ```
+
+## Step 6: Write findings file
+
+Write the ENTIRE output of this review (everything you just printed) to `.pre-push-review/findings.md` so the calling script can read the verdict and issues:
+
+```bash
+cat > .pre-push-review/findings.md << 'REVIEW_EOF'
+(paste your full review output here)
+REVIEW_EOF
+```

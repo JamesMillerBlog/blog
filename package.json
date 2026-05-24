@@ -4,7 +4,7 @@
     "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"]
   },
   "scripts": {
-    "prepare": "husky && bash scripts/setup-local.sh",
+    "prepare": "husky",
     "dev": "pnpm --dir web dev",
     "build": "pnpm --dir web build",
     "start": "pnpm --dir web start",

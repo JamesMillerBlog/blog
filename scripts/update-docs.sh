@@ -47,25 +47,30 @@ if has_structural_changes; then
 
 	DOCS_OK=false
 	PROMPT_FILE=$(mktemp /tmp/docs-prompt-XXXXXX)
+	AI_LOG=$(mktemp /tmp/docs-ai-XXXXXX)
 	echo "$DOCS_PROMPT" >"$PROMPT_FILE"
 
-	# Try Docker claude first
 	echo "→ Using claude (Docker) for docs update..."
-	if bash scripts/claude.sh -p --model haiku --allowedTools "Read,Glob,Grep,Edit,Write" <"$PROMPT_FILE"; then
+	if bash scripts/claude.sh -p --model haiku --allowedTools "Read,Glob,Grep,Edit,Write" \
+		<"$PROMPT_FILE" >"$AI_LOG" 2>&1; then
 		DOCS_OK=true
 	else
-		echo "✗ Docker claude failed (session limit?) — trying pi..."
+		echo "✗ Docker claude failed — trying pi..."
+		cat "$AI_LOG" >&2
 	fi
 
 	# Fallback: Docker pi
 	if [ "$DOCS_OK" = false ]; then
 		echo "→ Using pi (Docker) for docs update..."
-		if bash scripts/pi.sh --print --provider opencode-go --api-key "${OPENCODE_API_KEY:-}" <"$PROMPT_FILE"; then
+		if bash scripts/pi.sh --print --provider opencode-go --api-key "${OPENCODE_API_KEY:-}" \
+			<"$PROMPT_FILE" >"$AI_LOG" 2>&1; then
 			DOCS_OK=true
+		else
+			cat "$AI_LOG" >&2
 		fi
 	fi
 
-	rm -f "$PROMPT_FILE"
+	rm -f "$PROMPT_FILE" "$AI_LOG"
 
 	if [ "$DOCS_OK" = false ]; then
 		echo "⚠ No AI available for docs update — skipping."

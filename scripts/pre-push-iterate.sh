@@ -9,7 +9,16 @@ if [ -z "${CI:-}" ] && [ -f .envrc ]; then
 fi
 
 MAX_ITERATIONS=10
-LOG_FILE=".pre-push-review/last-run.log"
+FINDINGS_FILE=".pre-push-review/findings.md"
+VERDICT_FILE=".pre-push-review/verdict"
+
+cleanup() {
+	echo ""
+	echo "→ Interrupted. Stopping containers..."
+	docker compose down --remove-orphans 2>/dev/null || true
+	exit 130
+}
+trap cleanup INT TERM
 
 run_fix() {
 	local review_output="$1"
@@ -32,11 +41,10 @@ PROMPT_EOF
 	echo "Review output:" >>"$PROMPT_FILE"
 	printf '%s\n' "$review_output" >>"$PROMPT_FILE"
 
-	# Try Docker claude first
 	if bash scripts/claude.sh -p \
 		--model sonnet \
 		--allowedTools "Agent,Bash,Read,Edit,Write" \
-		<"$PROMPT_FILE" 2>&1; then
+		<"$PROMPT_FILE"; then
 		return 0
 	fi
 
@@ -44,7 +52,7 @@ PROMPT_EOF
 	if bash scripts/pi.sh --print \
 		--provider opencode-go \
 		--api-key "${OPENCODE_API_KEY:-}" \
-		<"$PROMPT_FILE" 2>&1; then
+		<"$PROMPT_FILE"; then
 		return 0
 	fi
 
@@ -55,20 +63,18 @@ PROMPT_EOF
 for i in $(seq 1 $MAX_ITERATIONS); do
 	echo "→ Pre-push review (pass $i of $MAX_ITERATIONS)..."
 
-	# Run review directly — pre-push-review-auto.sh handles its own tee to log + terminal
 	if ! bash scripts/pre-push-review-auto.sh; then
 		echo "✗ Review runner failed — no AI available. Blocking push."
 		exit 1
 	fi
 
-	REVIEW_OUTPUT=$(cat "$LOG_FILE" 2>/dev/null || true)
-
-	if echo "$REVIEW_OUTPUT" | grep -qE 'SAFE TO PUSH|PUSH WITH CAUTION'; then
+	if [ -f "$VERDICT_FILE" ] && grep -q 'SAFE' "$VERDICT_FILE"; then
 		echo "✓ Review passed on pass $i."
 		exit 0
 	fi
 
 	if [[ $i -lt $MAX_ITERATIONS ]]; then
+		REVIEW_OUTPUT=$(cat "$FINDINGS_FILE" 2>/dev/null || echo "No findings file found.")
 		echo "→ Issues found — running fix pass $i..."
 		run_fix "$REVIEW_OUTPUT" || echo "Fix pass $i had errors — retrying review..."
 	fi

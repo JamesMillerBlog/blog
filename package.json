@@ -4,7 +4,7 @@
     "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"]
   },
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky && bash scripts/setup-local.sh",
     "dev": "pnpm --dir web dev",
     "build": "pnpm --dir web build",
     "start": "pnpm --dir web start",
@@ -38,8 +38,7 @@
     "claude": "sh scripts/claude.sh",
     "claude:fresh": "docker compose build && pnpm claude",
     "pi": "sh scripts/pi.sh",
-    "pi:fresh": "docker compose build pi && pnpm pi",
-    "pr:generate": "./scripts/generate-pr.sh"
+    "pi:fresh": "docker compose build pi && pnpm pi"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

@@ -23,8 +23,7 @@
     "npm:pi-gh-cli",
     "npm:pi-powerline-footer",
     "npm:pi-caveman",
-    "npm:@demigodmode/pi-web-agent",
-    "npm:@gotgenes/pi-permission-system"
+    "npm:@demigodmode/pi-web-agent"
   ],
   "hideThinkingBlock": true
 }

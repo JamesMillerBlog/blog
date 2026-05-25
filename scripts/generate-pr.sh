@@ -64,7 +64,7 @@ run_ai() {
 	local prompt="$1"
 	local prompt_file
 	prompt_file=$(mktemp /tmp/pr-prompt-XXXXXX)
-	echo "$prompt" >"$prompt_file"
+	printf '%s' "$prompt" >"$prompt_file"
 
 	echo "→ Using claude (Docker) for PR generation..."
 	if bash scripts/claude.sh -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" <"$prompt_file"; then

@@ -5,8 +5,8 @@ set -euo pipefail
 [ -n "${CI:-}" ] && exit 0
 
 # Override `git push` to also generate the PR after a successful push.
-# `-c alias.push=` clears the alias for that one invocation so git runs the
-# built-in push command instead of recursing back into this alias.
-# Args are validated to reject shell metacharacters before being forwarded to git push.
-git config --local alias.push '!f() { for arg in "$@"; do case "$arg" in *[\;\`\$\(\)\{\}\|\&\<\>\\\"\']*) echo "git push: rejected unsafe argument: $arg" >&2; exit 1;; esac; done; git -c alias.push= push "$@"; bash scripts/generate-pr.sh; }; f'
+# scripts/push.sh runs the real push (with alias cleared to prevent recursion)
+# then calls generate-pr.sh. Using an explicit bash script avoids /bin/sh quirks
+# on macOS where inline alias commands after `git push` silently don't execute.
+git config --local alias.push '!bash scripts/push.sh'
 echo "✓ git push alias configured (push → pre-push hook → push → generate PR)"

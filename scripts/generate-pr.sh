@@ -1,14 +1,12 @@
 #!/bin/bash
-echo "DEBUG generate-pr.sh: invoked, branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)" >&2
 set -eo pipefail
 
 # Source .envrc for non-interactive shells (git hooks) where direnv hasn't loaded it
 if [ -z "${CI:-}" ] && [ -f .envrc ]; then
 	set -a
-	source .envrc || { echo "DEBUG generate-pr.sh: .envrc source failed (exit $?)" >&2; }
+	source .envrc
 	set +a
 fi
-echo "DEBUG generate-pr.sh: past envrc" >&2
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -cd '[:alnum:]/_.-' | cut -c1-80)
 

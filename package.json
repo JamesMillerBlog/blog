@@ -38,7 +38,8 @@
     "claude": "sh scripts/claude.sh",
     "claude:fresh": "docker compose build && pnpm claude",
     "pi": "sh scripts/pi.sh",
-    "pi:fresh": "docker compose build pi && pnpm pi"
+    "pi:fresh": "docker compose build pi && pnpm pi",
+    "pr:generate": "scripts/generate-pr.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

@@ -132,4 +132,5 @@ cd web && pnpm build    # production build
 cd web && pnpm test     # unit tests (vitest)
 pnpm claude             # Claude Code (Docker)
 pnpm pi                 # pi (Docker)
+pnpm pr:generate        # Generate or update PR description
 ```

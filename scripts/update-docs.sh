@@ -27,7 +27,7 @@ has_structural_changes() {
 if has_structural_changes; then
 	echo "Checking if documentation (AGENTS.md, etc.) needs updates..."
 
-	DIFF_FILE=$(mktemp /tmp/staged-diff-XXXXXX.diff)
+	DIFF_FILE=$(mktemp /tmp/staged-diff-XXXXXX)
 	trap 'rm -f "$DIFF_FILE"' EXIT
 
 	if $PRECOMMIT_MODE; then

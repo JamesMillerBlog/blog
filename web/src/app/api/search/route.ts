@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getAllPosts, isPostVisible } from '@/common/utils/posts'
 import { projects } from '@/app/projects/data'
 
+export const dynamic = 'force-static'
+
 export interface SearchResultItem {
   type: 'post' | 'project'
   title: string
@@ -16,6 +18,8 @@ export interface SearchResultItem {
 const rateLimitMap = new Map<string, number[]>()
 const RATE_LIMIT_WINDOW_MS = 60_000
 const RATE_LIMIT_MAX = 60
+let lastCleanup = 0
+const CLEANUP_COOLDOWN_MS = 60_000
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now()
@@ -25,8 +29,9 @@ function isRateLimited(ip: string): boolean {
   if (recent.length >= RATE_LIMIT_MAX) return true
   recent.push(now)
   rateLimitMap.set(ip, recent)
-  // Periodic cleanup: if map grows too large, clear old entries
-  if (rateLimitMap.size > 10_000) {
+  // Periodic cleanup: sweep if needed and last sweep was >60s ago (avoids latency spikes)
+  if (rateLimitMap.size > 10_000 && now - lastCleanup > CLEANUP_COOLDOWN_MS) {
+    lastCleanup = now
     for (const [key, ts] of rateLimitMap) {
       const valid = ts.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
       if (valid.length === 0) rateLimitMap.delete(key)
@@ -37,7 +42,10 @@ function isRateLimited(ip: string): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const ip =
+    request.headers.get('x-real-ip') ??
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    'unknown'
   if (isRateLimited(ip)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }

@@ -64,7 +64,7 @@ function highlightMatches(text: string, query: string): React.ReactNode {
 
   return parts.map((part, i) =>
     testPattern.test(part) ? (
-      <mark key={i} className="bg-primary/20 text-primary rounded-sm px-0.5">
+      <mark key={i} className="bg-primary/20 text-primary rounded-lg px-0.5">
         {part}
       </mark>
     ) : (
@@ -76,18 +76,37 @@ function highlightMatches(text: string, query: string): React.ReactNode {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('')
   const [allItems, setAllItems] = useState<SearchResultItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Map<number, HTMLAnchorElement>>(new Map())
+  const resultsRef = useRef<SearchResultItem[]>([])
 
-  // Fetch search index and focus input on mount
+  // Fetch search index on mount with abort + loading state
   useEffect(() => {
-    fetch('/api/search')
-      .then((r) => r.json())
-      .then((data: SearchResultItem[]) => setAllItems(data))
-      .catch(() => setAllItems([]))
+    const controller = new AbortController()
+    fetch('/api/search', { signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Search API returned ${r.status}`)
+        return r.json()
+      })
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setAllItems(Array.isArray(data) ? data : [])
+        }
+      })
+      .catch((err) => {
+        if (!controller.signal.aborted && err.name !== 'AbortError') {
+          setAllItems([])
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false)
+      })
     setTimeout(() => inputRef.current?.focus(), 50)
+    return () => controller.abort()
   }, [])
 
   const results = useMemo(() => {
@@ -109,6 +128,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return scored.map((s) => s.item)
   }, [query, allItems])
 
+  // Keep resultsRef in sync for stable handleKeyDown reference
+  useEffect(() => {
+    resultsRef.current = results
+  }, [results])
+
   // Reset selected index when query changes (derived in event handler)
 
   // Scroll selected item into view
@@ -119,18 +143,19 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      const currentResults = resultsRef.current
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0))
+          setSelectedIndex((prev) => (prev < currentResults.length - 1 ? prev + 1 : 0))
           break
         case 'ArrowUp':
           e.preventDefault()
-          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1))
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : currentResults.length - 1))
           break
         case 'Enter':
           e.preventDefault()
-          if (results[selectedIndex]) {
+          if (currentResults[selectedIndex]) {
             onClose()
             // Navigate via link click
             itemRefs.current.get(selectedIndex)?.click()
@@ -142,7 +167,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           break
         case 'Tab': {
           // Focus trap: cycle through focusable elements within the modal
-          const modal = document.querySelector('[role="dialog"][aria-modal="true"]')
+          const modal = modalRef.current
           if (!modal) break
           const focusable = modal.querySelectorAll<HTMLElement>(
             'input, a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -165,7 +190,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         }
       }
     },
-    [results, selectedIndex, onClose]
+    [selectedIndex, onClose]
   )
 
   // Global Escape listener
@@ -203,17 +228,23 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       {/* Modal */}
       <div className="relative max-w-2xl mx-auto mt-20 mx-4">
         <div
-          className="bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden border border-outline-variant/20"
+          ref={modalRef}
+          className="bg-surface-container-lowest rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.06)] overflow-hidden border border-outline-variant/15"
           role="dialog"
           aria-modal="true"
           aria-label="Search"
         >
           {/* Search Input */}
-          <div className="flex items-center gap-4 p-4 border-b border-outline-variant/20">
-            <SearchIcon className="w-5 h-5 text-on-surface-variant shrink-0" />
+          <div className="flex items-center gap-4 p-4">
+            {isLoading ? (
+              <SpinnerIcon className="w-5 h-5 text-on-surface-variant/50 shrink-0 animate-spin" />
+            ) : (
+              <SearchIcon className="w-5 h-5 text-on-surface-variant shrink-0" />
+            )}
             <input
               ref={inputRef}
               type="text"
+              disabled={isLoading}
               placeholder="Search posts and projects…"
               value={query}
               onChange={(e) => {
@@ -261,7 +292,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   else itemRefs.current.delete(idx)
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
-                className={`block p-4 transition-colors border-b border-outline-variant/10 last:border-0 ${
+                className={`block p-4 transition-colors ${
                   idx === selectedIndex ? 'bg-primary/10' : 'hover:bg-surface-container-low'
                 }`}
                 role="option"
@@ -337,6 +368,19 @@ function SearchIcon({ className }: { className?: string }) {
         strokeLinejoin="round"
         strokeWidth={2}
         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      />
+    </svg>
+  )
+}
+
+function SpinnerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
       />
     </svg>
   )

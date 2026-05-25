@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
 import { ui } from '@/i18n/en'
@@ -72,10 +72,13 @@ export function Navigation() {
     }, 320)
   }
 
-  const isActive = (path: string) => {
-    if (path === '/') return pathname === '/'
-    return pathname.startsWith(path)
-  }
+  const isActive = useCallback(
+    (path: string) => {
+      if (path === '/') return pathname === '/'
+      return pathname.startsWith(path)
+    },
+    [pathname]
+  )
 
   // Cmd+K to open search
   useEffect(() => {
@@ -93,7 +96,7 @@ export function Navigation() {
   return (
     <>
       <header className="fixed top-4 left-0 right-0 z-50 mx-auto w-[95%] max-w-7xl">
-        <nav className="flex items-center justify-between px-6 py-2 rounded-full bg-surface-container-lowest/60 dark:bg-surface-container/60 backdrop-blur-xl shadow-xl shadow-on-surface/5 border border-outline-variant/10">
+        <nav className="flex items-center justify-between px-6 py-2 rounded-full bg-surface-container-lowest/60 dark:bg-surface-container/60 backdrop-blur-xl border border-outline-variant/15">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div
@@ -121,7 +124,7 @@ export function Navigation() {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-1">
-            <NavLink href="/" active={isActive('/') && pathname === '/'}>
+            <NavLink href="/" active={isActive('/')}>
               {ui.nav.posts}
             </NavLink>
             <NavLink href="/projects" active={isActive('/projects')}>
@@ -172,14 +175,14 @@ export function Navigation() {
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/') && pathname === '/' ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface'}`}
+              className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface hover:bg-surface-container-low'}`}
             >
               {ui.nav.posts}
             </Link>
             <Link
               href="/projects"
               onClick={() => setMobileMenuOpen(false)}
-              className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/projects') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface'}`}
+              className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/projects') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface hover:bg-surface-container-low'}`}
             >
               {ui.nav.projects}
             </Link>

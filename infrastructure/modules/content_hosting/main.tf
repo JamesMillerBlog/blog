@@ -19,6 +19,16 @@ resource "aws_s3_bucket_public_access_block" "content" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "content" {
+  bucket = aws_s3_bucket.content.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_s3_bucket_versioning" "content" {
   bucket = aws_s3_bucket.content.id
 

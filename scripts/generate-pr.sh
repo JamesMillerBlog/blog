@@ -1,6 +1,11 @@
 #!/bin/bash
 set -eo pipefail
 
+DRAFT_FLAG=""
+if [[ "${1:-}" == "--draft" ]]; then
+  DRAFT_FLAG="--draft"
+fi
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -cd '[:alnum:]/_.-' | cut -c1-80)
 
 [[ -z "$BRANCH" ]] && { echo "fatal: could not determine branch name"; exit 1; }
@@ -11,8 +16,11 @@ if [[ "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
 fi
 
 command -v gh >/dev/null 2>&1 || { echo "gh CLI not found. Please install it."; exit 1; }
-gh auth status >/dev/null 2>&1 || { echo "gh not authenticated. Please run 'gh auth login'."; exit 1; }
-command -v claude >/dev/null 2>&1 || { echo "claude CLI not found. Please install it."; exit 1; }
+
+if [[ "${CI:-false}" != "true" ]]; then
+  gh auth status >/dev/null 2>&1 || { echo "gh not authenticated. Please run 'gh auth login'."; exit 1; }
+  command -v claude >/dev/null 2>&1 || { echo "claude CLI not found. Please install it."; exit 1; }
+fi
 
 # PR_NUMBER sourced from GitHub API (integer field) — validated below as defense-in-depth
 PR_NUMBER=$(gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || true)
@@ -31,17 +39,25 @@ PROMPT_STEPS="Steps:
 Note: PR title must follow conventional commits — start with feat:, fix:, chore:, docs:, refactor:, perf:, or test:"
 
 if [[ -n "$PR_NUMBER" ]]; then
-  echo "-> Requesting Claude to update PR #$PR_NUMBER..."
+  echo "-> Requesting AI to update PR #$PR_NUMBER..."
   PROMPT_ACTION="6. Run: gh pr edit \"${PR_NUMBER}\" --body '<filled template content>'"
   PROMPT_INTRO="Update PR #${PR_NUMBER} for branch: ${BRANCH}."
-  FALLBACK="Claude failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
+  FALLBACK="AI failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
 else
-  echo "-> Requesting Claude to create PR for branch ${BRANCH}..."
-  PROMPT_ACTION="6. Run: gh pr create --title '<conventional commit title: must start with feat:|fix:|chore:|docs:|refactor:|perf:|test: followed by short description>' --body '<filled template content>'"
+  echo "-> Requesting AI to create PR for branch ${BRANCH}..."
+  DRAFT_ARG=""
+  [[ -n "$DRAFT_FLAG" ]] && DRAFT_ARG=" --draft"
+  PROMPT_ACTION="6. Run: gh pr create${DRAFT_ARG} --title '<conventional commit title: must start with feat:|fix:|chore:|docs:|refactor:|perf:|test: followed by short description>' --body '<filled template content>'"
   PROMPT_INTRO="Create a PR for branch: ${BRANCH}."
-  FALLBACK="Claude failed to create PR. Run manually: gh pr create"
+  FALLBACK="AI failed to create PR. Run manually: gh pr create"
 fi
 
-printf '%s\n%s\n%s' "${PROMPT_INTRO}" "${PROMPT_STEPS}" "${PROMPT_ACTION}" \
-  | claude -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" \
-  2>&1 || echo "$FALLBACK"
+if [[ "${CI:-false}" == "true" ]]; then
+  printf '%s\n%s\n%s' "${PROMPT_INTRO}" "${PROMPT_STEPS}" "${PROMPT_ACTION}" \
+    | pi --agent-team-subagent-skills disabled --model opencode-go/deepseek-v4-flash \
+    2>&1 || echo "$FALLBACK"
+else
+  printf '%s\n%s\n%s' "${PROMPT_INTRO}" "${PROMPT_STEPS}" "${PROMPT_ACTION}" \
+    | claude -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" \
+    2>&1 || echo "$FALLBACK"
+fi

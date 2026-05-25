@@ -19,6 +19,9 @@ Read extra skill files only when relevant:
 - `web/_posts/` — local MDX preview
 - `.agents/skills/` — on-demand cross-tool skills
 - `.claude/agents/` — Claude Code agents
+- `.pi/prompts/` — pi workflow prompt templates
+- `.pi/settings.ci.json` — CI-specific pi configuration
+- `.github/workflows/ai-*.yml` — GitHub workflows for AI automation
 
 ## AI Tools
 
@@ -81,6 +84,17 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 
 ## Docker
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.
+
+## GitHub Workflows — Automated AI Development
+
+Two workflows automate issue implementation and PR review using OpenCode:
+
+| Workflow | Trigger | What it does |
+|----------|---------|-------------|
+| `ai-issue.yml` | Issue labeled `ai-implement` (repo owner only) | Implements the issue with deepseek-v4-pro, creates draft PR, runs pre-push review loop, creates independent Kimi review |
+| `ai-pr-comment.yml` | PR comment `/ai <instruction>` (repo owner only) | Checks out PR branch, runs deepseek-v4-pro to action instruction, commits changes |
+
+See `docs/AGENTIC_WORKFLOW.md` for full details on how to trigger and use these workflows.
 
 ## Commands
 ```bash

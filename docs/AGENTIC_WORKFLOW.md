@@ -133,6 +133,72 @@ In pi with the `pi-multiagent` extension installed, the `agent_team` tool can sp
 
 ---
 
+## GitHub Workflows — Automated AI Issue Implementation & Review
+
+Two GitHub workflows automate AI-driven development:
+
+### AI Issue Implementation (`ai-implement` label)
+
+**When:** An issue is labeled `ai-implement` by the repo owner.
+
+**What happens:**
+1. Creates a branch: `ai/issue-{number}-{slug}`
+2. Runs `deepseek-v4-pro` to implement the issue based on the issue title and body
+3. Creates a draft PR with the implementation
+4. Runs a pre-push review loop (up to 10 iterations) to validate changes
+5. Once passing, creates a final PR and transitions it to ready
+6. Runs a Kimi K2.6 independent code review and posts findings as a PR comment
+
+**To trigger:** Label an issue with `ai-implement` (repo owner only).
+
+**Example workflow:**
+```
+Issue: "Add dark mode toggle to homepage"
+↓ (label ai-implement)
+Branch: ai/issue-123-add-dark-mode-toggle
+↓ (deepseek implements)
+Draft PR #456 created
+↓ (pre-push review loop)
+Issues found → deepseek fixes → re-reviews → passes
+↓ (Kimi K2.6 review)
+Independent code review posted
+↓ (PR marked ready for human review)
+```
+
+### AI PR Comment Response (`/ai` command)
+
+**When:** A comment on an AI-initiated PR starts with `/ai <instruction>` (repo owner only).
+
+**What happens:**
+1. Checks out the PR branch
+2. Runs `deepseek-v4-pro` to action the instruction (e.g., "add loading state" or "fix the TypeScript error")
+3. Commits changes
+4. Posts result as a PR comment
+5. Pushes changes
+
+**Example:** Comment `/ai add a loading spinner while data is fetching` on a PR — OpenCode will implement it and commit.
+
+### Configuration
+
+- **`.pi/settings.ci.json`** — CI-specific pi settings: uses `deepseek-v4-pro` by default, enables `pi-lens` and `pi-multiagent` extensions
+- **`.pi/prompts/`** — Workflow prompt templates:
+  - `ai-issue-implement.md` — issue implementation instructions
+  - `ai-pr-respond.md` — PR comment response instructions
+  - `ai-pr-review.md` — independent PR review (Kimi K2.6)
+
+### Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop |
+| `scripts/ai-pr-review.sh` | Kimi K2.6 independent code review |
+| `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>` |
+| `scripts/generate-pr.sh` | (updated) Supports `--draft` flag and CI mode |
+
+All scripts post progress to the PR as comments, allowing real-time monitoring of the AI workflow.
+
+---
+
 ## Commit & Push Workflow
 
 ### Committing

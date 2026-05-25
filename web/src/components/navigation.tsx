@@ -81,18 +81,29 @@ export function Navigation() {
     [pathname]
   )
 
-  // Cmd+K to open search
+  // Cmd+K toggles search open/close
+  const searchOpenRef = useRef(searchOpen)
+  useEffect(() => {
+    searchOpenRef.current = searchOpen
+  }, [searchOpen])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setSearchKey((k) => k + 1)
-        setSearchOpen(true)
+        if (searchOpenRef.current) {
+          setSearchOpen(false)
+        } else {
+          setSearchKey((k) => k + 1)
+          setSearchOpen(true)
+        }
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  const handleSearchClose = useCallback(() => setSearchOpen(false), [])
 
   return (
     <>
@@ -191,7 +202,7 @@ export function Navigation() {
         )}
       </header>
 
-      <SearchModal key={searchKey} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchModal key={searchKey} isOpen={searchOpen} onClose={handleSearchClose} />
     </>
   )
 }

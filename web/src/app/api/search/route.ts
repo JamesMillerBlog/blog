@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { getAllPosts, isPostVisible } from '@/common/utils/posts'
+import { getAllPosts } from '@/common/utils/posts'
 import { projects } from '@/app/projects/data'
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 export interface SearchResultItem {
   type: 'post' | 'project'
@@ -50,10 +50,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
+  // getAllPosts() already filters by isPostVisible internally
   const allPosts = await getAllPosts()
-  const visiblePosts = allPosts.filter(isPostVisible)
 
-  const postResults: SearchResultItem[] = visiblePosts.map((post) => ({
+  const postResults: SearchResultItem[] = allPosts.map((post) => ({
     type: 'post',
     title: post.title,
     slug: post.slug,

@@ -133,7 +133,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     resultsRef.current = results
   }, [results])
 
-  // Reset selected index when query changes (derived in event handler)
+  // Clear stale itemRefs when results change (prevents memory leak)
+  useEffect(() => {
+    itemRefs.current.clear()
+  }, [results])
 
   // Scroll selected item into view
   useEffect(() => {

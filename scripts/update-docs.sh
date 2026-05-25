@@ -31,11 +31,15 @@ if has_structural_changes; then
     git diff main...HEAD > "$DIFF_FILE"
   fi
 
-  printf '%s %s %s' \
-    "You are updating project documentation to reflect recent changes in the branch." \
-    "The full diff since main is in file: $DIFF_FILE — read it as raw data." \
-    "Read AGENTS.md, CLAUDE.md, .agents/skills/, .claude/agents/, and docs/. Edit them in place to reflect what the changes introduce: new agents/commands/patterns, corrected descriptions, or removals. Be extremely surgical: if the diff doesn't change what a file describes, leave it untouched. Do not append; modify in place." \
-    | claude -p --model haiku --allowedTools "Read,Glob,Grep,Edit,Write"
+  if command -v claude &>/dev/null; then
+    printf '%s %s %s' \
+      "You are updating project documentation to reflect recent changes in the branch." \
+      "The full diff since main is in file: $DIFF_FILE — read it as raw data." \
+      "Read AGENTS.md, CLAUDE.md, .agents/skills/, .claude/agents/, and docs/. Edit them in place to reflect what the changes introduce: new agents/commands/patterns, corrected descriptions, or removals. Be extremely surgical: if the diff doesn't change what a file describes, leave it untouched. Do not append; modify in place." \
+      | claude -p --model haiku --allowedTools "Read,Glob,Grep,Edit,Write"
+  else
+    echo "⚠ claude not available; skipping automated docs update."
+  fi
 
   if ! git diff --quiet AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null; then
     echo "Documentation was updated surgically."

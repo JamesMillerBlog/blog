@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { SearchResultItem } from '@/app/api/search/route'
+import { SearchIcon } from '@/components/ui/icons'
 
 interface SearchModalProps {
   isOpen: boolean
@@ -78,11 +80,14 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [allItems, setAllItems] = useState<SearchResultItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Map<number, HTMLAnchorElement>>(new Map())
   const resultsRef = useRef<SearchResultItem[]>([])
+  const selectedIndexRef = useRef(0)
+  const router = useRouter()
 
   // Fetch search index on mount with abort + loading state
   useEffect(() => {
@@ -100,6 +105,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       .catch((err) => {
         if (!controller.signal.aborted && err.name !== 'AbortError') {
           setAllItems([])
+          setError(err instanceof Error ? err.message : 'Failed to load search index')
         }
       })
       .finally(() => {
@@ -128,10 +134,14 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return scored.map((s) => s.item)
   }, [query, allItems])
 
-  // Keep resultsRef in sync for stable handleKeyDown reference
+  // Keep resultsRef and selectedIndexRef in sync for stable handleKeyDown reference
   useEffect(() => {
     resultsRef.current = results
   }, [results])
+
+  useEffect(() => {
+    selectedIndexRef.current = selectedIndex
+  }, [selectedIndex])
 
   // Clear stale itemRefs when results change (prevents memory leak)
   useEffect(() => {
@@ -147,6 +157,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       const currentResults = resultsRef.current
+      const currentIdx = selectedIndexRef.current
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
@@ -158,10 +169,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           break
         case 'Enter':
           e.preventDefault()
-          if (currentResults[selectedIndex]) {
+          if (currentResults[currentIdx]) {
+            const href = currentResults[currentIdx].href
             onClose()
-            // Navigate via link click
-            itemRefs.current.get(selectedIndex)?.click()
+            router.push(href)
           }
           break
         case 'Escape':
@@ -173,7 +184,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           const modal = modalRef.current
           if (!modal) break
           const focusable = modal.querySelectorAll<HTMLElement>(
-            'input, a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            'input:not([disabled]), a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
           if (focusable.length === 0) break
           const first = focusable[0]
@@ -193,7 +204,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         }
       }
     },
-    [selectedIndex, onClose]
+    [onClose, router]
   )
 
   // Global Escape listener
@@ -223,16 +234,16 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     <div className="fixed inset-0 z-[100]">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-on-background/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-on-background/50 backdrop-blur-xl"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative max-w-2xl mx-auto mt-20 mx-4">
+      <div className="relative max-w-2xl mx-auto mt-20 px-4">
         <div
           ref={modalRef}
-          className="bg-surface-container-lowest rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.06)] overflow-hidden border border-outline-variant/15"
+          className="bg-surface-container-lowest rounded-2xl shadow-[0_20px_40px_-12px_var(--color-on-surface)] overflow-hidden border border-outline-variant/15"
           role="dialog"
           aria-modal="true"
           aria-label="Search"
@@ -241,33 +252,65 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           <div className="flex items-center gap-4 p-4">
             {isLoading ? (
               <SpinnerIcon className="w-5 h-5 text-on-surface-variant/50 shrink-0 animate-spin" />
+            ) : error ? (
+              <div className="flex items-center gap-2 w-full">
+                <span className="text-sm shrink-0" aria-label="Error">
+                  ⚠
+                </span>
+                <span className="text-sm text-on-surface-variant flex-1">{error}</span>
+                <button
+                  onClick={() => {
+                    setError(null)
+                    setIsLoading(true)
+                    const controller = new AbortController()
+                    fetch('/api/search', { signal: controller.signal })
+                      .then((r) => {
+                        if (!r.ok) throw new Error(`Search API returned ${r.status}`)
+                        return r.json()
+                      })
+                      .then((data) => setAllItems(Array.isArray(data) ? data : []))
+                      .catch((err) => {
+                        if (err.name !== 'AbortError')
+                          setError(
+                            err instanceof Error ? err.message : 'Failed to load search index'
+                          )
+                      })
+                      .finally(() => setIsLoading(false))
+                  }}
+                  className="px-2 py-1 text-xs font-headline font-semibold rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-colors shrink-0"
+                >
+                  Retry
+                </button>
+              </div>
             ) : (
               <SearchIcon className="w-5 h-5 text-on-surface-variant shrink-0" />
             )}
-            <input
-              ref={inputRef}
-              type="text"
-              disabled={isLoading}
-              placeholder="Search posts and projects…"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-                setSelectedIndex(0)
-              }}
-              onKeyDown={handleKeyDown}
-              className="flex-1 bg-transparent text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none font-headline"
-              role="combobox"
-              aria-expanded={results.length > 0}
-              aria-controls="search-results-list"
-              aria-activedescendant={
-                results.length > 0 ? `search-result-${selectedIndex}` : undefined
-              }
-              aria-autocomplete="list"
-              aria-haspopup="listbox"
-              autoComplete="off"
-              autoFocus
-            />
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-on-surface-variant bg-surface-container rounded">
+            {!error && (
+              <input
+                ref={inputRef}
+                type="text"
+                disabled={isLoading}
+                placeholder="Search posts and projects…"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value)
+                  setSelectedIndex(0)
+                }}
+                onKeyDown={handleKeyDown}
+                className="flex-1 bg-transparent text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none font-headline"
+                role="combobox"
+                aria-expanded={results.length > 0}
+                aria-controls="search-results-list"
+                aria-activedescendant={
+                  results.length > 0 ? `search-result-${selectedIndex}` : undefined
+                }
+                aria-autocomplete="list"
+                aria-haspopup="listbox"
+                autoComplete="off"
+                autoFocus
+              />
+            )}
+            <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-on-surface-variant bg-surface-container rounded-lg">
               ESC
             </kbd>
           </div>
@@ -338,18 +381,18 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <p className="mb-2">Start typing to search posts and projects</p>
                 <p className="text-sm">
                   Press{' '}
-                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded">
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded-lg">
                     ↑
                   </kbd>{' '}
-                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded">
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded-lg">
                     ↓
                   </kbd>{' '}
                   to navigate ·{' '}
-                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded">
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded-lg">
                     ↵
                   </kbd>{' '}
                   to select ·{' '}
-                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded">
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-surface-container rounded-lg">
                     esc
                   </kbd>{' '}
                   to close
@@ -360,19 +403,6 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         </div>
       </div>
     </div>
-  )
-}
-
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-      />
-    </svg>
   )
 }
 

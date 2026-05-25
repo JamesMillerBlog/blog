@@ -21,7 +21,7 @@ const RATE_LIMIT_MAX = 60
 let lastCleanup = 0
 const CLEANUP_COOLDOWN_MS = 60_000
 
-function isRateLimited(ip: string): boolean {
+function checkAndRecordRequest(ip: string): boolean {
   const now = Date.now()
   const timestamps = rateLimitMap.get(ip) ?? []
   // Prune expired timestamps
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     request.headers.get('x-real-ip') ??
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     'unknown'
-  if (isRateLimited(ip)) {
+  if (checkAndRecordRequest(ip)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 

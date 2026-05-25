@@ -58,6 +58,14 @@ BLOG_GIT_DIR=$(git rev-parse --git-common-dir) pnpm pi
 
 Both `pnpm claude` and `pnpm pi` mount the `.git` directory read-only when the variable is set.
 
+## GitHub CLI Integration
+
+Both containers include the `gh` CLI tool for GitHub automation (creating PRs, posting comments, querying issues). Container mounts host's GitHub credentials:
+- `${HOME}/.config/gh` → `/home/claude/.config/gh:ro` (read-only)
+- `${HOME}/.config/gh` → `/home/pi/.config/gh:ro` (read-only)
+
+Authenticate locally with `gh auth login` once; credentials persist to both containers.
+
 ## Persistence
 
 Host mounts persist credentials and settings across restarts:

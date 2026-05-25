@@ -57,6 +57,27 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 - UI: Plus Jakarta Sans · Content: Newsreader
 - No 1px borders · `rounded-xl`+ · color shifts for depth
 
+## Automated Workflows
+
+GitHub Actions automatically implement issues and review PRs using pi agents:
+
+| Workflow | Trigger | Action |
+|----------|---------|--------|
+| **AI Issue Implementation** | Label `ai` added to issue | Creates branch, implements via pi, opens PR |
+| **AI PR Review** | PR opened / updated | Reviews diff via pi, posts findings as comment |
+
+These workflows run `pi` with prompt guards against injection attacks. See `.github/workflows/` for details.
+
+## Pre-Push Review System
+
+Local pre-push review via `bash scripts/pre-push-iterate.sh`:
+- Reads `.claude/prompts/pre-push-review.md` or `.pi/prompts/pre-push-review.md`
+- **Iterative loop:** Review → Fix CRITICAL/HIGH → Retest → Repeat (max 10 passes)
+- Exits clean only when verdict is **SAFE TO PUSH**
+- Writes findings to `.pre-push-review/findings.md` and verdict to `.pre-push-review/verdict`
+
+Triggered automatically by `.husky/pre-push` hook. Falls back: claude → pi.
+
 ## Claude Agents
 
 **Writer agents** — implement and build:
@@ -69,24 +90,30 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | `security-auditor` | Vulnerability scanning |
 | `parallel-executor` | Independent parallel tasks |
 
-**Reviewer agents** — read-only, dispatched by `/pre-push-review` based on review mode and changed file types:
+**Reviewer agents** — read-only, dispatched by `/pre-push-review` or pre-push loop based on file types:
 
-| Agent | Dispatched when | Checks |
-|-------|-----------------|--------|
-| `reviewer-security` | always | Secrets, injection, CVEs |
-| `reviewer-code-quality` | app / infra changes | Smells, complexity, best practices |
-| `reviewer-frontend` | `*.tsx/ts/jsx/js/css` | React, TypeScript, a11y |
-| `reviewer-design` | `*.tsx/jsx/css` | Byte Mark tokens, typography |
-| `reviewer-infrastructure` | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform |
+| Agent | Triggered by | Checks |
+|-------|--------------|--------|
+| `reviewer-security` | Always in review | Secrets, injection, CVEs |
+| `reviewer-code-quality` | App / infra changes | Smells, complexity, best practices |
+| `reviewer-frontend` | `*.tsx/ts/jsx/js/css` changes | React, TypeScript, a11y |
+| `reviewer-design` | `*.tsx/jsx/css` changes | Byte Mark tokens, typography |
+| `reviewer-infrastructure` | `.tf`, `.github/`, Dockerfile changes | GitHub Actions, IAM, Terraform |
 
 ## Docker
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.
 
 ## Commands
+
+### Local development
 ```bash
 cd web && pnpm dev      # dev server
 cd web && pnpm build    # production build
 cd web && pnpm test     # unit tests (vitest)
 pnpm claude             # Claude Code (Docker)
 pnpm pi                 # pi (Docker)
+git push                # push + pre-push review loop + auto PR generation (aliased by setup-local.sh)
 ```
+
+### Documentation
+The husky `prepare` hook automatically runs `scripts/setup-local.sh` to configure the `git push` alias. If manually pushing without the alias, run `scripts/pre-push-iterate.sh` before pushing.

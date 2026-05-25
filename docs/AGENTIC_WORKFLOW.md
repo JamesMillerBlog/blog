@@ -133,6 +133,38 @@ In pi with the `pi-multiagent` extension installed, the `agent_team` tool can sp
 
 ---
 
+## GitHub Actions Automation
+
+### Automated Issue Implementation
+
+When a GitHub issue is labeled with `ai`, a workflow automatically:
+
+1. Creates a branch `ai/issue-{number}-{title-slug}`
+2. Reads AGENTS.md for project context
+3. Runs `pi` to implement the issue autonomously
+4. Posts progress comments to the issue
+5. Runs typecheck and tests; fixes any failures
+6. Executes pre-push review (`.pi/prompts/pre-push-review.md`)
+7. Commits changes and pushes
+8. Opens a PR (triggering the auto-review workflow)
+
+**Protection**: The issue body is sanitized against prompt injection. Commands or system prompts embedded in the issue body are treated as data, never instructions.
+
+### Automated PR Review
+
+When a PR is opened or updated, a workflow automatically:
+
+1. Checks out the base branch (safe for script execution)
+2. Fetches the PR head for diff context
+3. Runs `pi` with PR review agents via `agent_team`
+4. Dispatches agents with model diversity: security via deepseek, others via kimi
+5. Parses each agent's findings and aggregates by severity
+6. Posts consolidated review as a PR comment
+
+Reviewers are selected based on changed file types. See `.pi/prompts/pr-review.md` for details.
+
+---
+
 ## Commit & Push Workflow
 
 ### Committing
@@ -153,37 +185,48 @@ SKIP_DOCS_UPDATE=1 git commit -m "wip"
 
 ### Pushing
 
-Before pushing to a public branch, run a multi-agent review inside Claude Code:
-
-```
-/pre-push-review
-```
-
-Then push:
-
 ```bash
 git push
 ```
 
-The pre-push hook runs a local `gitleaks` scan when available, then tests, then checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked. Bypass with `git push --no-verify` only if you have a good reason.
+The `.husky/pre-push` hook automatically runs `bash scripts/pre-push-iterate.sh`, which:
 
-**When using pi:** You can still run the review scripts manually (`bash scripts/pre-push-review-manifest.sh`, `bash scripts/pre-push-static-checks.sh`) and ask pi to review the output, but pi has no equivalent of the full multi-agent `/pre-push-review` command. Use `git push --no-verify` or run the review in Claude before switching.
+1. **Reviews**: Stages all changes and runs a multi-agent pre-push review via claude or pi
+2. **Fixes**: If CRITICAL or HIGH findings exist, automatically fixes them and re-tests
+3. **Iterates**: Up to 10 review → fix → test cycles until clean or blocked
+4. **Verdict**: Exits with 0 only when `SAFE TO PUSH`. Blocks push if issues remain after max iterations.
+5. **Generates PR**: After push succeeds, `scripts/generate-pr.sh` is called to create/update the PR
 
-### What `/pre-push-review` produces
+Findings are written to `.pre-push-review/findings.md` and verdict to `.pre-push-review/verdict`.
 
-1. **Architecture / Flow Diagram** — ASCII diagram if changes affect structure, data flow, or CI
-2. **Findings by severity** — aggregated across the reviewers selected for the current diff (CRITICAL / HIGH / MEDIUM / LOW)
-3. **Verdict** — SAFE TO PUSH / DO NOT PUSH / PUSH WITH CAUTION
+To skip the hook (not recommended):
+```bash
+git push --no-verify
+```
 
-### Reviewers
+### Pre-push review behavior
 
-| Reviewer | Focus |
-|----------|-------|
-| `reviewer-security` | Secrets, injection, CVEs, exploitable logic |
-| `reviewer-frontend` | React/Next.js patterns, TypeScript, accessibility |
-| `reviewer-design` | Byte Mark compliance — tokens, typography, borders |
-| `reviewer-infrastructure` | GitHub Actions injection, IAM, Terraform misconfigs |
-| `reviewer-code-quality` | Syntax, smells, complexity, naming, best practices |
+The review loop:
+1. Runs claude first (`.claude/prompts/pre-push-review.md`) — full multi-agent review
+2. Falls back to pi (`.pi/prompts/pre-push-review.md`) if claude unavailable
+3. Parses verdict from findings file
+4. If SAFE TO PUSH → allows push; otherwise attempts fix cycle
+5. Each fix cycle: runs claude or pi to fix CRITICAL/HIGH issues, re-runs typecheck and tests
+6. Stops after 10 iterations regardless to prevent infinite loops
+
+Reviewers dispatched based on changed file types:
+
+| Reviewer | Triggered when | Checks |
+|----------|---|---|
+| `reviewer-security` | Always | Secrets, injection, CVEs, exploitable logic |
+| `reviewer-frontend` | `*.tsx/ts/jsx/js/css` changed | React/Next.js patterns, TypeScript, accessibility |
+| `reviewer-design` | `*.tsx/jsx/css` changed | Byte Mark compliance — tokens, typography, borders |
+| `reviewer-infrastructure` | `.tf`, `.github/`, Dockerfile changed | GitHub Actions injection, IAM, Terraform misconfigs |
+| `reviewer-code-quality` | App code changed | Syntax, smells, complexity, naming, best practices |
+
+### Automatic PR generation
+
+After `git push` succeeds, `pnpm pr:generate` (or `scripts/generate-pr.sh`) is called to create or update the PR. This runs claude or pi to fill in PR title and body. Falls back if both tools unavailable.
 
 ### Critical vulnerability handling
 

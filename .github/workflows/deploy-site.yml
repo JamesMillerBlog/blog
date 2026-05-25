@@ -87,7 +87,6 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ''
           R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
           BLOG_R2_BUCKET: ${{ vars.BLOG_R2_BUCKET }}
         run: |
@@ -121,10 +120,10 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ''
           R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          ASSETS_R2_BUCKET: ${{ vars.ASSETS_R2_BUCKET }}
         run: |
-          aws s3 sync out/assets/ s3://assets-jamesmiller-blog/assets/ \
+          aws s3 sync out/assets/ s3://${ASSETS_R2_BUCKET}/assets/ \
             --endpoint-url ${R2_ENDPOINT} \
             --region auto \
             --cache-control "public, max-age=86400"

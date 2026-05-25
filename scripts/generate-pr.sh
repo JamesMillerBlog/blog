@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -e
 
 DRAFT_FLAG=""
 if [[ "${1:-}" == "--draft" ]]; then

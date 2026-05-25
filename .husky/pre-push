@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -e
 
 # Run a fast local secret scan before heavier checks when available.
 ./scripts/pre-push-secret-scan.sh

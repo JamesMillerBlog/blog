@@ -76,25 +76,28 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 
 | Agent | Dispatched when | Checks |
 |-------|-----------------|--------|
-| `reviewer-security` | always | Secrets, injection, CVEs |
+| `reviewer-security` (Sonnet) | always | Secrets, injection, CVEs, exploitable logic |
 | `reviewer-code-quality` | app / infra changes | Smells, complexity, best practices |
 | `reviewer-frontend` | `*.tsx/ts/jsx/js/css` | React, TypeScript, a11y |
 | `reviewer-design` | `*.tsx/jsx/css` | Byte Mark tokens, typography |
 | `reviewer-infrastructure` | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform |
+
+(Security reviewer uses claude-sonnet-4-6 for deeper adversarial coverage; others use Haiku for speed.)
 
 ## Docker
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.
 
 ## GitHub Workflows — Automated AI Development
 
-Two workflows automate issue implementation and PR review using OpenCode:
+Three workflows automate issue implementation and PR management using OpenCode:
 
 | Workflow | Trigger | What it does |
 |----------|---------|-------------|
-| `ai-issue.yml` | Issue labeled `ai-implement` (repo owner only) | Implements the issue with deepseek-v4-pro, creates draft PR, runs pre-push review loop, creates independent Kimi review |
-| `ai-pr-comment.yml` | PR comment `/ai <instruction>` (repo owner only) | Checks out PR branch, runs deepseek-v4-pro to action instruction, commits changes |
+| `ai-issue.yml` | Issue labeled `ai-implement` (repo owner only) | Implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
+| `ai-pr-merged.yml` | AI-generated PR merged (auto) | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive |
+| `destroy-preview-manual.yml` | Manual workflow trigger (repo owner) | Destroys a specific PR's ephemeral preview environment |
 
-See `docs/AGENTIC_WORKFLOW.md` for full details on how to trigger and use these workflows.
+See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment architecture, issue template, and E2E test generation.
 
 ## Commands
 ```bash

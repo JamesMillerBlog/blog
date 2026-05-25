@@ -49,13 +49,15 @@ Specialist agents focus Claude on a specific domain. Switch agents with `/agent 
 
 Dispatched automatically by `/pre-push-review`. Never write code — they review diffs adversarially.
 
-| Agent | What it checks |
-|-------|---------------|
-| `reviewer-security` | Secrets, injection, CVEs, exploitable logic, prompt injection in diff |
-| `reviewer-frontend` | React/Next.js patterns, TypeScript safety, accessibility, performance |
-| `reviewer-design` | Byte Mark compliance — tokens, typography, borders, corner radii |
-| `reviewer-infrastructure` | GitHub Actions injection, IAM permissions, Terraform misconfigs |
-| `reviewer-code-quality` | Syntax, code smells, complexity, naming, reusability, best practices |
+| Agent | Model | What it checks |
+|-------|-------|---------------|
+| `reviewer-security` | claude-sonnet-4-6 | Secrets, injection, CVEs, exploitable logic, prompt injection in diff |
+| `reviewer-frontend` | claude-haiku-4-5 | React/Next.js patterns, TypeScript safety, accessibility, performance |
+| `reviewer-design` | claude-haiku-4-5 | Byte Mark compliance — tokens, typography, borders, corner radii |
+| `reviewer-infrastructure` | claude-haiku-4-5 | GitHub Actions injection, IAM permissions, Terraform misconfigs |
+| `reviewer-code-quality` | claude-haiku-4-5 | Syntax, code smells, complexity, naming, reusability, best practices |
+
+(Security reviewer runs on Sonnet for deeper adversarial coverage; others use Haiku for speed.)
 
 ### pi — Skills & Multi-Agent
 
@@ -135,7 +137,7 @@ In pi with the `pi-multiagent` extension installed, the `agent_team` tool can sp
 
 ## GitHub Workflows — Automated AI Issue Implementation & Review
 
-Two GitHub workflows automate AI-driven development:
+Three GitHub workflows automate AI-driven development:
 
 ### AI Issue Implementation (`ai-implement` label)
 
@@ -143,40 +145,57 @@ Two GitHub workflows automate AI-driven development:
 
 **What happens:**
 1. Creates a branch: `ai/issue-{number}-{slug}`
-2. Runs `deepseek-v4-pro` to implement the issue based on the issue title and body
-3. Creates a draft PR with the implementation
-4. Runs a pre-push review loop (up to 10 iterations) to validate changes
-5. Once passing, creates a final PR and transitions it to ready
-6. Runs a Kimi K2.6 independent code review and posts findings as a PR comment
+2. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title and body
+3. Phase 2 — **Pre-push review loop** (local, up to 10 iterations) — validates changes before any push. Issues found → deepseek fixes locally → re-reviews → passes
+4. Phase 3 — **Push and create draft PR** — writes review stamp, pushes branch, creates draft PR on GitHub
+5. Phase 4 — **Preview deployment** — if PR created successfully:
+   - Deploys site to ephemeral Cloudflare R2 bucket: `https://pr-{number}.staging.jamesmiller.blog`
+   - Generates AI E2E tests from issue acceptance criteria
+   - Runs Playwright tests against preview
+   - Registers GitHub deployment and posts Playwright report link
+6. Phase 5 — **PR summary comment** — posts comprehensive implementation + review log to PR
+7. Phase 6 — **Independent code review** — Kimi K2.6 reviews the PR and posts findings as a comment
 
-**To trigger:** Label an issue with `ai-implement` (repo owner only).
+**To trigger:** Label an issue with `ai-implement` (repo owner only). Use the template at `.github/ISSUE_TEMPLATE/ai-implement.yml`.
+
+**Issue template fields:**
+- **Description** — what needs building/fixing (required)
+- **Acceptance Criteria** — bullet-point list of testable criteria (used to generate E2E tests, required)
+- **Technical Context** — relevant files, components, links (optional)
+- **Design Notes** — UI/UX requirements, Byte Mark references (optional)
+- **Out of Scope** — what AI should NOT change (optional)
 
 **Example workflow:**
 ```
 Issue: "Add dark mode toggle to homepage"
 ↓ (label ai-implement)
 Branch: ai/issue-123-add-dark-mode-toggle
-↓ (deepseek implements)
-Draft PR #456 created
-↓ (pre-push review loop)
-Issues found → deepseek fixes → re-reviews → passes
-↓ (Kimi K2.6 review)
-Independent code review posted
-↓ (PR marked ready for human review)
+↓ (Phase 1: deepseek implements)
+↓ (Phase 2: review loop locally — fixes issues, passes)
+↓ (Phase 3: push + create draft PR #456)
+↓ (Phase 4: deploy to pr-456.staging.jamesmiller.blog, run generated E2E tests)
+↓ (Phase 5: post implementation + review summary to PR)
+↓ (Phase 6: Kimi K2.6 independent review)
+Preview live + tests pass/fail visible in Actions
 ```
 
-### AI PR Comment Response (`/ai` command)
+### AI PR Merged — Auto-cleanup (`ai-pr-merged` workflow)
 
-**When:** A comment on an AI-initiated PR starts with `/ai <instruction>` (repo owner only).
+**When:** An AI-generated PR (branch starts with `ai/issue-`) is merged.
 
 **What happens:**
-1. Checks out the PR branch
-2. Runs `deepseek-v4-pro` to action the instruction (e.g., "add loading state" or "fix the TypeScript error")
-3. Commits changes
-4. Posts result as a PR comment
-5. Pushes changes
+1. Closes the linked issue automatically
+2. Destroys the ephemeral preview environment (Terraform destroy)
+3. Marks the GitHub deployment as inactive
 
-**Example:** Comment `/ai add a loading spinner while data is fetching` on a PR — OpenCode will implement it and commit.
+### Destroy Preview Environment — Manual (`destroy-preview-manual` workflow)
+
+**When:** Triggered manually via GitHub Actions UI (repo owner).
+
+**What happens:**
+1. Asks for PR number
+2. Destroys that PR's preview environment and marks deployment inactive
+3. Useful if PR is abandoned or preview needs early cleanup
 
 ### Configuration
 
@@ -185,17 +204,36 @@ Independent code review posted
   - `ai-issue-implement.md` — issue implementation instructions
   - `ai-pr-respond.md` — PR comment response instructions
   - `ai-pr-review.md` — independent PR review (Kimi K2.6)
+- **`infrastructure/stacks/site/ephemeral/`** — Terraform for ephemeral preview environments:
+  - `main.tf` — Cloudflare R2 bucket, custom domain, Workers Basic Auth
+  - `variables.tf` — PR number, Cloudflare credentials, Basic Auth credentials
 
 ### Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop |
+| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary |
 | `scripts/ai-pr-review.sh` | Kimi K2.6 independent code review |
 | `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>` |
-| `scripts/generate-pr.sh` | (updated) Supports `--draft` flag and CI mode |
+| `scripts/ai-generate-tests.sh` | Generates Playwright E2E tests from issue description using `deepseek-v4-pro` |
+| `scripts/generate-pr.sh` | Supports `--draft` flag and CI mode |
 
-All scripts post progress to the PR as comments, allowing real-time monitoring of the AI workflow.
+### Infrastructure — Ephemeral Preview Environments
+
+Each AI-generated PR gets an ephemeral preview environment for live testing:
+
+- **R2 Bucket:** `jamesmiller-blog-pr-{number}` — auto-created, ephemeral (no `prevent_destroy`)
+- **Domain:** `pr-{number}.staging.jamesmiller.blog` — custom domain via Cloudflare
+- **Auth:** Basic Auth via Cloudflare Workers (same credentials as staging)
+- **Lifecycle:** Created when PR is created, destroyed when PR is merged (or manually via destroy-preview-manual workflow)
+
+### Playwright Configuration
+
+Updated for CI preview testing:
+
+- `PLAYWRIGHT_BASE_URL` env var — if set, tests target remote preview instead of localhost
+- `PLAYWRIGHT_BASIC_AUTH_USERNAME` & `PLAYWRIGHT_BASIC_AUTH_PASSWORD` env vars — auto-submitted for preview auth
+- `CI=true` captures video/screenshots on failure, used by test report artifact
 
 ---
 

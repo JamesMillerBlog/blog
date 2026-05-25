@@ -1,5 +1,14 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const remoteUrl = process.env.PLAYWRIGHT_BASE_URL
+if (remoteUrl) {
+  try {
+    new URL(remoteUrl)
+  } catch {
+    throw new Error(`PLAYWRIGHT_BASE_URL is not a valid URL: "${remoteUrl}"`)
+  }
+}
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -9,8 +18,17 @@ export default defineConfig({
   outputDir: './e2e/test-results',
   reporter: [['html', { outputFolder: './e2e/playwright-report' }]],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: remoteUrl ?? 'http://localhost:3000',
+    httpCredentials:
+      process.env.PLAYWRIGHT_BASIC_AUTH_USERNAME && process.env.PLAYWRIGHT_BASIC_AUTH_PASSWORD
+        ? {
+            username: process.env.PLAYWRIGHT_BASIC_AUTH_USERNAME,
+            password: process.env.PLAYWRIGHT_BASIC_AUTH_PASSWORD,
+          }
+        : undefined,
     trace: 'on-first-retry',
+    video: process.env.CI ? 'on' : 'off',
+    screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
   projects: [
     {
@@ -18,12 +36,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    // Use the dev server in CI (build step handled separately);
-    // locally you can pre-start `pnpm dev` and set REUSE_SERVER=1
-    command: process.env.CI ? 'pnpm build && pnpm start' : 'pnpm dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 300000,
-  },
+  webServer: remoteUrl
+    ? undefined
+    : {
+        command: process.env.CI ? 'pnpm build && pnpm start' : 'pnpm dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 300000,
+      },
 })

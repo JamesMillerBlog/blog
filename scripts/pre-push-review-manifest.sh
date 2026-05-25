@@ -8,7 +8,7 @@ branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)
 base_ref=""
 merge_base=""
 
-for candidate in "origin/$branch" "origin/main" "origin/master"; do
+for candidate in "origin/main" "origin/master" "origin/$branch"; do
   if git rev-parse --verify "$candidate" >/dev/null 2>&1; then
     base_ref="$candidate"
     merge_base=$(git merge-base "$candidate" HEAD 2>/dev/null || true)

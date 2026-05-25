@@ -1,0 +1,92 @@
+name: AI PR Comment Response
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  respond:
+    if: |
+      github.event.issue.pull_request != null &&
+      github.event.comment.user.login == github.repository_owner &&
+      startsWith(github.event.comment.body, '/ai ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Get PR branch
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DATA=$(gh pr view ${{ github.event.issue.number }} --json headRefName,number)
+          echo "branch=$(echo "$DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
+          echo "number=$(echo "$DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Install OpenCode
+        run: npm install -g @earendil-works/pi-coding-agent pi-multiagent pi-gh-cli pi-lens
+
+      - name: Configure git
+        run: |
+          git config --global user.name "pi[bot]"
+          git config --global user.email "pi[bot]@users.noreply.github.com"
+
+      - name: Setup OpenCode permissions
+        run: |
+          mkdir -p .pi/extensions/pi-permission-system
+          echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
+
+      - name: Acknowledge comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          INSTRUCTION="${COMMENT_BODY#/ai }"
+          gh pr comment ${{ steps.pr.outputs.number }} --body "**Working on it...**
+
+          > ${INSTRUCTION}"
+
+      - name: Run AI response
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          INSTRUCTION="${COMMENT_BODY#/ai }"
+          bash scripts/ai-respond.sh "$PR_NUMBER" "$BRANCH" "$INSTRUCTION"
+
+      - name: Push changes
+        run: git push origin ${{ steps.pr.outputs.branch }}
+
+      - name: Post result
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -f /tmp/ai-respond-result.md ]]; then
+            gh pr comment ${{ steps.pr.outputs.number }} --body "$(cat /tmp/ai-respond-result.md)"
+          fi

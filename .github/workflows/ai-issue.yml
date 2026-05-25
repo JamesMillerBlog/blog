@@ -1,0 +1,105 @@
+name: AI Issue Implementation
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  implement:
+    if: github.event.label.name == 'ai-implement' && github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Install OpenCode
+        run: npm install -g @earendil-works/pi-coding-agent pi-multiagent pi-gh-cli pi-lens
+
+      - name: Configure git
+        run: |
+          git config --global user.name "pi[bot]"
+          git config --global user.email "pi[bot]@users.noreply.github.com"
+
+      - name: Setup OpenCode permissions
+        run: |
+          mkdir -p .pi/extensions/pi-permission-system
+          echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
+
+      - name: Create branch
+        id: branch
+        run: |
+          SLUG=$(echo "${{ github.event.issue.title }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//' | cut -c1-40)
+          BRANCH="ai/issue-${{ github.event.issue.number }}-${SLUG}"
+          echo "name=${BRANCH}" >> $GITHUB_OUTPUT
+          git checkout -b "${BRANCH}"
+
+      - name: Notify issue — starting
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "**AI Implementation Started**
+
+          Branch: \`${{ steps.branch.outputs.name }}\`
+          Model: deepseek-v4-pro (implementation) + kimi-k2.6 (review)
+
+          Will raise a draft PR and post progress there."
+
+      - name: Implement and review loop
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+        run: bash scripts/ai-implement.sh
+
+      - name: Get PR number
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR=$(gh pr view "${{ steps.branch.outputs.name }}" --json number --jq '.number' 2>/dev/null || echo "")
+          echo "number=${PR}" >> $GITHUB_OUTPUT
+
+      - name: Run Kimi PR review
+        if: steps.pr.outputs.number != ''
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ai-pr-review.sh "${{ steps.pr.outputs.number }}"
+
+      - name: Mark PR ready
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr ready ${{ steps.pr.outputs.number }}
+
+      - name: Notify issue — done
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "**PR #${{ steps.pr.outputs.number }} raised.**
+
+          Kimi code review posted. Reply to any PR comment with \`/ai <instruction>\` to have OpenCode action it."

@@ -115,7 +115,10 @@ $(cat "/tmp/review-${ITER}.txt")"
 
   pi_run "opencode-go/deepseek-v4-pro" "$FIX_PROMPT" "/tmp/fix-${ITER}.txt"
 
-  git push origin "${BRANCH}" || true
+  if ! git push origin "${BRANCH}"; then
+    echo "Warning: push failed after iteration ${ITER} fixes" >&2
+    pr_comment "$PR_NUMBER" "⚠️ Push failed after iteration ${ITER} fixes — branch may be out of sync."
+  fi
 
   pr_comment "$PR_NUMBER" "## 🔧 Fixes Applied — Iteration ${ITER}
 

@@ -3,8 +3,13 @@ set -euo pipefail
 
 PR_NUMBER="$1"
 BRANCH="$2"
-INSTRUCTION="$3"
+INSTRUCTION="${3:-}"
 PI="pi --agent-team-subagent-skills disabled"
+
+if [[ -z "$INSTRUCTION" ]]; then
+  echo "Error: no instruction provided" >&2
+  exit 1
+fi
 
 echo "=== Responding to PR comment on #${PR_NUMBER} ===" >&2
 

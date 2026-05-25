@@ -43,7 +43,7 @@ PROMPT_EOF
 
 	if bash scripts/claude.sh -p \
 		--model sonnet \
-		--allowedTools "Agent,Bash,Read,Edit,Write" \
+		--allowedTools "Agent,Bash(git add*),Bash(git commit*),Bash(git diff*),Bash(git log*),Bash(git status*),Bash(pnpm typecheck*),Bash(pnpm test*),Bash(cd web*),Read,Edit,Write" \
 		<"$PROMPT_FILE"; then
 		return 0
 	fi

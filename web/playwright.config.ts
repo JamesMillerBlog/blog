@@ -1,6 +1,13 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const remoteUrl = process.env.PLAYWRIGHT_BASE_URL
+if (remoteUrl) {
+  try {
+    new URL(remoteUrl)
+  } catch {
+    throw new Error(`PLAYWRIGHT_BASE_URL is not a valid URL: "${remoteUrl}"`)
+  }
+}
 
 export default defineConfig({
   testDir: './e2e',
@@ -12,12 +19,13 @@ export default defineConfig({
   reporter: [['html', { outputFolder: './e2e/playwright-report' }]],
   use: {
     baseURL: remoteUrl ?? 'http://localhost:3000',
-    httpCredentials: process.env.PLAYWRIGHT_BASIC_AUTH_USERNAME
-      ? {
-          username: process.env.PLAYWRIGHT_BASIC_AUTH_USERNAME,
-          password: process.env.PLAYWRIGHT_BASIC_AUTH_PASSWORD ?? '',
-        }
-      : undefined,
+    httpCredentials:
+      process.env.PLAYWRIGHT_BASIC_AUTH_USERNAME && process.env.PLAYWRIGHT_BASIC_AUTH_PASSWORD
+        ? {
+            username: process.env.PLAYWRIGHT_BASIC_AUTH_USERNAME,
+            password: process.env.PLAYWRIGHT_BASIC_AUTH_PASSWORD,
+          }
+        : undefined,
     trace: 'on-first-retry',
     video: process.env.CI ? 'on' : 'off',
     screenshot: process.env.CI ? 'only-on-failure' : 'off',

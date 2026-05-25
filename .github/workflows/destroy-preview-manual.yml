@@ -6,7 +6,7 @@ on:
       pr_number:
         description: 'PR number whose preview environment to destroy'
         required: true
-        type: string
+        type: number
 
 jobs:
   destroy:

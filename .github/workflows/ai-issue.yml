@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
+    outputs:
+      branch: ${{ steps.branch.outputs.name }}
+      pr_number: ${{ steps.pr.outputs.number }}
+
     concurrency:
       group: ai-issue-${{ github.event.issue.number }}
       cancel-in-progress: true
@@ -20,6 +24,15 @@ jobs:
       issues: write
 
     steps:
+      - name: Acknowledge issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions \
+            -f content=eyes
+
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
@@ -68,6 +81,8 @@ jobs:
           Branch: \`${{ steps.branch.outputs.name }}\`
           Model: deepseek-v4-pro (implementation) + kimi-k2.6 (review)
 
+          [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
           Will raise a draft PR and post progress there."
 
       - name: Implement and review loop
@@ -108,4 +123,157 @@ jobs:
         run: |
           gh issue comment ${{ github.event.issue.number }} --body "**PR #${{ steps.pr.outputs.number }} raised.**
 
+          https://github.com/${{ github.repository }}/pull/${{ steps.pr.outputs.number }}
+
           Kimi code review posted. Reply to any PR comment with \`/ai <instruction>\` to have OpenCode action it."
+
+  preview:
+    name: Deploy preview environment
+    needs: implement
+    if: needs.implement.outputs.pr_number != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: staging
+
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      deployments: write
+
+    env:
+      PR_NUMBER: ${{ needs.implement.outputs.pr_number }}
+      BRANCH: ${{ needs.implement.outputs.branch }}
+      TF_VERSION: '1.9.5'
+      PREVIEW_URL: https://pr-${{ needs.implement.outputs.pr_number }}.staging.jamesmiller.blog
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ env.BRANCH }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+        with:
+          version: 9
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS credentials (infra)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Terraform — create preview environment
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_basic_auth_username: ${{ secrets.BASIC_AUTH_USERNAME }}
+          TF_VAR_basic_auth_password: ${{ secrets.BASIC_AUTH_PASSWORD }}
+        working-directory: infrastructure/stacks/site/ephemeral
+        run: |
+          terraform init \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="key=ephemeral/pr-${PR_NUMBER}/terraform.tfstate" \
+            -backend-config="region=eu-west-2"
+          terraform apply -auto-approve \
+            -var="pr_number=${PR_NUMBER}"
+
+      - name: Configure AWS credentials (deploy)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Build site
+        env:
+          POSTS_BUCKET: ${{ vars.POSTS_S3_BUCKET }}
+          POSTS_BUCKET_REGION: eu-west-2
+          NEXT_PUBLIC_ENVIRONMENT: staging
+        run: cd web && pnpm build
+
+      - name: Deploy to preview R2 bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ''
+          R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          aws s3 sync web/out/ s3://jamesmiller-blog-pr-${PR_NUMBER}/ \
+            --endpoint-url ${R2_ENDPOINT} \
+            --region auto \
+            --delete
+
+      - name: Install OpenCode (for test generation)
+        run: npm install -g @earendil-works/pi-coding-agent@0.75.5 pi-multiagent@0.9.4 pi-gh-cli@0.2.4 pi-lens@3.8.45
+
+      - name: Generate AI tests
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          PREVIEW_URL: ${{ env.PREVIEW_URL }}
+        run: bash scripts/ai-generate-tests.sh
+
+      - name: Install Playwright
+        run: cd web && pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests against preview
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.PREVIEW_URL }}
+          PLAYWRIGHT_BASIC_AUTH_USERNAME: ${{ secrets.BASIC_AUTH_USERNAME }}
+          PLAYWRIGHT_BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+        run: cd web && pnpm test:e2e --reporter=html
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: playwright-report-pr-${{ env.PR_NUMBER }}
+          path: |
+            web/e2e/playwright-report/
+            web/e2e/test-results/
+          retention-days: 14
+
+      - name: Register GitHub deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
+            --method POST \
+            -f ref="${BRANCH}" \
+            -f environment="preview-pr-${PR_NUMBER}" \
+            -f description="Preview environment for PR #${PR_NUMBER}" \
+            -F auto_merge=false \
+            --jq '.id')
+          gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \
+            --method POST \
+            -f state="success" \
+            -f environment_url="${PREVIEW_URL}" \
+            -f description="Preview live"
+
+      - name: Comment preview URL on PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPORT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh pr comment ${PR_NUMBER} --body "## 🔍 Preview Environment Ready
+
+          **URL:** ${PREVIEW_URL}
+
+          Login with staging basic auth credentials.
+
+          **E2E tests:** [View Playwright report](${REPORT_URL})"

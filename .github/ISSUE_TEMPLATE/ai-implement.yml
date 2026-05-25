@@ -1,0 +1,78 @@
+name: AI Implementation Request
+description: Request an AI agent to implement a feature or fix. Fill in as much detail as possible — the more context, the better the output and the more accurate the generated tests.
+title: "[Brief description of what needs implementing]"
+labels:
+  - ai-implement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## How this works
+        When this issue is labeled `ai-implement`, an AI agent will:
+        1. Implement the feature based on your description
+        2. Run a security and quality review loop
+        3. Create a draft PR with a preview environment
+        4. Generate and run E2E tests based on your acceptance criteria
+
+        **The more detail you provide — especially in Acceptance Criteria — the better the implementation and tests.**
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs to be built or fixed? What is the current behaviour vs. the expected behaviour?
+      placeholder: |
+        The search button in the nav bar doesn't work. When a user types in the search box and hits Enter (or clicks Search), it should return a list of matching posts and projects. Currently nothing happens.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: |
+        Bullet-point list of testable criteria. These are used to generate E2E tests. Be specific — describe user actions and expected outcomes.
+      placeholder: |
+        - [ ] Clicking the search icon in the nav opens a search modal
+        - [ ] Typing in the search box filters posts and projects in real time
+        - [ ] Pressing Escape or clicking outside the modal closes it
+        - [ ] Search results show the post/project title and a short excerpt
+        - [ ] Clicking a result navigates to that post/project
+        - [ ] If no results match, a "No results found" message is shown
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-context
+    attributes:
+      label: Technical Context
+      description: Which files, components, or pages are relevant? Links to code, screenshots, or error messages are all helpful.
+      placeholder: |
+        - Component: `web/src/app/_components/navigation.tsx`
+        - The search modal already exists at `web/src/app/_components/search-modal.tsx` but is not wired up
+        - Posts data is available via `getPostSlugs()` in `web/src/lib/posts.ts`
+    validations:
+      required: false
+
+  - type: textarea
+    id: design-notes
+    attributes:
+      label: Design Notes
+      description: Any specific UI/UX requirements? Reference the Byte Mark design system (`web/design/DESIGN.md`) for tokens and patterns.
+      placeholder: |
+        - Match the existing nav styling — `rounded-xl`, no 1px borders
+        - Use the primary colour `#00675d` for result hover states
+        - Modal should animate in with framer-motion (consistent with existing modals)
+    validations:
+      required: false
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of Scope
+      description: What should the AI explicitly NOT change or implement in this issue?
+      placeholder: |
+        - Do not add server-side search (keep it client-side for now)
+        - Do not change the navigation layout
+    validations:
+      required: false

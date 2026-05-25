@@ -4,7 +4,7 @@ Full guide: `docs/AWS_INFRASTRUCTURE.md`
 
 ## File Locations
 - Modules: `infrastructure/modules/`
-- Stacks: `infrastructure/stacks/` (`shared` then `site`)
+- Stacks: `infrastructure/stacks/` — `shared` → `site` → `site/ephemeral` (ephemeral: preview environments for AI-generated PRs)
 - Vars: `infrastructure/vars/`
 - CI/CD: `.github/workflows/`
 

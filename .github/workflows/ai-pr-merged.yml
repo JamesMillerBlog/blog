@@ -1,0 +1,96 @@
+name: AI PR Merged
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  close-issue:
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'ai/issue-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      issues: write
+
+    steps:
+      - name: Extract issue number from branch
+        id: issue
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          ISSUE_NUMBER=$(echo "$BRANCH" | sed 's|ai/issue-\([0-9]*\)-.*|\1|')
+          if ! [[ "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Could not extract issue number from branch: $BRANCH"
+            exit 1
+          fi
+          echo "number=${ISSUE_NUMBER}" >> $GITHUB_OUTPUT
+
+      - name: Close linked issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue close ${{ steps.issue.outputs.number }} \
+            --repo ${{ github.repository }} \
+            --comment "Closed — implemented and merged via PR #${{ github.event.pull_request.number }}."
+
+  destroy-preview:
+    if: startsWith(github.event.pull_request.head.ref, 'ai/issue-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+
+    permissions:
+      id-token: write
+      contents: read
+      deployments: write
+
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      TF_VERSION: '1.9.5'
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Terraform — destroy preview environment
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_basic_auth_username: ${{ secrets.BASIC_AUTH_USERNAME }}
+          TF_VAR_basic_auth_password: ${{ secrets.BASIC_AUTH_PASSWORD }}
+        working-directory: infrastructure/stacks/site/ephemeral
+        run: |
+          terraform init \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="key=ephemeral/pr-${PR_NUMBER}/terraform.tfstate" \
+            -backend-config="region=eu-west-2"
+          terraform destroy -auto-approve \
+            -var="pr_number=${PR_NUMBER}" || true
+
+      - name: Mark GitHub deployment inactive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
+            -f environment="preview-pr-${PR_NUMBER}" \
+            --jq '.[0].id' 2>/dev/null || echo "")
+          if [[ -n "$DEPLOY_ID" && "$DEPLOY_ID" != "null" ]]; then
+            gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \
+              --method POST \
+              -f state="inactive" \
+              -f description="Preview environment destroyed"
+          fi

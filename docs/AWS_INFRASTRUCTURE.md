@@ -65,12 +65,15 @@ infrastructure/
         │   ├── variables.tf
         │   ├── outputs.tf
         │   └── auth.js  # Cloudflare Worker for Basic Auth
-        └── production/
-            ├── stack.tm.hcl
-            ├── backend_generated.tf
+        ├── production/
+        │   ├── stack.tm.hcl
+        │   ├── backend_generated.tf
+        │   ├── main.tf
+        │   ├── variables.tf
+        │   └── outputs.tf
+        └── ephemeral/  # PR preview environments (temporary per AI-generated PR)
             ├── main.tf
-            ├── variables.tf
-            └── outputs.tf
+            └── variables.tf
 ```
 
 Stacks are managed with [Terramate](https://terramate.io), which handles stack ordering, backend config generation, and orchestration.
@@ -78,6 +81,8 @@ Stacks are managed with [Terramate](https://terramate.io), which handles stack o
 `shared` owns the assets/posts infrastructure, the GitHub OIDC provider, and the content repo's Bedrock Claude IAM role.
 
 `site/staging` and `site/production` own the environment-specific blog site infrastructure and the app repo's IAM deploy role. Both depend on `shared` and will always run after it.
+
+`site/ephemeral` is a separate, non-Terramate stack created dynamically for each AI-generated PR. Each ephemeral environment is self-contained (no state dependencies on shared/production/staging) and is destroyed when the PR is merged or via manual cleanup.
 
 The site stacks read outputs from `shared` via `terraform_remote_state`, so `shared` must be applied first — Terramate enforces this ordering automatically.
 
@@ -170,7 +175,31 @@ The separate content repo triggers this workflow after syncing posts to S3.
 - Triggered by the content repo via `repository_dispatch` with `content-update` type
 - Calls `deploy-site.yml` with the environment specified in `client_payload.environment`
 
-## 9. Scripts
+## 9. Ephemeral Preview Environments
+
+When an issue is labeled `ai-implement`, the GitHub Actions workflow creates a temporary preview environment for the generated PR to enable live testing and E2E validation before merge.
+
+### Architecture
+
+- **Stack:** `infrastructure/stacks/site/ephemeral/` (separate from production/staging)
+- **Hosting:** Cloudflare R2 bucket per PR: `jamesmiller-blog-pr-{number}`
+- **Domain:** `pr-{number}.staging.jamesmiller.blog` (custom domain via Cloudflare DNS)
+- **Auth:** Reuses the staging Basic Auth Worker (`auth.js`)
+- **Lifecycle:** Created when PR is created, destroyed when PR is merged or via manual workflow
+
+### Terraform Configuration
+
+- `main.tf` — R2 bucket, custom domain, Workers auth script
+- `variables.tf` — PR number, Cloudflare account/zone IDs, Basic Auth credentials
+
+Variables are passed via GitHub Actions environment variables during the preview deployment job in `ai-issue.yml`.
+
+### Automated Cleanup
+
+- **On merge:** `ai-pr-merged.yml` runs `terraform destroy` automatically, removing the R2 bucket and custom domain
+- **Manual cleanup:** `destroy-preview-manual.yml` workflow allows manual destruction if needed
+
+## 10. Scripts
 
 Asset scripts:
 
@@ -181,3 +210,8 @@ Asset scripts:
 Local dev content script:
 
 - `./scripts/pull-posts.sh [local-path]` — pull posts from S3 into `web/_posts/` for local development
+
+AI automation scripts:
+
+- `./scripts/ai-implement.sh` — implements issue + pre-push review + creates PR (called by `ai-issue.yml`)
+- `./scripts/ai-generate-tests.sh` — generates Playwright E2E tests from issue description (called by preview deployment job)

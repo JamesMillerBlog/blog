@@ -61,7 +61,7 @@ Both `pnpm claude` and `pnpm pi` mount the `.git` directory read-only when the v
 ## Persistence
 
 Host mounts persist credentials and settings across restarts:
-- **Claude:** `${HOME}/.claude` → `/home/claude/.claude`, `${HOME}/.claude.json` → `/home/claude/.claude.json`, `${HOME}/.config/gh` → `/home/claude/.config/gh` (GitHub CLI auth)
+- **Claude:** `${HOME}/.claude` → `/home/claude/.claude`, `${HOME}/.claude.json` → `/home/claude/.claude.json`
 - **Pi:** `${HOME}/.pi` → `/home/pi/.pi` (settings, auth, sessions)
 
 The images ship default settings at build time; host mounts override them if present. Repo changes are live in both directions.

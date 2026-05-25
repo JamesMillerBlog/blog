@@ -6,15 +6,14 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
-import { Post } from '@/types/post'
 import { ui } from '@/i18n/en'
 
 export function Navigation() {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchKey, setSearchKey] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [posts] = useState<Post[]>([])
   const logoRef = useRef<HTMLDivElement>(null)
   const searchIconRef = useRef<HTMLDivElement>(null)
   const themeIconRef = useRef<HTMLDivElement>(null)
@@ -83,6 +82,7 @@ export function Navigation() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
+        setSearchKey((k) => k + 1)
         setSearchOpen(true)
       }
     }
@@ -134,6 +134,7 @@ export function Navigation() {
             <button
               onClick={() => {
                 triggerSearchAnim('click')
+                setSearchKey((k) => k + 1)
                 setSearchOpen(true)
               }}
               onMouseEnter={() => triggerSearchAnim('hover')}
@@ -186,7 +187,7 @@ export function Navigation() {
         )}
       </header>
 
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} posts={posts} />
+      <SearchModal key={searchKey} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   )
 }

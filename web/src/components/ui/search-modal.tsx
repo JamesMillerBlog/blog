@@ -140,6 +140,29 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           e.preventDefault()
           onClose()
           break
+        case 'Tab': {
+          // Focus trap: cycle through focusable elements within the modal
+          const modal = document.querySelector('[role="dialog"][aria-modal="true"]')
+          if (!modal) break
+          const focusable = modal.querySelectorAll<HTMLElement>(
+            'input, a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+          if (focusable.length === 0) break
+          const first = focusable[0]
+          const last = focusable[focusable.length - 1]
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault()
+              last.focus()
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault()
+              first.focus()
+            }
+          }
+          break
+        }
       }
     },
     [results, selectedIndex, onClose]
@@ -199,6 +222,15 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               }}
               onKeyDown={handleKeyDown}
               className="flex-1 bg-transparent text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none font-headline"
+              role="combobox"
+              aria-expanded={results.length > 0}
+              aria-controls="search-results-list"
+              aria-activedescendant={
+                results.length > 0 ? `search-result-${selectedIndex}` : undefined
+              }
+              aria-autocomplete="list"
+              aria-haspopup="listbox"
+              autoComplete="off"
               autoFocus
             />
             <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-on-surface-variant bg-surface-container rounded">
@@ -207,7 +239,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           </div>
 
           {/* Results */}
-          <div ref={listRef} className="max-h-96 overflow-y-auto" role="listbox">
+          <div
+            ref={listRef}
+            className="max-h-96 overflow-y-auto"
+            role="listbox"
+            id="search-results-list"
+          >
             {query && results.length === 0 && (
               <div className="p-8 text-center text-on-surface-variant">
                 No results found for &quot;{query}&quot;
@@ -229,6 +266,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 }`}
                 role="option"
                 aria-selected={idx === selectedIndex}
+                id={`search-result-${idx}`}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span

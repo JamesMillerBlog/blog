@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { getAllPosts, isPostVisible } from '@/common/utils/posts'
 import { projects } from '@/app/projects/data'
 
@@ -12,7 +12,36 @@ export interface SearchResultItem {
   href: string
 }
 
-export async function GET() {
+// In-memory rate limiter: 60 requests per minute per IP
+const rateLimitMap = new Map<string, number[]>()
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX = 60
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const timestamps = rateLimitMap.get(ip) ?? []
+  // Prune expired timestamps
+  const recent = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
+  if (recent.length >= RATE_LIMIT_MAX) return true
+  recent.push(now)
+  rateLimitMap.set(ip, recent)
+  // Periodic cleanup: if map grows too large, clear old entries
+  if (rateLimitMap.size > 10_000) {
+    for (const [key, ts] of rateLimitMap) {
+      const valid = ts.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
+      if (valid.length === 0) rateLimitMap.delete(key)
+      else rateLimitMap.set(key, valid)
+    }
+  }
+  return false
+}
+
+export async function GET(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const allPosts = await getAllPosts()
   const visiblePosts = allPosts.filter(isPostVisible)
 

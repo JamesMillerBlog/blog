@@ -85,8 +85,6 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Map<number, HTMLAnchorElement>>(new Map())
-  const resultsRef = useRef<SearchResultItem[]>([])
-  const selectedIndexRef = useRef(0)
   const router = useRouter()
 
   // Fetch search index on mount with abort + loading state
@@ -134,15 +132,6 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return scored.map((s) => s.item)
   }, [query, allItems])
 
-  // Keep resultsRef and selectedIndexRef in sync for stable handleKeyDown reference
-  useEffect(() => {
-    resultsRef.current = results
-  }, [results])
-
-  useEffect(() => {
-    selectedIndexRef.current = selectedIndex
-  }, [selectedIndex])
-
   // Clear stale itemRefs when results change (prevents memory leak)
   useEffect(() => {
     itemRefs.current.clear()
@@ -156,21 +145,19 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      const currentResults = resultsRef.current
-      const currentIdx = selectedIndexRef.current
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedIndex((prev) => (prev < currentResults.length - 1 ? prev + 1 : 0))
+          setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0))
           break
         case 'ArrowUp':
           e.preventDefault()
-          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : currentResults.length - 1))
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1))
           break
         case 'Enter':
           e.preventDefault()
-          if (currentResults[currentIdx]) {
-            const href = currentResults[currentIdx].href
+          if (results[selectedIndex]) {
+            const href = results[selectedIndex].href
             onClose()
             router.push(href)
           }
@@ -204,7 +191,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         }
       }
     },
-    [onClose, router]
+    [results, selectedIndex, onClose, router]
   )
 
   // Global Escape listener

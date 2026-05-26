@@ -82,21 +82,15 @@ export function Navigation() {
   )
 
   // Cmd+K toggles search open/close
-  const searchOpenRef = useRef(searchOpen)
-  useEffect(() => {
-    searchOpenRef.current = searchOpen
-  }, [searchOpen])
-
+  // Uses functional updater to avoid stale-ref — no separate effect-synced ref needed
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        if (searchOpenRef.current) {
-          setSearchOpen(false)
-        } else {
-          setSearchKey((k) => k + 1)
-          setSearchOpen(true)
-        }
+        setSearchOpen((prev) => {
+          if (!prev) setSearchKey((k) => k + 1)
+          return !prev
+        })
       }
     }
     document.addEventListener('keydown', handleKeyDown)

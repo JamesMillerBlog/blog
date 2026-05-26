@@ -3,6 +3,7 @@
   "defaultModel": "opencode-go/deepseek-v4-pro",
   "skills": [".agents/skills"],
   "prompts": [".pi/prompts"],
+  "agents": [".pi/agents"],
   "enabledModels": ["opencode-go/*"],
   "hideThinkingBlock": true,
   "quietStartup": true,

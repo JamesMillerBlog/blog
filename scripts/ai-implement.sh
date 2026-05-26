@@ -2,13 +2,19 @@
 set -euo pipefail
 
 MAX_ITERATIONS=10
-PI="pi --agent-team-subagent-skills disabled"
+PI="pi --agent-team-subagent-skills disabled --no-session"
+export PI_SKIP_VERSION_CHECK=1
+export PI_CACHE_RETENTION=long
+
+strip_ansi() {
+  sed 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\x1B\[[<>][0-9;]*[a-zA-Z]//g; s/\x1B[()][0-9A-Za-z]//g'
+}
 
 pi_run() {
   local model="$1"
   local prompt="$2"
   local outfile="$3"
-  printf '%s' "$prompt" | $PI --model "$model" 2>&1 | tee "$outfile"
+  printf '%s' "$prompt" | $PI --model "$model" 2>&1 | strip_ansi | tee "$outfile"
 }
 
 issue_comment() {
@@ -62,9 +68,10 @@ for ITER in $(seq 1 $MAX_ITERATIONS); do
   echo "=== Pre-push review iteration ${ITER}/${MAX_ITERATIONS} ===" >&2
 
   REVIEW_PROMPT="$(cat .pi/prompts/pre-push-review.md)"
-  pi_run "opencode-go/deepseek-v4-pro" "$REVIEW_PROMPT" "/tmp/review-${ITER}.txt"
+  pi_run "opencode-go/kimi-k2.6" "$REVIEW_PROMPT" "/tmp/review-${ITER}.txt"
 
-  VERDICT=$(grep -oE 'SAFE TO PUSH|DO NOT PUSH|PUSH WITH CAUTION' "/tmp/review-${ITER}.txt" | tail -1 || echo "UNKNOWN")
+  VERDICT=$(grep -ioE 'DO NOT PUSH|PUSH WITH CAUTION|SAFE TO PUSH' "/tmp/review-${ITER}.txt" | tail -1 | tr '[:lower:]' '[:upper:]' || true)
+  [[ -z "$VERDICT" ]] && VERDICT="UNKNOWN"
   FINAL_VERDICT="$VERDICT"
 
   issue_comment "## 🔍 Pre-Push Review — Iteration ${ITER}/${MAX_ITERATIONS}
@@ -87,6 +94,17 @@ $(cat "/tmp/review-${ITER}.txt")
     break
   fi
 
+  # At iterations 9 or 10, accept PUSH WITH CAUTION but flag the findings explicitly
+  if [[ "$VERDICT" == "PUSH WITH CAUTION" && $ITER -ge $(( MAX_ITERATIONS - 1 )) ]]; then
+    issue_comment "## ⚠️ Caution Required Before Merging
+
+The review reached **PUSH WITH CAUTION** after ${ITER} iteration(s) without a clean pass. The branch has been pushed, but **the following issues must be reviewed before this PR is merged:**
+
+$(cat "/tmp/review-${ITER}.txt")"
+    echo "Accepting PUSH WITH CAUTION at late iteration ${ITER}" >&2
+    break
+  fi
+
   if [[ $ITER -eq $MAX_ITERATIONS ]]; then
     issue_comment "⚠️ **Max review iterations (${MAX_ITERATIONS}) reached.** Proceeding with current state. Manual review required."
     break
@@ -94,16 +112,34 @@ $(cat "/tmp/review-${ITER}.txt")
 
   echo "=== Fixing review findings (iteration ${ITER}) ===" >&2
 
-  FIX_PROMPT="The pre-push review found issues that must be fixed before pushing.
+  # Build history of prior fix attempts for context
+  PRIOR_FIXES=""
+  for prev in $(seq 1 $((ITER - 1))); do
+    if [[ -f "/tmp/fix-${prev}.txt" ]]; then
+      PRIOR_FIXES="${PRIOR_FIXES}
+### Fix attempt ${prev} (already applied — do not repeat these):
+$(head -50 "/tmp/fix-${prev}.txt")
+---"
+    fi
+  done
 
-Read the review findings below carefully, fix all CRITICAL and HIGH severity issues, then commit with:
+  FIX_PROMPT="The pre-push review found CRITICAL or HIGH severity issues that must be fixed before pushing.
+
+Fix all CRITICAL and HIGH severity issues from the review findings below. Ignore MEDIUM and LOW issues.
+
+After fixing, commit with:
 git add -A && git commit -m 'fix: address pre-push review findings (iteration ${ITER})'
 
 If pre-commit hooks fail when committing, fix those errors too before finishing.
 
-## Review Findings
+IMPORTANT: Do not re-introduce issues that were fixed in previous iterations (see prior fix history below).
 
-$(cat "/tmp/review-${ITER}.txt")"
+## Review Findings (iteration ${ITER})
+
+$(cat "/tmp/review-${ITER}.txt")
+${PRIOR_FIXES:+
+## Prior Fix History (already applied — avoid undoing these)
+${PRIOR_FIXES}}"
 
   pi_run "opencode-go/deepseek-v4-pro" "$FIX_PROMPT" "/tmp/fix-${ITER}.txt"
 

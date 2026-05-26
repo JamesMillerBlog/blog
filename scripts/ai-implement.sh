@@ -89,8 +89,19 @@ $(cat "/tmp/review-${ITER}.txt")
 
 </details>"
 
-  if [[ "$VERDICT" == "SAFE TO PUSH" || "$VERDICT" == "PUSH WITH CAUTION" ]]; then
-    echo "Review passed on iteration ${ITER} with verdict: ${VERDICT}" >&2
+  if [[ "$VERDICT" == "SAFE TO PUSH" ]]; then
+    echo "Review passed on iteration ${ITER}" >&2
+    break
+  fi
+
+  # At iterations 9 or 10, accept PUSH WITH CAUTION but flag the findings explicitly
+  if [[ "$VERDICT" == "PUSH WITH CAUTION" && $ITER -ge $(( MAX_ITERATIONS - 1 )) ]]; then
+    issue_comment "## ⚠️ Caution Required Before Merging
+
+The review reached **PUSH WITH CAUTION** after ${ITER} iteration(s) without a clean pass. The branch has been pushed, but **the following issues must be reviewed before this PR is merged:**
+
+$(cat "/tmp/review-${ITER}.txt")"
+    echo "Accepting PUSH WITH CAUTION at late iteration ${ITER}" >&2
     break
   fi
 

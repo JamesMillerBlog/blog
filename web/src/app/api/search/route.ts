@@ -41,12 +41,25 @@ function checkAndRecordRequest(ip: string): boolean {
   return false
 }
 
+function getClientKey(request: NextRequest): string {
+  // Primary: X-Forwarded-For leftmost IP (set by Vercel/trusted proxy, not client-spoofable).
+  // Fallback: hash User-Agent for defense-in-depth against header-spoofing floods.
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  if (ip) return `ip:${ip}`
+  const ua = request.headers.get('user-agent') ?? 'unknown'
+  const al = request.headers.get('accept-language') ?? ''
+  // Simple hash to avoid storing raw UA strings endlessly
+  let hash = 0
+  const key = `${ua}|${al}`
+  for (let i = 0; i < key.length; i++) {
+    hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0
+  }
+  return `ua:${hash.toString(36)}`
+}
+
 export async function GET(request: NextRequest) {
-  const ip =
-    request.headers.get('x-real-ip') ??
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    'unknown'
-  if (checkAndRecordRequest(ip)) {
+  const clientKey = getClientKey(request)
+  if (checkAndRecordRequest(clientKey)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 

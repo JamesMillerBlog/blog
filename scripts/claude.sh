@@ -1,5 +1,4 @@
 #!/bin/bash
-printf '\033[1;36m▶ Notifications: https://ntfy.sh/%s\033[0m\n' "$NTFY_TOPIC"
 printf '\033[0;33m  Tip: use pnpm claude:fresh if Dockerfile or deps changed\033[0m\n'
 
 if [ -n "$BLOG_GIT_DIR" ]; then

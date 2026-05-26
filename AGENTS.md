@@ -19,6 +19,7 @@ Read extra skill files only when relevant:
 - `web/_posts/` — local MDX preview
 - `.agents/skills/` — on-demand cross-tool skills
 - `.claude/agents/` — Claude Code agents
+- `.pi/agents/` — pi council agents
 - `.pi/prompts/` — pi workflow prompt templates
 - `.pi/settings.ci.json` — CI-specific pi configuration
 - `.github/workflows/ai-*.yml` — GitHub workflows for AI automation
@@ -53,6 +54,18 @@ pi --model opencode-go/deepseek-v4-pro  # switch model inline
 ```
 
 Inside pi, use `/model` or Ctrl+L to switch providers at any time.
+
+### pi Council Agents
+
+Multi-agent collaborative workflow for complex reasoning:
+
+| Agent | Model | Role |
+|-------|-------|------|
+| `council-analyst` | deepseek-v4-pro | Deep analytical thinking with structured reasoning |
+| `council-critic` | kimi-k2.6 | Adversarial critique, risks, failure modes |
+| `council-synthesizer` | deepseek-v4-pro | Synthesizes perspectives into final answer |
+
+Run with: `./scripts/council.sh "your question"`
 
 ## Design System — Byte Mark
 Full spec: `web/design/DESIGN.md`. Key tokens:
@@ -101,9 +114,10 @@ See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment arc
 
 ## Commands
 ```bash
-cd web && pnpm dev      # dev server
-cd web && pnpm build    # production build
-cd web && pnpm test     # unit tests (vitest)
-pnpm claude             # Claude Code (Docker)
-pnpm pi                 # pi (Docker)
+cd web && pnpm dev                  # dev server
+cd web && pnpm build                # production build
+cd web && pnpm test                 # unit tests (vitest)
+pnpm claude                         # Claude Code (Docker)
+pnpm pi                             # pi (Docker)
+./scripts/council.sh "question"    # council of agents multi-model reasoning
 ```

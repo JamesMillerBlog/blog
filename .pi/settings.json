@@ -7,6 +7,9 @@
   "prompts": [
     ".pi/prompts"
   ],
+  "agents": [
+    ".pi/agents"
+  ],
   "enabledModels": [
     "opencode-go/*"
   ],

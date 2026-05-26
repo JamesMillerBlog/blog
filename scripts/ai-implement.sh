@@ -4,17 +4,22 @@ set -euo pipefail
 MAX_ITERATIONS=10
 PI="pi --agent-team-subagent-skills disabled --no-session"
 export PI_SKIP_VERSION_CHECK=1
-export PI_CACHE_RETENTION=long
 
 strip_ansi() {
   sed 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\x1B\[[<>][0-9;]*[a-zA-Z]//g; s/\x1B[()][0-9A-Za-z]//g'
 }
 
+# PI_CACHE_RETENTION=long is only supported by deepseek models — not kimi.
+# Pass it inline per call to avoid breaking kimi-based review/fix steps.
 pi_run() {
   local model="$1"
   local prompt="$2"
   local outfile="$3"
-  printf '%s' "$prompt" | $PI --model "$model" 2>&1 | strip_ansi | tee "$outfile"
+  local cache_env=""
+  if [[ "$model" == *"deepseek"* ]]; then
+    cache_env="PI_CACHE_RETENTION=long"
+  fi
+  printf '%s' "$prompt" | env $cache_env $PI --model "$model" 2>&1 | strip_ansi | tee "$outfile"
 }
 
 issue_comment() {

@@ -4,7 +4,7 @@ set -euo pipefail
 PR_NUMBER="$1"
 PI="pi --agent-team-subagent-skills disabled --no-session"
 export PI_SKIP_VERSION_CHECK=1
-export PI_CACHE_RETENTION=long
+# PI_CACHE_RETENTION=long is not supported by kimi — omitted here
 
 echo "=== Running Kimi PR review on PR #${PR_NUMBER} ===" >&2
 

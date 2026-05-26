@@ -12,7 +12,15 @@
   ],
   "compaction": {
     "reserveTokens": 16384,
-    "keepRecentTokens": 20000
+    "keepRecentTokens": 32000
+  },
+  "retry": {
+    "maxRetries": 5,
+    "provider": {
+      "timeoutMs": 120000,
+      "maxRetries": 5,
+      "maxRetryDelayMs": 60000
+    }
   },
   "branchSummary": {
     "reserveTokens": 8192

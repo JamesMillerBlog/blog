@@ -167,24 +167,30 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           onClose()
           break
         case 'Tab': {
-          // Focus trap: cycle through focusable elements within the modal
+          // Focus trap: prevent escape, cycle focusable elements within modal
           const modal = modalRef.current
           if (!modal) break
           const focusable = modal.querySelectorAll<HTMLElement>(
-            'input:not([disabled]), a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            'input:not([disabled]), a[href]:not([role="option"]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
-          if (focusable.length === 0) break
-          const first = focusable[0]
-          const last = focusable[focusable.length - 1]
+          if (focusable.length === 0) {
+            e.preventDefault()
+            break
+          }
+          e.preventDefault()
+          const items = Array.from(focusable)
+          const currentIndex = items.indexOf(document.activeElement as HTMLElement)
           if (e.shiftKey) {
-            if (document.activeElement === first) {
-              e.preventDefault()
-              last.focus()
+            if (currentIndex <= 0) {
+              items[items.length - 1].focus()
+            } else {
+              items[currentIndex - 1].focus()
             }
           } else {
-            if (document.activeElement === last) {
-              e.preventDefault()
-              first.focus()
+            if (currentIndex === -1 || currentIndex >= items.length - 1) {
+              items[0].focus()
+            } else {
+              items[currentIndex + 1].focus()
             }
           }
           break

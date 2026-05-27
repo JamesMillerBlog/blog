@@ -5,6 +5,8 @@
   },
   "permissions": {
     "deny": [
+      "Bash(git commit*)",
+      "Bash(git push*)",
       "Read(**/node_modules/**)",
       "Read(**/.next/**)",
       "Read(**/dist/**)",

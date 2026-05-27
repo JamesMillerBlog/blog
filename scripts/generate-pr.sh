@@ -22,6 +22,11 @@ if [[ "${CI:-false}" != "true" ]]; then
   command -v claude >/dev/null 2>&1 || { echo "claude CLI not found. Please install it."; exit 1; }
 fi
 
+# Push the branch before creating/updating the PR so Claude doesn't need push permission.
+if [[ "${CI:-false}" != "true" ]]; then
+  git push origin "$BRANCH" 2>&1 || true
+fi
+
 # PR_NUMBER sourced from GitHub API (integer field) — validated below as defense-in-depth
 PR_NUMBER=$(gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || true)
 

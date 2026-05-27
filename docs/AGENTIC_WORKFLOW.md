@@ -67,6 +67,34 @@ pi doesn't have named agents in the same way as Claude, but it loads the same sh
 - **Multi-agent**: The `agent_team` tool (via `pi-multiagent` extension) lets pi spawn parallel sub-agents with their own isolated context — useful for code review, scouting, and parallel audits.
 - **Prompt templates**: Reusable workflow prompts via `/template-name`.
 
+#### pi Council of Agents
+
+For complex questions or tasks that benefit from multiple perspectives, pi has a built-in council workflow. Pass any question to `scripts/council.sh` and it dispatches a graph of specialist agents in parallel before synthesising a final answer.
+
+```bash
+./scripts/council.sh "Should I use server components or client components for this feature?"
+```
+
+**How it works:**
+
+```
+[scout] → maps the question, identifies sub-angles
+     ↓              ↓
+[analyst]       [critic]       ← run in parallel
+(deepseek-v4-pro) (kimi-k2.6)
+     ↓              ↓
+       [synthesizer]           ← combines both perspectives
+       (deepseek-v4-pro)
+```
+
+| Agent | Model | Role |
+|-------|-------|------|
+| `council-analyst` | deepseek-v4-pro | Deep analytical thinking, structured reasoning |
+| `council-critic` | kimi-k2.6 | Adversarial critique, risks, failure modes |
+| `council-synthesizer` | deepseek-v4-pro | Synthesises perspectives into final answer |
+
+Agent definitions live in `.pi/agents/`. The orchestration prompt is `.pi/prompts/council.md`.
+
 ### Example prompts per agent/skill
 
 **frontend-dev** — building UI:

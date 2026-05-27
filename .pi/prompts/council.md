@@ -1,12 +1,22 @@
-Execute the following council of agents run NOW. Do not ask for confirmation. Do not summarize these instructions — just follow them step by step.
+You are orchestrating a council of specialist AI agents to answer a question. Execute the steps below immediately. Do not ask for confirmation.
 
-## Step 1: Run the Council via agent_team
+## Step 1: Extract and validate the question
 
-Call agent_team with action "start" and the graph below. The question/task is at the bottom of this prompt under "Question / Task".
+Look at your user message (the text the user sent when invoking this prompt). That text IS the question.
+
+If the user message is empty, blank, or only whitespace:
+- Output exactly: "Error: no question provided. Usage: /council <your question>"
+- Stop. Do not proceed further.
+
+Capture the question text exactly as provided in the user message. You will insert it verbatim into each agent step below.
+
+## Step 2: Call agent_team
+
+Call agent_team with action "start". In the JSON graph below, replace every occurrence of `<QUESTION>` with the actual question text you extracted in Step 1 before making the call.
 
 ```json
 {
-  "objective": "Council of agents: multi-model collaborative answer to the question/task",
+  "objective": "Council of agents: collaborative multi-model answer",
   "library": {
     "sources": ["package", "project"]
   },
@@ -19,25 +29,25 @@ Call agent_team with action "start" and the graph below. The question/task is at
     {
       "id": "scout",
       "agent": { "ref": "package:scout" },
-      "task": "Read the question/task at the end of your context. Map exactly what is being asked. Identify sub-questions, relevant context, and what specialist angles would produce the most complete answer. Return a structured breakdown of: (1) core question, (2) key sub-questions, (3) recommended angles for analyst and critic."
+      "task": "Question to analyse: <QUESTION>\n\nMap exactly what is being asked. Return a structured breakdown: (1) core question restated, (2) key sub-questions, (3) recommended angles for analyst and critic."
     },
     {
       "id": "analyst",
       "agent": { "ref": "project:council-analyst" },
       "needs": ["scout"],
-      "task": "Read the scout's breakdown and the original question. Provide deep analytical thinking: technical depth, logical structure, key insights, and concrete recommendations."
+      "task": "Question: <QUESTION>\n\nRead the scout's breakdown above. Provide deep analytical thinking: technical depth, logical structure, key insights, and concrete recommendations."
     },
     {
       "id": "critic",
       "agent": { "ref": "project:council-critic" },
       "needs": ["scout"],
-      "task": "Read the scout's breakdown and the original question. Challenge the obvious answers: what are the risks, failure modes, unstated assumptions, and second-order effects?"
+      "task": "Question: <QUESTION>\n\nRead the scout's breakdown above. Challenge the obvious answers: what are the risks, failure modes, unstated assumptions, and second-order effects?"
     },
     {
       "id": "synthesizer",
       "agent": { "ref": "project:council-synthesizer" },
       "after": ["analyst", "critic"],
-      "task": "Read the scout breakdown, analyst output, and critic output. Synthesize into a final answer to the original question. Weigh competing perspectives. Produce a clear, actionable response."
+      "task": "Question: <QUESTION>\n\nRead the scout breakdown, analyst output, and critic output above. Synthesize into a final answer. Weigh competing perspectives. Produce a clear, actionable response."
     }
   ],
   "limits": {
@@ -47,14 +57,10 @@ Call agent_team with action "start" and the graph below. The question/task is at
 }
 ```
 
-## Step 2: Monitor and collect results
+## Step 3: Wait for results
 
-Use run_status with waitSeconds to wait for all steps to complete. Then use step_result to retrieve the synthesizer's output.
+Use run_status with waitSeconds to poll until all steps are complete.
 
-## Step 3: Present the council answer
+## Step 4: Present the answer
 
-Output the synthesizer's final answer. If the synthesizer did not run (due to upstream failures), summarise what partial results exist and explain what failed.
-
----
-
-## Question / Task
+Retrieve the synthesizer's output with step_result and present it. If synthesizer did not run due to upstream failures, summarise any partial results and explain what failed.

@@ -3,10 +3,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
-import { Post } from '@/types/post'
+import { SearchIndexItem } from '@/types/search'
 import { ui } from '@/i18n/en'
 
 export function Navigation() {
@@ -14,13 +14,23 @@ export function Navigation() {
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [posts] = useState<Post[]>([])
+  const [searchItems, setSearchItems] = useState<SearchIndexItem[]>([])
+  const [searchKey, setSearchKey] = useState(0)
   const logoRef = useRef<HTMLDivElement>(null)
   const searchIconRef = useRef<HTMLDivElement>(null)
   const themeIconRef = useRef<HTMLDivElement>(null)
   const themeAnimating = useRef(false)
-  // Tracks which icon SVG to show — allows mid-animation swap ahead of theme state
   const [iconDark, setIconDark] = useState(false)
+
+  // Fetch search index on mount
+  useEffect(() => {
+    fetch('/api/search')
+      .then((res) => res.json())
+      .then((data: SearchIndexItem[]) => setSearchItems(data))
+      .catch(() => {
+        // Silently degrade — search will show empty results
+      })
+  }, [])
 
   useEffect(() => {
     setIconDark(theme === 'dark')
@@ -43,6 +53,16 @@ export function Navigation() {
     el.style.animation =
       type === 'click' ? 'searchFound 0.4s ease forwards' : 'searchZoomIn 0.4s ease forwards'
   }
+
+  const openSearch = useCallback(() => {
+    triggerSearchAnim('click')
+    setSearchKey((k) => k + 1)
+    setSearchOpen(true)
+  }, [])
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false)
+  }, [])
 
   const handleThemeToggle = () => {
     if (themeAnimating.current) return
@@ -83,12 +103,12 @@ export function Navigation() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setSearchOpen(true)
+        openSearch()
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [openSearch])
 
   return (
     <>
@@ -132,10 +152,7 @@ export function Navigation() {
           {/* Actions & Mobile Menu Toggle */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => {
-                triggerSearchAnim('click')
-                setSearchOpen(true)
-              }}
+              onClick={openSearch}
               onMouseEnter={() => triggerSearchAnim('hover')}
               className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors duration-150 focus:outline-none"
               aria-label={ui.nav.searchLabel}
@@ -186,7 +203,7 @@ export function Navigation() {
         )}
       </header>
 
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} posts={posts} />
+      <SearchModal key={searchKey} isOpen={searchOpen} onClose={closeSearch} items={searchItems} />
     </>
   )
 }

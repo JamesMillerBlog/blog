@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { ThemeProvider } from '@/providers/theme-provider'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
+import { getAllPosts } from '@/common/utils/posts'
 
 import './globals.css'
 
@@ -58,11 +59,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const posts = await getAllPosts()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -77,7 +80,7 @@ export default function RootLayout({
       <body className="font-label antialiased bg-surface text-on-surface">
         <ThemeProvider>
           <div className="min-h-screen">
-            <Navigation />
+            <Navigation posts={posts} />
             {children}
             <Footer />
           </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Post } from '@/types/post'
 import { projects } from '@/app/projects/data'
 
@@ -122,6 +123,8 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
     onClose()
   }, [onClose])
 
+  const router = useRouter()
+
   // Keyboard navigation within the input
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -143,11 +146,11 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
         const selected = results[highlightedIndex]
         if (selected) {
           handleClose()
-          window.location.href = selected.href
+          router.push(selected.href)
         }
       }
     },
-    [results, highlightedIndex, handleClose]
+    [results, highlightedIndex, handleClose, router]
   )
 
   // Global keyboard listeners (Cmd+K, Escape)
@@ -308,7 +311,7 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
   return (
     <>
       {parts.map((part, i) =>
-        regex.test(part) ? (
+        i % 2 === 1 ? (
           <mark
             key={i}
             className="bg-tertiary-container/40 text-on-tertiary-container rounded-sm px-0.5"

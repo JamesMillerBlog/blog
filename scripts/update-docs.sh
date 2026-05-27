@@ -20,6 +20,12 @@ has_structural_changes() {
 if has_structural_changes; then
   echo "Checking if documentation (AGENTS.md, etc.) needs updates..."
 
+  # Skip if claude CLI is not available (e.g., CI environments)
+  if ! command -v claude &>/dev/null; then
+    echo "⚠ claude CLI not found — skipping documentation update."
+    exit 0
+  fi
+
   DIFF_FILE=$(mktemp /tmp/staged-diff-XXXXXX.diff)
   trap 'rm -f "$DIFF_FILE"' EXIT
 

@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
 import { Post } from '@/types/post'
@@ -88,6 +88,8 @@ export function Navigation({ posts }: { posts: Post[] }) {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  const handleCloseSearch = useCallback(() => setSearchOpen(false), [])
 
   return (
     <>
@@ -185,7 +187,7 @@ export function Navigation({ posts }: { posts: Post[] }) {
         )}
       </header>
 
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} posts={posts} />
+      <SearchModal isOpen={searchOpen} onClose={handleCloseSearch} posts={posts} />
     </>
   )
 }

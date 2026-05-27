@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { SearchIndexItem } from '@/types/search'
 
 interface SearchModalProps {
@@ -80,12 +81,14 @@ function getBestExcerptSnippet(query: string, excerpt: string): string {
 }
 
 export function SearchModal({ isOpen, onClose, items }: SearchModalProps) {
+  const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchIndexItem[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const hoveredViaMouse = useRef(false)
+  const prevOverflow = useRef<string | null>(null)
 
   // Focus input on mount (component remounts each time modal opens via key)
   useEffect(() => {
@@ -136,7 +139,10 @@ export function SearchModal({ isOpen, onClose, items }: SearchModalProps) {
         case 'Enter':
           e.preventDefault()
           if (results.length > 0 && results[selectedIndex]) {
-            window.location.href = results[selectedIndex].url
+            const targetUrl = results[selectedIndex].url
+            if (targetUrl.startsWith('/')) {
+              router.push(targetUrl)
+            }
             onClose()
           }
           break
@@ -151,15 +157,19 @@ export function SearchModal({ isOpen, onClose, items }: SearchModalProps) {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose, results, selectedIndex])
+  }, [isOpen, onClose, results, selectedIndex, router])
 
   // Block body scroll when modal open
   useEffect(() => {
     if (isOpen) {
+      prevOverflow.current = document.body.style.overflow
       document.body.style.overflow = 'hidden'
     }
     return () => {
-      document.body.style.overflow = ''
+      if (prevOverflow.current !== null) {
+        document.body.style.overflow = prevOverflow.current
+        prevOverflow.current = null
+      }
     }
   }, [isOpen])
 

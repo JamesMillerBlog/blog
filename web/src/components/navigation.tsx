@@ -24,12 +24,21 @@ export function Navigation() {
 
   // Fetch search index on mount
   useEffect(() => {
+    let cancelled = false
     fetch('/api/search')
-      .then((res) => res.json())
-      .then((data: SearchIndexItem[]) => setSearchItems(data))
+      .then((res) => {
+        if (!res.ok) throw new Error(`Search index fetch failed: ${res.status}`)
+        return res.json()
+      })
+      .then((data: SearchIndexItem[]) => {
+        if (!cancelled) setSearchItems(data)
+      })
       .catch(() => {
         // Silently degrade — search will show empty results
       })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {

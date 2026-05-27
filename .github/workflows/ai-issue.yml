@@ -40,7 +40,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
         with:
@@ -89,6 +89,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -144,7 +145,7 @@ jobs:
     env:
       PR_NUMBER: ${{ needs.implement.outputs.pr_number }}
       BRANCH: ${{ needs.implement.outputs.branch }}
-      TF_VERSION: '1.9.5'
+      TF_VERSION: "1.9.5"
       PREVIEW_URL: https://pr-${{ needs.implement.outputs.pr_number }}.staging.jamesmiller.blog
 
     steps:
@@ -154,7 +155,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
         with:
@@ -208,7 +209,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ''
+          AWS_SESSION_TOKEN: ""
           R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
           aws s3 sync web/out/ s3://jamesmiller-blog-pr-${PR_NUMBER}/ \

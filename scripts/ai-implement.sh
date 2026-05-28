@@ -120,10 +120,27 @@ REVIEW_SUMMARY=""
 for ITER in $(seq 1 $MAX_ITERATIONS); do
 	echo "=== Pre-push review iteration ${ITER}/${MAX_ITERATIONS} ===" >&2
 
-	REVIEW_PROMPT="$(cat .pi/prompts/pre-push-review.md)"
+	REVIEW_PROMPT="$(cat .pi/prompts/pre-push-review.md)
+
+---
+
+## CI Parsing Requirements
+
+This review runs in an automated CI pipeline. Two strict requirements:
+
+1. Do NOT write .review-stamp — the pipeline script handles that.
+2. Your response MUST end with EXACTLY one of these three lines (no bold, no punctuation, nothing else on the line):
+   SAFE TO PUSH
+   DO NOT PUSH
+   PUSH WITH CAUTION"
+
 	pi_run_with_fallback "opencode-go/kimi-k2.6" "$REVIEW_PROMPT" "/tmp/review-${ITER}.txt"
 
-	VERDICT=$(grep -ioE 'DO NOT PUSH|PUSH WITH CAUTION|SAFE TO PUSH' "/tmp/review-${ITER}.txt" | tail -1 | tr '[:lower:]' '[:upper:]' || true)
+	VERDICT=$(grep -ioE '^(DO NOT PUSH|PUSH WITH CAUTION|SAFE TO PUSH)$' "/tmp/review-${ITER}.txt" | tail -1 | tr '[:lower:]' '[:upper:]' || true)
+	# Fallback: match verdict anywhere in the output (handles models that add surrounding text)
+	if [[ -z "$VERDICT" ]]; then
+		VERDICT=$(grep -ioE 'DO NOT PUSH|PUSH WITH CAUTION|SAFE TO PUSH' "/tmp/review-${ITER}.txt" | tail -1 | tr '[:lower:]' '[:upper:]' || true)
+	fi
 	[[ -z "$VERDICT" ]] && VERDICT="UNKNOWN"
 	FINAL_VERDICT="$VERDICT"
 

@@ -1,4 +1,4 @@
-name: AI PR Comment Response
+name: AI Issue Comment Response
 
 on:
   issue_comment:
@@ -7,18 +7,18 @@ on:
 jobs:
   respond:
     if: |
-      github.event.issue.pull_request != null &&
+      github.event.issue.pull_request == null &&
       github.event.comment.user.login == github.repository_owner &&
       (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume')
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
 
     outputs:
-      branch: ${{ steps.pr.outputs.branch }}
-      pr_number: ${{ steps.pr.outputs.number }}
+      branch: ${{ steps.outputs.outputs.branch }}
+      pr_number: ${{ steps.outputs.outputs.pr_number }}
 
     concurrency:
-      group: ai-pr-${{ github.event.issue.number }}
+      group: ai-issue-${{ github.event.issue.number }}
       cancel-in-progress: true
 
     permissions:
@@ -27,21 +27,23 @@ jobs:
       issues: write
 
     env:
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      ISSUE_TITLE: ${{ github.event.issue.title }}
+      ISSUE_BODY: ${{ github.event.issue.body }}
       COMMENT_BODY: ${{ github.event.comment.body }}
 
     steps:
-      - name: Get PR branch
-        id: pr
+      - name: Acknowledge comment
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          DATA=$(gh pr view ${{ github.event.issue.number }} --json headRefName,number)
-          echo "branch=$(echo "$DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
-          echo "number=$(echo "$DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
+          gh api \
+            --method POST \
+            repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions \
+            -f content=eyes
 
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ steps.pr.outputs.branch }}
           fetch-depth: 0
           token: ${{ github.token }}
 
@@ -69,53 +71,119 @@ jobs:
           mkdir -p .pi/extensions/pi-permission-system
           echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
 
-      - name: Acknowledge comment
+      - name: Detect existing branch and PR
+        id: detect
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
-          if [[ "$COMMENT_BODY" == '/resume' ]]; then
-            gh pr comment ${{ steps.pr.outputs.number }} --body "**Resuming preview deployment...**
+          SHOULD_IMPLEMENT=false
 
-          [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          # Find existing branch for this issue number
+          EXISTING_BRANCH=$(git ls-remote --heads origin "refs/heads/ai/issue-${ISSUE_NUMBER}-*" | \
+            awk '{print $2}' | sed 's|refs/heads/||' | head -1 || true)
+
+          if [[ -n "$EXISTING_BRANCH" ]]; then
+            BRANCH="$EXISTING_BRANCH"
+            git checkout "$BRANCH"
+            PR_NUMBER=$(GH_TOKEN="${GH_PR_CREATE_TOKEN:-$GH_TOKEN}" \
+              gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || echo "")
+            if [[ -z "$PR_NUMBER" ]]; then
+              SHOULD_IMPLEMENT=true  # branch exists but PR creation failed — re-implement
+            fi
           else
-            INSTRUCTION="${COMMENT_BODY#/ai }"
-            gh pr comment ${{ steps.pr.outputs.number }} --body "**Working on it...**
+            SLUG=$(echo "$ISSUE_TITLE" | \
+              tr '[:upper:]' '[:lower:]' | \
+              sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//' | \
+              cut -c1-40)
+            BRANCH="ai/issue-${ISSUE_NUMBER}-${SLUG}"
+            PR_NUMBER=""
+            SHOULD_IMPLEMENT=true
+          fi
+
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+          echo "should_implement=${SHOULD_IMPLEMENT}" >> $GITHUB_OUTPUT
+
+      - name: Implement from scratch
+        if: steps.detect.outputs.should_implement == 'true'
+        id: implement
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+        run: |
+          BRANCH="${{ steps.detect.outputs.branch }}"
+          export BRANCH
+
+          git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+
+          gh issue comment "$ISSUE_NUMBER" --body "**AI Implementation Started**
+
+          Branch: \`${BRANCH}\`
+          Model: deepseek-v4-pro (implementation) + kimi-k2.6 (review)
+
+          [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          A draft PR will be raised once implementation and review are complete."
+
+          bash scripts/ai-implement.sh
+
+          PR_NUMBER=$(GH_TOKEN="${GH_PR_CREATE_TOKEN:-$GH_TOKEN}" \
+            gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || echo "")
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+
+      - name: Apply fix via /ai instruction
+        if: |
+          steps.detect.outputs.should_implement == 'false' &&
+          startsWith(env.COMMENT_BODY, '/ai ')
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
+          BRANCH: ${{ steps.detect.outputs.branch }}
+        run: |
+          INSTRUCTION="${COMMENT_BODY#/ai }"
+          gh issue comment "$ISSUE_NUMBER" --body "**Applying fix to PR #${PR_NUMBER}...**
 
           > ${INSTRUCTION}
 
           [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-          fi
 
-      - name: Run AI response
-        if: startsWith(env.COMMENT_BODY, '/ai ')
-        env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.pr.outputs.number }}
-          BRANCH: ${{ steps.pr.outputs.branch }}
-        run: |
-          INSTRUCTION="${COMMENT_BODY#/ai }"
           bash scripts/ai-respond.sh "$PR_NUMBER" "$BRANCH" "$INSTRUCTION"
+          git push origin "$BRANCH"
 
-      - name: Push changes
-        if: startsWith(env.COMMENT_BODY, '/ai ')
-        run: git push origin ${{ steps.pr.outputs.branch }}
-
-      - name: Post AI response result
-        if: startsWith(env.COMMENT_BODY, '/ai ')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
           if [[ -f /tmp/ai-respond-result.md ]]; then
-            gh pr comment ${{ steps.pr.outputs.number }} --body "$(cat /tmp/ai-respond-result.md)"
+            gh pr comment "$PR_NUMBER" --body "$(cat /tmp/ai-respond-result.md)"
           fi
 
-      - name: Run Kimi PR review
-        if: startsWith(env.COMMENT_BODY, '/ai ')
+          bash scripts/ai-pr-review.sh "$PR_NUMBER"
+
+      - name: Resume without code change (/resume)
+        if: |
+          steps.detect.outputs.should_implement == 'false' &&
+          env.COMMENT_BODY == '/resume'
         env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
-        run: bash scripts/ai-pr-review.sh "${{ steps.pr.outputs.number }}"
+          PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
+          BRANCH: ${{ steps.detect.outputs.branch }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "**Resuming pipeline for PR #${PR_NUMBER}...**
+
+          Re-running preview deployment.
+
+          [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+      - name: Collect outputs
+        id: outputs
+        run: |
+          BRANCH="${{ steps.detect.outputs.branch }}"
+          PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
+          if [[ -n "${{ steps.implement.outputs.pr_number }}" ]]; then
+            PR_NUMBER="${{ steps.implement.outputs.pr_number }}"
+          fi
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
 
   preview:
     name: Deploy preview environment

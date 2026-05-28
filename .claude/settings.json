@@ -19,16 +19,6 @@
     ]
   },
   "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "curl -s -d 'Claude done' \"ntfy.sh/${NTFY_TOPIC}\""
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",

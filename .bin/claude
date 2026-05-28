@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Delegates to pnpm claude from the current worktree root.
+# Shadows the global `claude` CLI when inside this repo or any linked worktree.
+REPO=$(git rev-parse --show-toplevel 2>/dev/null)
+[[ -z "$REPO" ]] && { echo "error: not inside a git repo"; exit 1; }
+cd "$REPO" && exec pnpm claude "$@"

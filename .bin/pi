@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Delegates to pnpm pi from the current worktree root.
+# Shadows the global `pi` CLI when inside this repo or any linked worktree.
+REPO=$(git rev-parse --show-toplevel 2>/dev/null)
+[[ -z "$REPO" ]] && { echo "error: not inside a git repo"; exit 1; }
+cd "$REPO" && exec pnpm pi "$@"

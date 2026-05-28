@@ -49,20 +49,15 @@ Pi has built-in support for these providers (auth via env vars or `/login` in in
 
 ## Git Worktrees
 
-When running inside a git worktree, set `$BLOG_GIT_DIR` to the main repo's `.git` directory so the container can access the full git history:
+Each worktree gets its own named container (e.g. `claude-blog-main`, `pi-blog-feature`), so you can run separate AI sessions per branch. Run `pnpm claude:fresh` or `pnpm pi:fresh` to rebuild and start a fresh container.
 
-```bash
-BLOG_GIT_DIR=$(git rev-parse --git-common-dir) pnpm claude
-BLOG_GIT_DIR=$(git rev-parse --git-common-dir) pnpm pi
-```
-
-Both `pnpm claude` and `pnpm pi` mount the `.git` directory read-only when the variable is set.
+The scripts auto-detect the shared `.git` directory via `git rev-parse --git-common-dir` and mount it read-only. You can still override with `$BLOG_GIT_DIR` if needed.
 
 ## Persistence
 
 Host mounts persist credentials and settings across restarts:
-- **Claude:** `${HOME}/.claude` → `/home/claude/.claude`, `${HOME}/.claude.json` → `/home/claude/.claude.json`
-- **Pi:** `${HOME}/.pi` → `/home/pi/.pi` (settings, auth, sessions)
+- **Claude:** `${HOME}/.claude` → `/home/claude/.claude`, `${HOME}/.claude.json` → `/home/claude/.claude.json`, `${HOME}/.config/gh` → `/home/claude/.config/gh`
+- **Pi:** `${HOME}/.pi` → `/home/pi/.pi` (settings, auth, sessions), `${HOME}/.config/gh` → `/home/pi/.config/gh`
 
 The images ship default settings at build time; host mounts override them if present. Repo changes are live in both directions.
 
@@ -73,7 +68,8 @@ Set API keys via environment variables (compose inherits from host env):
 ```bash
 export OPENCODE_API_KEY=sk-...
 export GEMINI_API_KEY=...
+export GH_TOKEN=ghp_...
 pnpm pi
 ```
 
-Do not add keys to `docker-compose.yml` — it's committed to git.
+Do not add keys to `docker-compose.yml` — it's committed to git. (Exception: `GH_TOKEN` already in compose as `${GH_TOKEN:-}`, inheriting from host when set.)

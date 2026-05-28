@@ -6,6 +6,22 @@
 # direnv auto-loads these variables whenever you cd into this directory.
 # Install direnv: https://direnv.net
 # After creating .envrc run: direnv allow
+#
+# ── Local tooling (.bin/) ──────────────────────────────────
+#
+# .bin/ contains repo-local CLI wrappers committed to git:
+#   .bin/claude  — delegates `claude` → `pnpm claude` (Docker-based Claude Code)
+#   .bin/pi      — delegates `pi`     → `pnpm pi`     (Docker-based pi)
+#
+# PATH_add .bin (below) makes these shadow the global claude/pi CLIs whenever
+# you're inside this repo or any linked worktree.
+#
+# Setup after cloning:
+#   chmod +x .bin/claude .bin/pi   # git should preserve this, but run if needed
+#   cp .envrc.example .envrc       # fill in values
+#   direnv allow                   # activate
+
+PATH_add .bin
 
 # ── Cloudflare ─────────────────────────────────────────────
 
@@ -38,12 +54,6 @@ export TF_STATE_BUCKET="your-terraform-state-bucket-name"
 
 # GitHub repo for the content
 export CONTENT_GITHUB_REPO="your-org/your-content-repo"
-
-# ── Notifications ──────────────────────────────────────────
-
-# ntfy.sh topic for AI tool notifications (https://ntfy.sh)
-# Treat as a secret — topic is your auth. Use a cryptographically random value.
-export NTFY_TOPIC="your-unique-ntfy-topic"
 
 # ── Git Worktrees ──────────────────────────────────────────
 

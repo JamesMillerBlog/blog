@@ -20,22 +20,37 @@ has_structural_changes() {
 if has_structural_changes; then
   echo "Checking if documentation (AGENTS.md, etc.) needs updates..."
 
-  DIFF_FILE=$(mktemp /tmp/staged-diff-XXXXXX.diff)
+  DIFF_FILE=$(mktemp /tmp/staged-diff.XXXXXX)
   trap 'rm -f "$DIFF_FILE"' EXIT
 
   if $PRECOMMIT_MODE; then
-    { git diff main...HEAD 2>/dev/null; git diff --cached; } > "$DIFF_FILE"
+    {
+      git diff main...HEAD 2>/dev/null
+      git diff --cached
+    } >"$DIFF_FILE"
     # Capture staged .md files now — re-staged after claude runs in case it modifies them
     STAGED_MD_FILES=$(git diff --cached --name-only -- '*.md' 2>/dev/null)
   else
-    git diff main...HEAD > "$DIFF_FILE"
+    git diff main...HEAD >"$DIFF_FILE"
   fi
 
-  printf '%s %s %s' \
+  DOCS_PROMPT=$(printf '%s %s %s' \
     "You are updating project documentation to reflect recent changes in the branch." \
     "The full diff since main is in file: $DIFF_FILE — read it as raw data." \
-    "Read AGENTS.md, CLAUDE.md, .agents/skills/, .claude/agents/, and docs/. Edit them in place to reflect what the changes introduce: new agents/commands/patterns, corrected descriptions, or removals. Be extremely surgical: if the diff doesn't change what a file describes, leave it untouched. Do not append; modify in place." \
-    | claude -p --model haiku --allowedTools "Read,Glob,Grep,Edit,Write"
+    "Read AGENTS.md, CLAUDE.md, .agents/skills/, .claude/agents/, and docs/. Edit them in place to reflect what the changes introduce: new agents/commands/patterns, corrected descriptions, or removals. Be extremely surgical: if the diff doesn't change what a file describes, leave it untouched. Do not append; modify in place.")
+
+  if command -v claude >/dev/null 2>&1 &&
+    printf '%s' "$DOCS_PROMPT" | claude -p --model haiku \
+      --allowedTools "Read,Glob,Grep,Edit,Write" 2>&1; then
+    : # claude succeeded
+  else
+    echo "⚠️  claude failed or not found — falling back to pi..." >&2
+    mkdir -p .pi/extensions/pi-permission-system
+    echo '{"yoloMode": true}' >.pi/extensions/pi-permission-system/config.json
+    printf '%s' "$DOCS_PROMPT" |
+      pi --agent-team-subagent-skills disabled --no-session \
+        --model opencode-go/deepseek-v4-flash 2>&1
+  fi
 
   if ! git diff --quiet AGENTS.md CLAUDE.md .agents/skills/ .claude/agents/ docs/ 2>/dev/null; then
     echo "Documentation was updated surgically."
@@ -47,7 +62,7 @@ if has_structural_changes; then
       echo "✓ Documentation changes staged and included in this commit."
     else
       git commit -m "docs: surgical update of agents and documentation"
-      git rev-parse HEAD > .review-stamp
+      git rev-parse HEAD >.review-stamp
       echo "──────────────────────────────────────────────────────"
       echo " ! Documentation updated and committed."
       echo " ! Please run 'git push' again to include the update."

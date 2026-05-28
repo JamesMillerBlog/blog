@@ -23,7 +23,7 @@ Personal blog and portfolio for [James Miller](https://jamesmiller.blog).
 ├── docs/                 # AI workflow documentation
 ├── .claude/              # Claude Code config and custom commands
 ├── .pi/                  # pi (fallback AI harness) config and extensions
-├── Dockerfile            # Claude Code Docker image
+├── Dockerfile.claude     # Claude Code Docker image
 ├── Dockerfile.pi         # pi Docker image
 ├── docker/               # Docker config files (claude-settings, pi-settings)
 ├── AGENTS.md             # AI agent instructions

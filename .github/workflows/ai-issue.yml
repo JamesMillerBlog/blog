@@ -83,7 +83,7 @@ jobs:
 
           [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
-          Will raise a draft PR and post progress there."
+          A draft PR will be raised once implementation and review are complete."
 
       - name: Implement and review loop
         env:

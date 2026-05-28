@@ -111,13 +111,15 @@ Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (
 
 ## GitHub Workflows — Automated AI Development
 
-Three workflows automate issue implementation and PR management using OpenCode:
+Five workflows automate issue implementation and PR management using OpenCode:
 
-| Workflow                     | Trigger                                        | What it does                                                                                                                                              |
-| ---------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only) | Implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
-| `ai-pr-merged.yml`           | AI-generated PR merged (auto)                  | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
-| `destroy-preview-manual.yml` | Manual workflow trigger (repo owner)           | Destroys a specific PR's ephemeral preview environment                                                                                                    |
+| Workflow                     | Trigger                                                              | What it does                                                                                                                                              |
+| ---------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                       | Implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
+| `ai-issue-comment.yml`       | Issue comment `/ai <instruction>` or `/resume` (repo owner only)     | Finds existing branch/PR; if none → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change |
+| `ai-pr-comment.yml`          | PR comment `/ai <instruction>` or `/resume` (repo owner only)        | `/ai` applies fix via ai-respond.sh, runs Kimi review, re-deploys preview; `/resume` re-deploys preview without code change                               |
+| `ai-pr-merged.yml`           | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
+| `destroy-preview-manual.yml` | Manual workflow trigger (repo owner)                                 | Destroys a specific PR's ephemeral preview environment                                                                                                    |
 
 See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment architecture, issue template, and E2E test generation.
 

@@ -1,15 +1,18 @@
 services:
   claude:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.claude
     stdin_open: true
     tty: true
     volumes:
       - .:/workspace
       - ${HOME}/.claude:/home/claude/.claude
       - ${HOME}/.claude.json:/home/claude/.claude.json
+      - ${HOME}/.config/gh:/home/claude/.config/gh
     environment:
       - ANTHROPIC_MODEL=claude-sonnet-4-6
-      - NTFY_TOPIC=${NTFY_TOPIC}
+      - GH_TOKEN=${GH_TOKEN:-}
 
   pi:
     build:
@@ -20,5 +23,6 @@ services:
     volumes:
       - .:/workspace
       - ${HOME}/.pi:/home/pi/.pi
+      - ${HOME}/.config/gh:/home/pi/.config/gh
     environment:
-      - NTFY_TOPIC=${NTFY_TOPIC}
+      - GH_TOKEN=${GH_TOKEN:-}

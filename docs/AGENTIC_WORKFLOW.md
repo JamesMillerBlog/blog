@@ -165,7 +165,7 @@ In pi with the `pi-multiagent` extension installed, the `agent_team` tool can sp
 
 ## GitHub Workflows — Automated AI Issue Implementation & Review
 
-Three GitHub workflows automate AI-driven development:
+Five GitHub workflows automate AI-driven development:
 
 ### AI Issue Implementation (`ai-implement` label)
 
@@ -206,6 +206,28 @@ Branch: ai/issue-123-add-dark-mode-toggle
 ↓ (Phase 6: Kimi K2.6 independent review)
 Preview live + tests pass/fail visible in Actions
 ```
+
+### AI Issue Comment Response (`ai-issue-comment` workflow)
+
+**When:** A repo owner comments `/ai <instruction>` or `/resume` on an issue.
+
+**What happens:**
+1. Detects existing branch+PR for this issue number
+2. If no branch exists → re-implements from scratch (same as `ai-issue.yml` but runs in the comment workflow)
+3. If branch exists and `/ai <instruction>` → applies fix via `ai-respond.sh`, pushes, runs Kimi K2.6 review, re-deploys preview
+4. If branch exists and `/resume` → re-deploys preview environment without code changes
+
+**Why:** Lets you iterate on an AI-generated feature by commenting `/ai` with instructions, or restart preview deployment with `/resume`, all without leaving GitHub.
+
+### AI PR Comment Response (`ai-pr-comment` workflow)
+
+**When:** A repo owner comments `/ai <instruction>` or `/resume` on a pull request.
+
+**What happens:**
+1. `/ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary, runs Kimi K2.6 review, then re-deploys preview environment
+2. `/resume` → re-deploys preview environment without code changes
+
+**Why:** Enables rapid iteration on PRs — comment `/ai fix the heading colour` and the AI implements, reviews, and re-deploys automatically.
 
 ### AI PR Merged — Auto-cleanup (`ai-pr-merged` workflow)
 
@@ -363,7 +385,7 @@ Switching tools doesn't mean starting over. Both harnesses read the same project
 ├── .agents/skills/       # Shared skill definitions (auto-loaded by both)
 ├── .claude/              # Claude Code agents, commands, settings
 ├── .pi/                  # pi config, extensions, settings
-├── Dockerfile            # Claude Code Docker image
+├── Dockerfile.claude     # Claude Code Docker image
 ├── Dockerfile.pi         # pi Docker image
 ├── docker/               # Docker config files
 └── web/design/DESIGN.md  # Byte Mark design system

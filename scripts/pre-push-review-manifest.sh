@@ -63,7 +63,7 @@ is_docs_only_path() {
 
 is_high_risk_path() {
   case "$1" in
-    .github/workflows/*|Dockerfile|docker-compose*|docker/*|infrastructure/*|*.tf|*.tfvars|package.json|pnpm-workspace.yaml|*.npmrc|scripts/deploy.*|scripts/*deploy*|scripts/*upload*|scripts/*publish*|*auth*|*secret*|*.env|*.env.*|*middleware*|*webhook*)
+    .github/workflows/*|Dockerfile.*|docker-compose*|docker/*|infrastructure/*|*.tf|*.tfvars|package.json|pnpm-workspace.yaml|*.npmrc|scripts/deploy.*|scripts/*deploy*|scripts/*upload*|scripts/*publish*|*auth*|*secret*|*.env|*.env.*|*middleware*|*webhook*)
       return 0
       ;;
     *)
@@ -96,7 +96,7 @@ is_design_path() {
 
 is_quality_path() {
   case "$1" in
-    *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.yml|*.yaml|*.sh|Dockerfile|docker-compose*)
+    *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.yml|*.yaml|*.sh|Dockerfile.*|docker-compose*)
       return 0
       ;;
     scripts/*)

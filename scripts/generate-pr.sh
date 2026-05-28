@@ -28,10 +28,6 @@ if [[ "${CI:-false}" != "true" ]]; then
 		echo "gh not authenticated. Please run 'gh auth login'."
 		exit 1
 	}
-	command -v claude >/dev/null 2>&1 || {
-		echo "claude CLI not found. Please install it."
-		exit 1
-	}
 fi
 
 # Push the branch before creating/updating the PR so Claude doesn't need push permission.
@@ -83,7 +79,15 @@ if [[ "${CI:-false}" == "true" ]]; then
 		pi --agent-team-subagent-skills disabled --model opencode-go/deepseek-v4-flash \
 			2>&1 || echo "$FALLBACK"
 else
-	printf '%s\n%s\n%s' "${PROMPT_INTRO}" "${PROMPT_STEPS}" "${PROMPT_ACTION}" |
-		claude -p --model haiku --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" \
-			2>&1 || echo "$FALLBACK"
+	PROMPT=$(printf '%s\n%s\n%s' "${PROMPT_INTRO}" "${PROMPT_STEPS}" "${PROMPT_ACTION}")
+	if command -v claude >/dev/null 2>&1 && \
+	   printf '%s' "$PROMPT" | claude -p --model haiku \
+	     --allowedTools "Bash(git log*),Bash(git diff*),Bash(gh pr*),Read" 2>&1; then
+		: # claude succeeded
+	else
+		echo "⚠️  claude failed or not found — falling back to pi..." >&2
+		printf '%s' "$PROMPT" | \
+		  pi --agent-team-subagent-skills disabled --no-session \
+		    --model opencode-go/deepseek-v4-flash 2>&1 || echo "$FALLBACK"
+	fi
 fi

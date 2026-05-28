@@ -6,6 +6,7 @@
 ## Conventions
 - Server components by default · Client components: `'use client'`
 - No `pages/` directory · File-based routing under `web/src/app/`
+- **Formatting:** single quotes, no semicolons, trailing commas (ES5), 100 print width per `.prettierrc`. 2-space indent (spaces, not tabs). Preserve surrounding formatting when editing.
 
 ## File Locations
 - Shared components: `web/src/app/_components/`

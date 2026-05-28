@@ -62,6 +62,17 @@ pi --model opencode-go/deepseek-v4-pro  # switch model inline
 
 Inside pi, use `/model` or Ctrl+L to switch providers at any time.
 
+## Code Formatting — All AI Tools
+
+All AI tools (Claude Code and pi) must follow these formatting conventions. Match existing file style when editing — do not change formatting of unchanged lines.
+
+- **Indentation:** spaces only, 2-space indent. Never tabs (except Makefiles).
+- **YAML:** single-quoted strings (`'22'` not `"22"`, `''` not `""`). 2-space indent.
+- **Shell scripts:** 2-space indent with spaces. Line continuation with `\` (backslash). Pipe chains use `|` at end of continued line, next line indented with 4 spaces for visual alignment.
+- **JSON/TS/JS/TSX/CSS:** per `.prettierrc` in `web/`: single quotes, no semicolons, trailing commas (ES5), 100 print width.
+- **Markdown:** 2-space indent in code blocks. No trailing whitespace.
+- **When editing:** preserve surrounding formatting. Only change lines that need functional changes.
+
 ## Design System — Byte Mark
 
 Full spec: `web/design/DESIGN.md`. Key tokens:

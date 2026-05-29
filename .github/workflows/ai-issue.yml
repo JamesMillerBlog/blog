@@ -8,7 +8,7 @@ jobs:
   implement:
     if: github.event.label.name == 'ai-implement' && github.event.sender.login == github.repository_owner
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     outputs:
       branch: ${{ steps.branch.outputs.name }}

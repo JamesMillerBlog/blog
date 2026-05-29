@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-MAX_ITERATIONS=10
+MAX_ITERATIONS=6
 PI="pi --agent-team-subagent-skills disabled --no-session"
 export PI_SKIP_VERSION_CHECK=1
 
@@ -29,7 +29,7 @@ pi_run() {
 	if [[ "$model" == *"deepseek"* ]]; then
 		cache_env="PI_CACHE_RETENTION=long"
 	fi
-	printf '%s' "$prompt" | env $cache_env $PI --model "$model" 2>&1 | strip_ansi | tee "$outfile"
+	printf '%s' "$prompt" | env $cache_env timeout 45m $PI --model "$model" 2>&1 | strip_ansi | tee "$outfile"
 }
 
 # pi_run_with_fallback: retries once on failure, then falls back to deepseek-v4-pro.

@@ -60,6 +60,22 @@ cd ../Project.worktrees/<branch-name>
 
 _Note: Dependencies (like `node_modules`) and ignored files (like `.env`) are not shared between worktrees. You will need to install dependencies and set up environment variables in each new worktree._
 
+#### AI Tools in Worktrees
+
+Each worktree can run multiple concurrent Claude or pi sessions. When you run `pnpm claude` or `pnpm pi`, the container scripts auto-assign to the next available instance slot, allowing you to run independent AI sessions in parallel:
+
+```bash
+# Terminal 1: First session in the worktree
+cd ../Project.worktrees/feature-branch
+pnpm claude                  # runs as claude-<worktree-name>
+
+# Terminal 2: Parallel session in the same worktree (different container)
+cd ../Project.worktrees/feature-branch
+pnpm claude                  # runs as claude-<worktree-name>-2
+```
+
+This is useful for running multiple agents or tools simultaneously without blocking each other.
+
 ### 3. List Active Worktrees
 
 To see all currently active worktrees and their locations:

@@ -49,14 +49,14 @@ Pi has built-in support for these providers (auth via env vars or `/login` in in
 
 ## Git Worktrees
 
-Each worktree gets its own named container (e.g. `claude-blog-main`, `pi-blog-feature`), so you can run separate AI sessions per branch. Run `pnpm claude:fresh` or `pnpm pi:fresh` to rebuild and start a fresh container.
+Each worktree can run multiple concurrent Claude or pi sessions. The scripts auto-assign container names to available slots (e.g. `claude-blog-main`, `claude-blog-main-2`, `claude-blog-main-3`), allowing independent AI sessions to run in parallel within the same worktree. Run `pnpm claude:fresh` or `pnpm pi:fresh` to rebuild and start a fresh container.
 
 The scripts auto-detect the shared `.git` directory via `git rev-parse --git-common-dir` and mount it read-only. You can still override with `$BLOG_GIT_DIR` if needed.
 
 ## Persistence
 
 Host mounts persist credentials and settings across restarts:
-- **Claude:** `${HOME}/.claude` → `/home/claude/.claude`, `${HOME}/.claude.json` → `/home/claude/.claude.json`, `${HOME}/.config/gh` → `/home/claude/.config/gh`
+- **Claude:** `${HOME}/.claude/projects` → `/home/claude/.claude/projects`, `${HOME}/.claude/hooks` → `/home/claude/.claude/hooks`, `${HOME}/.claude/.credentials.json` → `/home/claude/.claude/.credentials.json`, `${HOME}/.claude.json` → `/home/claude/.claude.json`, `${HOME}/.config/gh` → `/home/claude/.config/gh`
 - **Pi:** `${HOME}/.pi` → `/home/pi/.pi` (settings, auth, sessions), `${HOME}/.config/gh` → `/home/pi/.config/gh`
 
 The images ship default settings at build time; host mounts override them if present. Repo changes are live in both directions.

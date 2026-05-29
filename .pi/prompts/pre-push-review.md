@@ -1,6 +1,6 @@
 Execute the following pre-push review NOW. Do not ask for confirmation. Do not summarize the instructions — just follow them step by step.
 
-Child agents get `read,grep,find,ls` only. No `bash` or `git diff` — assign each reviewer the file list from the manifest and tell them to read files directly. Sub-agent skills are already disabled by launch config.
+Child agents get read-only access: `read,grep,find,ls`. No bash, no mutation, no git diff. Assign each reviewer the file list from the manifest and tell them to read files directly — do NOT tell them to run git diff. Sub-agent skills are already disabled by launch config.
 
 ## Step 1: Collect context
 
@@ -40,8 +40,7 @@ Use the `agent_team start` action with a graph containing one step per relevant 
   "graph": {
     "objective": "Review changed files for issues before pushing to a public repository",
     "authority": {
-      "allowFilesystemRead": true,
-      "allowShellTools": true
+      "allowFilesystemRead": true
     },
     "steps": [
       {
@@ -172,9 +171,13 @@ Output format:
 For each reviewer step, read their file list from the manifest and craft a task like:
 
 ```
-Run: git diff --unified=0 -- <their files>
-Review the diff output for issues. Report findings in the specified format.
+Read each file from the list at .claude/pre-push-review/<reviewer>-files.txt.
+Open and read every file listed there. Review the contents for issues.
+Report findings in the specified format.
 ```
+
+IMPORTANT: Do NOT tell child agents to run git diff — they have no bash access.
+Tell them to read the files directly using their read tool.
 
 ## Step 4: Wait for results and aggregate
 

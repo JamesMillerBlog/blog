@@ -7,12 +7,19 @@ services:
     tty: true
     volumes:
       - .:/workspace
-      - ${HOME}/.claude:/home/claude/.claude
+      - ${HOME}/.claude/projects:/home/claude/.claude/projects
+      - ${HOME}/.claude/hooks:/home/claude/.claude/hooks
+      - ${HOME}/.claude/.credentials.json:/home/claude/.claude/.credentials.json
       - ${HOME}/.claude.json:/home/claude/.claude.json
       - ${HOME}/.config/gh:/home/claude/.config/gh
+    group_add:
+      - '0'
     environment:
       - ANTHROPIC_MODEL=claude-sonnet-4-6
       - GH_TOKEN=${GH_TOKEN:-}
+      - HERDR_ENV=${HERDR_ENV:-}
+      - HERDR_SOCKET_PATH=${HERDR_SOCKET_PATH:-}
+      - HERDR_PANE_ID=${HERDR_PANE_ID:-}
 
   pi:
     build:
@@ -24,5 +31,10 @@ services:
       - .:/workspace
       - ${HOME}/.pi:/home/pi/.pi
       - ${HOME}/.config/gh:/home/pi/.config/gh
+    group_add:
+      - '0'
     environment:
       - GH_TOKEN=${GH_TOKEN:-}
+      - HERDR_ENV=${HERDR_ENV:-}
+      - HERDR_SOCKET_PATH=${HERDR_SOCKET_PATH:-}
+      - HERDR_PANE_ID=${HERDR_PANE_ID:-}

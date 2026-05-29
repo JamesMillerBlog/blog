@@ -12,5 +12,80 @@
       "MultiEdit(*)",
       "MultiEdit(**)"
     ]
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${HOME}/.claude/hooks/herdr-agent-state.sh\" working",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${HOME}/.claude/hooks/herdr-agent-state.sh\" working",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${HOME}/.claude/hooks/herdr-agent-state.sh\" blocked",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${HOME}/.claude/hooks/herdr-agent-state.sh\" idle",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${HOME}/.claude/hooks/herdr-agent-state.sh\" idle",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${HOME}/.claude/hooks/herdr-agent-state.sh\" release",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { ThemeProvider } from '@/providers/theme-provider'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
+import { getAllPosts } from '@/common/utils/posts'
+import { projects } from '@/app/projects/data'
 
 import './globals.css'
 
@@ -58,11 +60,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  let allPosts: Awaited<ReturnType<typeof getAllPosts>> = []
+  try {
+    allPosts = await getAllPosts()
+  } catch {
+    // Posts unavailable (e.g. no _posts/ dir and no POSTS_BUCKET) — search will still work for projects
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -77,7 +86,7 @@ export default function RootLayout({
       <body className="font-label antialiased bg-surface text-on-surface">
         <ThemeProvider>
           <div className="min-h-screen">
-            <Navigation />
+            <Navigation posts={allPosts} projects={projects} />
             {children}
             <Footer />
           </div>

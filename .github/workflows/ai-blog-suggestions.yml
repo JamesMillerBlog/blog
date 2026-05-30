@@ -1,0 +1,64 @@
+name: AI Blog Improvement Radar
+
+on:
+  schedule:
+    - cron: "0 8 1 * *"
+  workflow_dispatch:
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    concurrency:
+      group: blog-suggestions
+      cancel-in-progress: false
+
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+        with:
+          version: 9
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Install OpenCode
+        run: npm install -g @earendil-works/pi-coding-agent@0.75.5 pi-multiagent@0.9.4 pi-gh-cli@0.2.4 pi-lens@3.8.45
+
+      - name: Configure git
+        run: |
+          git config --global user.name "pi[bot]"
+          git config --global user.email "pi[bot]@users.noreply.github.com"
+
+      - name: Setup OpenCode permissions
+        run: |
+          mkdir -p .pi/extensions/pi-permission-system
+          echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
+
+      - name: Ensure blog-radar label exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create blog-radar \
+            --color '00675d' \
+            --description 'Monthly blog improvement suggestions' \
+            2>/dev/null || true
+
+      - name: Run blog improvement radar
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ai-blog-suggestions.sh

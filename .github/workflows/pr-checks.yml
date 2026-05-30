@@ -10,6 +10,9 @@ on:
       - ".github/workflows/**"
       - "Dockerfile.*"
 
+permissions:
+  contents: read
+
 concurrency:
   group: pr-checks-${{ github.head_ref }}
   cancel-in-progress: true

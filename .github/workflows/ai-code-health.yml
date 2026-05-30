@@ -12,6 +12,8 @@ on:
         default: false
         required: false
 
+permissions: read-all
+
 jobs:
   code-health:
     runs-on: ubuntu-latest
@@ -50,10 +52,11 @@ jobs:
 
       - name: Run code health check
         env:
-          CI: "true"
+          CI: 'true'
           GH_TOKEN: ${{ github.token }}
+          QUICK_MODE: ${{ github.event.inputs.quick_mode }}
         run: |
-          if [ "${{ github.event.inputs.quick_mode }}" = "true" ]; then
+          if [ "$QUICK_MODE" = 'true' ]; then
             ./scripts/code-health-check.sh --ci --quick
           else
             ./scripts/code-health-check.sh --ci

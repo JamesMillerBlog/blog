@@ -36,6 +36,7 @@
     "site:staging": "pnpm site:build && pnpm site:deploy:staging",
     "site:production": "pnpm site:build && pnpm site:deploy:production",
     "deploy": "tsx scripts/deploy.ts",
+    "council": "sh scripts/council.sh",
     "claude": "sh scripts/claude.sh",
     "claude:fresh": "sh scripts/claude.sh --fresh",
     "pi": "sh scripts/pi.sh",

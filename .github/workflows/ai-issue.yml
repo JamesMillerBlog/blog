@@ -85,6 +85,28 @@ jobs:
 
           A draft PR will be raised once implementation and review are complete."
 
+      - name: Council pre-implementation review
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          QUESTION="Architecture review for: ${ISSUE_TITLE}
+
+          ${ISSUE_BODY}"
+
+          bash scripts/council.sh "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
+
+          {
+            printf '**Council Pre-Implementation Review**\n\n'
+            cat /tmp/council-output.txt
+            printf '\n\n---\n_Proceeding with implementation..._'
+          } > /tmp/council-comment.md
+
+          gh issue comment "${ISSUE_NUMBER}" --body-file /tmp/council-comment.md
+
       - name: Implement and review loop
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}

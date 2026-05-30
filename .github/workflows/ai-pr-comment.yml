@@ -9,13 +9,14 @@ jobs:
     if: |
       github.event.issue.pull_request != null &&
       github.event.comment.user.login == github.repository_owner &&
-      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume')
+      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '/council '))
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
     outputs:
       branch: ${{ steps.pr.outputs.branch }}
       pr_number: ${{ steps.pr.outputs.number }}
+      should_preview: ${{ steps.set_preview.outputs.should_preview }}
 
     concurrency:
       group: ai-pr-${{ github.event.issue.number }}
@@ -72,19 +73,43 @@ jobs:
       - name: Acknowledge comment
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [[ "$COMMENT_BODY" == '/resume' ]]; then
-            gh pr comment ${{ steps.pr.outputs.number }} --body "**Resuming preview deployment...**
+            gh pr comment "${PR_NUMBER}" --body "**Resuming preview deployment...**
 
-          [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          [View Actions run](${RUN_URL})"
+          elif [[ "$COMMENT_BODY" == /council\ * ]]; then
+            QUESTION="${COMMENT_BODY#/council }"
+            gh pr comment "${PR_NUMBER}" --body "**Running council on question...**
+
+          > ${QUESTION}
+
+          [View Actions run](${RUN_URL})"
           else
             INSTRUCTION="${COMMENT_BODY#/ai }"
-            gh pr comment ${{ steps.pr.outputs.number }} --body "**Working on it...**
+            gh pr comment "${PR_NUMBER}" --body "**Working on it...**
 
           > ${INSTRUCTION}
 
-          [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          [View Actions run](${RUN_URL})"
           fi
+
+      - name: Run council
+        if: startsWith(env.COMMENT_BODY, '/council ')
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          QUESTION="${COMMENT_BODY#/council }"
+          bash scripts/council.sh "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
+          {
+            printf '**Council Answer**\n\n'
+            cat /tmp/council-output.txt
+          } > /tmp/council-comment.md
+          gh pr comment "${PR_NUMBER}" --body-file /tmp/council-comment.md
 
       - name: Run AI response
         if: startsWith(env.COMMENT_BODY, '/ai ')
@@ -117,10 +142,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: bash scripts/ai-pr-review.sh "${{ steps.pr.outputs.number }}"
 
+      - name: Set preview flag
+        id: set_preview
+        run: |
+          if [[ "$COMMENT_BODY" == '/resume' ]] || [[ "$COMMENT_BODY" == /ai\ * ]]; then
+            echo 'should_preview=true' >> $GITHUB_OUTPUT
+          else
+            echo 'should_preview=false' >> $GITHUB_OUTPUT
+          fi
+
   preview:
     name: Deploy preview environment
     needs: respond
-    if: needs.respond.outputs.pr_number != ''
+    if: needs.respond.outputs.should_preview == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     environment: staging

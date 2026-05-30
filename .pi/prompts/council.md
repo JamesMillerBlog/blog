@@ -1,19 +1,11 @@
 <!-- version: 1.0 -->
 You are orchestrating a council of specialist AI agents to answer a question. Execute the steps below immediately. Do not ask for confirmation.
 
-## Step 1: Extract and validate the question
+The question has already been embedded verbatim in each agent task below. Do not try to extract it from context — just call agent_team now.
 
-Look at your user message (the text the user sent when invoking this prompt). That text IS the question.
+## Step 1: Call agent_team
 
-If the user message is empty, blank, or only whitespace:
-- Output exactly: "Error: no question provided. Usage: /council <your question>"
-- Stop. Do not proceed further.
-
-Capture the question text exactly as provided in the user message. You will insert it verbatim into each agent step below.
-
-## Step 2: Call agent_team
-
-Call agent_team with action "start". In the JSON graph below, replace every occurrence of `<QUESTION>` with the actual question text you extracted in Step 1 before making the call.
+Call agent_team with action "start" using the JSON graph below. The question is already substituted into each task.
 
 ```json
 {
@@ -58,10 +50,10 @@ Call agent_team with action "start". In the JSON graph below, replace every occu
 }
 ```
 
-## Step 3: Wait for results
+## Step 2: Wait for results
 
 Use run_status with waitSeconds to poll until all steps are complete.
 
-## Step 4: Present the answer
+## Step 3: Present the answer
 
 Retrieve the synthesizer's output with step_result and present it. If synthesizer did not run due to upstream failures, summarise any partial results and explain what failed.

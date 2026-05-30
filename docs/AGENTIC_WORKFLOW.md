@@ -173,18 +173,19 @@ Six GitHub workflows automate AI-driven development:
 
 **What happens:**
 1. Creates a branch: `ai/issue-{number}-{slug}`
-2. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title and body
-3. Phase 2 — **Pre-push review loop** (local, up to 4 iterations) — validates changes before any push. Fix agent receives diff files and prior fix history for context; spinning detection breaks early if findings repeat across iterations; each fix step has a 20m timeout. Issues found → deepseek fixes locally → re-reviews → passes
-4. Phase 3 — **Pre-build check** — runs `pnpm build`; if broken, PR is marked for manual fix and push continues
-5. Phase 4 — **Push and create draft PR** — writes review stamp, pushes branch, creates draft PR on GitHub. If CRITICAL findings remain, creates PR with `ai-review-unresolved` label instead of blocking push
-6. Phase 5 — **Preview deployment** — if PR created successfully:
+2. Phase 0 — **Council pre-implementation review** (`deepseek-v4-pro` + `kimi-k2.6`) — analyst + critic perspectives on architecture
+3. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title and body
+4. Phase 2 — **Pre-push review loop** (local, up to 4 iterations) — validates changes before any push. Fix agent receives diff files and prior fix history for context; spinning detection breaks early if findings repeat across iterations; each fix step has a 20m timeout. Issues found → deepseek fixes locally → re-reviews → passes
+5. Phase 3 — **Pre-build check** — runs `pnpm build`; if broken, PR is marked for manual fix and push continues
+6. Phase 4 — **Push and create draft PR** — writes review stamp, pushes branch, creates draft PR on GitHub. If CRITICAL findings remain, creates PR with `ai-review-unresolved` label instead of blocking push
+7. Phase 5 — **Preview deployment** — if PR created successfully:
    - Deploys site to ephemeral Cloudflare R2 bucket: `https://pr-{number}.staging.jamesmiller.blog`
    - Generates AI E2E tests from issue acceptance criteria
    - Runs Playwright tests against preview
    - Registers GitHub deployment and posts Playwright report link
-7. Phase 6 — **PR summary comment** — posts comprehensive implementation + review log to PR (critical/high counts now go only to private evals Gist, not public Step Summary)
-8. Phase 7 — **Independent code review** — Kimi K2.6 reviews the PR and posts findings as a comment
-9. Phase 8 — **Eval recording** — appends run metrics (verdict, iterations, counts, duration) to private evals Gist `runs.jsonl`; never includes issue content or file paths
+8. Phase 6 — **PR summary comment** — posts comprehensive implementation + review log to PR (critical/high counts now go only to private evals Gist, not public Step Summary)
+9. Phase 7 — **Independent code review** — Kimi K2.6 reviews the PR and posts findings as a comment
+10. Phase 8 — **Eval recording** — appends run metrics (verdict, iterations, counts, duration) to private evals Gist `runs.jsonl`; never includes issue content or file paths
 
 **To trigger:** Label an issue with `ai-implement` (repo owner only). Use the template at `.github/ISSUE_TEMPLATE/ai-implement.yml`.
 
@@ -213,26 +214,28 @@ Preview live + tests pass/fail visible in Actions
 
 ### AI Issue Comment Response (`ai-issue-comment` workflow)
 
-**When:** A repo owner comments `/ai <instruction>`, `/resume`, or `/retry` on an issue.
+**When:** A repo owner comments `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` on an issue.
 
 **What happens:**
-1. Detects existing branch+PR for this issue number
-2. If no branch exists → re-implements from scratch (same as `ai-issue.yml` but runs in the comment workflow)
-3. If branch exists and `/ai <instruction>` → applies fix via `ai-respond.sh`, pushes, runs Kimi K2.6 review, re-deploys preview
-4. If branch exists and `/resume` → re-deploys preview environment without code changes
-5. If `/retry` → force-re-runs full implementation from scratch on the existing branch (clean checkout, re-run ai-implement.sh)
+1. If `/council <question>` → runs council of agents on the question and posts answer
+2. Otherwise: detects existing branch+PR for this issue number
+3. If no branch exists → re-implements from scratch (same as `ai-issue.yml` but runs in the comment workflow)
+4. If branch exists and `/ai <instruction>` → applies fix via `ai-respond.sh`, pushes, runs Kimi K2.6 review, re-deploys preview
+5. If branch exists and `/resume` → re-deploys preview environment without code changes
+6. If `/retry` → force-re-runs full implementation from scratch on the existing branch (clean checkout, re-run ai-implement.sh)
 
-**Why:** Lets you iterate on an AI-generated feature by commenting `/ai` with instructions, or restart preview deployment with `/resume`, all without leaving GitHub.
+**Why:** Lets you iterate on an AI-generated feature by commenting `/ai` with instructions, consult the council with `/council` for advice, or restart preview deployment with `/resume`, all without leaving GitHub.
 
 ### AI PR Comment Response (`ai-pr-comment` workflow)
 
-**When:** A repo owner comments `/ai <instruction>` or `/resume` on a pull request.
+**When:** A repo owner comments `/ai <instruction>`, `/resume`, or `/council <question>` on a pull request.
 
 **What happens:**
-1. `/ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary, runs Kimi K2.6 review, then re-deploys preview environment
-2. `/resume` → re-deploys preview environment without code changes
+1. If `/council <question>` → runs council of agents on the question and posts answer
+2. If `/ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary, runs Kimi K2.6 review, then re-deploys preview environment
+3. If `/resume` → re-deploys preview environment without code changes
 
-**Why:** Enables rapid iteration on PRs — comment `/ai fix the heading colour` and the AI implements, reviews, and re-deploys automatically.
+**Why:** Enables rapid iteration on PRs — comment `/ai fix the heading colour` and the AI implements, reviews, and re-deploys automatically. Use `/council` to get architectural guidance.
 
 ### AI PR Merged — Auto-cleanup (`ai-pr-merged` workflow)
 
@@ -430,6 +433,9 @@ pnpm claude              # Start Claude Code (Docker, primary)
 pnpm claude:fresh        # Rebuild Claude image then start
 pnpm pi                  # Start pi (Docker, fallback)
 pnpm pi:fresh            # Rebuild pi image then start
+pnpm council             # Council of agents
+bash scripts/claude.sh --resume    # Resume most recent Claude container
+bash scripts/pi.sh --resume        # Resume most recent pi container
 pi -p "query"            # One-shot prompt with pi
 pi --model google        # Start pi with specific provider
 ```

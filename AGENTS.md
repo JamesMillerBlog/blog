@@ -20,6 +20,10 @@ Read extra skill files only when relevant:
 - `web/src/app/` — App Router pages and components
 - `web/src/app/_components/` — shared components
 - `web/_posts/` — local MDX preview
+- `web/e2e/` — Playwright a11y specs (@axe-core)
+- `web/vitest.setup.ts` — vitest jsdom setup with testing-library matchers
+- `infrastructure/vitest.config.ts` — vitest config for infra unit tests
+- `infrastructure/stacks/site/staging/` — staging infra (auth worker, tests)
 - `.agents/skills/` — on-demand cross-tool skills
 - `.ai-evals/` — quality gate thresholds, run data, trends
 - `.claude/agents/` — Claude Code agents
@@ -74,6 +78,18 @@ All AI tools (Claude Code and pi) must follow these formatting conventions. Matc
 - **Markdown:** 2-space indent in code blocks. No trailing whitespace.
 - **When editing:** preserve surrounding formatting. Only change lines that need functional changes.
 
+## Testing Requirements — All AI Tools
+
+Every AI tool (Claude Code and pi) must write tests when implementing features. Changes to `.ts`/`.tsx` source files require corresponding test files.
+
+- **Per-file coverage:** 80% line coverage minimum on any changed source file.
+- **Global thresholds:** 40% lines, 40% functions, 30% branches, 40% statements — enforced by vitest.
+- **Test runner:** vitest with jsdom environment. Component tests use `@testing-library/react` + `@testing-library/jest-dom`.
+- **Test location:** `web/src/**/*.test.{ts,tsx}` mirroring the source file path.
+- **Infrastructure tests:** `infrastructure/stacks/**/*.test.ts` — run via `pnpm test:infra`.
+- **CI enforcement:** `pr-checks.yml` coverage job fails PR if any changed file is below 80%. Global thresholds fail the build.
+- **Pre-push hook:** runs all unit tests. Coverage gate lives in CI (async, doesn't block local push flow).
+
 ## Design System — Byte Mark
 
 Full spec: `web/design/DESIGN.md`. Key tokens:
@@ -123,6 +139,14 @@ Six workflows automate issue implementation, PR management, and blog improvement
 | `ai-blog-suggestions.yml`    | Monthly schedule (1st of month) or manual trigger (repo owner)       | Runs blog improvement radar: researches competitor blogs & trends, generates 8-15 prioritized suggestions, creates GitHub issue with `blog-radar` label  |
 | `destroy-preview-manual.yml` | Manual workflow trigger (repo owner)                                 | Destroys a specific PR's ephemeral preview environment                                                                                                    |
 
+### General CI Workflows
+
+| Workflow                     | Trigger              | What it does                                                                           |
+| ---------------------------- | -------------------- | -------------------------------------------------------------------------------------- |
+| `pr-checks.yml`              | PR to web/** scripts/** | TypeScript check, build, vitest, shellcheck on shell scripts                           |
+| `infra-deploy.yml`           | Push to main (infra)  | Terraform fmt, validate, plan, apply (staging → production)                            |
+| `weekly-checks.yml`          | Weekly schedule        | Dependency audit, Lighthouse CI, Terraform drift check, bundle size analysis           |
+
 See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment architecture, issue template, and E2E test generation.
 
 ## Commands
@@ -130,7 +154,9 @@ See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment arc
 ```bash
 cd web && pnpm dev                  # dev server
 cd web && pnpm build                # production build
-cd web && pnpm test                 # unit tests (vitest)
+cd web && pnpm test                 # unit tests (vitest, jsdom)
+cd web && pnpm test:e2e             # accessibility/Playwright tests
+pnpm test:infra                     # infrastructure tests (vitest)
 pnpm claude                         # Claude Code (Docker)
 pnpm pi                             # pi (Docker)
 ```

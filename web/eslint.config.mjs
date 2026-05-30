@@ -12,6 +12,7 @@ const eslintConfig = [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      '@typescript-eslint/no-explicit-any': 'warn',
       complexity: ['warn', 10],
       'max-lines': ['warn', { max: 200, skipBlankLines: true, skipComments: true }],
     },

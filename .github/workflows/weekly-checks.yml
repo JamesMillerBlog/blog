@@ -1,0 +1,148 @@
+name: Weekly Checks
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Monday 6am UTC
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    name: "Dependency Audit"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+  lighthouse:
+    name: "Lighthouse CI"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        run: pnpm build
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse
+        run: |
+          lhci autorun \
+            --upload.target=temporary-public-storage \
+            --collect.url=http://localhost:3000/ \
+            --collect.url=http://localhost:3000/projects \
+            --collect.numberOfRuns=1
+        continue-on-error: true
+
+  terraform-drift:
+    name: "Terraform Drift Check"
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      TERRAMATE_VERSION: "0.17.0"
+      TF_VERSION: "1.9.5"
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Install Terramate
+        run: |
+          curl -fsSL "https://github.com/terramate-io/terramate/releases/download/v${TERRAMATE_VERSION}/terramate_${TERRAMATE_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin terramate
+
+      - name: Terramate Generate
+        working-directory: ./infrastructure
+        run: terramate generate
+
+      - name: Terraform Init & Plan (production)
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        working-directory: ./infrastructure/stacks/site/production
+        run: |
+          terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
+          terraform plan -detailed-exitcode -input=false \
+            -var="state_bucket=${TF_STATE_BUCKET}" \
+            -var-file=../../../vars/site/production.tfvars
+        continue-on-error: true
+
+  bundlewatch:
+    name: "Bundle Size Check"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        run: pnpm build
+
+      - name: Analyze bundle size
+        run: |
+          echo "## Bundle Size Report"
+          echo ""
+          echo "| Chunk | Size |"
+          echo "|-------|------|"
+          find .next/static/chunks -name '*.js' -exec ls -lh {} \; | \
+            awk '{print "| " $NF " | " $5 " |"}' | sort
+        continue-on-error: true

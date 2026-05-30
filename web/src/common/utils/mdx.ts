@@ -7,7 +7,7 @@ import { ASSETS_BASE_URL } from '@/common/consts/constants'
 import { mdxComponents } from '@/components/mdx'
 import { CodeBlock } from '@/components/mdx/code-block'
 
-function rewriteAssetImageSources() {
+export function rewriteAssetImageSources() {
   return (tree: Root) => {
     visit(tree, 'element', (node: Element) => {
       if (

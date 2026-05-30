@@ -26,7 +26,7 @@ env:
 
 jobs:
   fmt:
-    name: "Terraform Format"
+    name: "Terraform Format & Validate"
     runs-on: ubuntu-latest
 
     steps:
@@ -50,6 +50,14 @@ jobs:
       - name: Terraform Format
         working-directory: ./infrastructure
         run: terramate run -- terraform fmt -check
+
+      - name: Terraform Init (validate-only)
+        working-directory: ./infrastructure
+        run: terramate run -- terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: ./infrastructure
+        run: terramate run -- terraform validate
 
   shared:
     name: "Terraform Shared"

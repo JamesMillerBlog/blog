@@ -3,23 +3,26 @@ import { resolve } from 'path'
 
 export default defineConfig({
   test: {
-    environment: 'node',
+    environment: 'jsdom',
     server: {
       deps: {
         external: [/@aws-sdk/],
       },
     },
     globals: true,
+    setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     exclude: ['node_modules', '.next', 'e2e'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
-      include: ['src/**'],
-      exclude: ['src/**/*.test.*', 'src/**/*.spec.*', 'src/types/**'],
+      reporter: ['text', 'lcov', 'json-summary'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/types/**', 'src/**/*.test.*', 'src/**/*.spec.*', 'src/**/__fixtures__/**'],
       thresholds: {
-        lines: 20,
-        functions: 20,
+        lines: 40,
+        functions: 40,
+        branches: 30,
+        statements: 40,
       },
     },
   },

@@ -268,3 +268,145 @@ describe('getAllPosts — sorting by date (newest first)', () => {
     expect(result[0].slug).toBe('only-post')
   })
 })
+
+// ---------------------------------------------------------------------------
+// getPostBySlug — slug validation (path traversal defense)
+// ---------------------------------------------------------------------------
+
+describe('getPostBySlug — slug validation', () => {
+  beforeEach(() => vi.restoreAllMocks())
+
+  it('rejects path traversal via ../', async () => {
+    setupFsMocks({ files: [], exists: true })
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('../etc/passwd')
+    expect(post).toBeNull()
+  })
+
+  it('rejects path traversal via ../../', async () => {
+    setupFsMocks({ files: [], exists: true })
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('../../secrets')
+    expect(post).toBeNull()
+  })
+
+  it('rejects empty slug', async () => {
+    setupFsMocks({ files: [], exists: true })
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('')
+    expect(post).toBeNull()
+  })
+
+  it('rejects slug with leading hyphen', async () => {
+    setupFsMocks({ files: [], exists: true })
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('-leading')
+    expect(post).toBeNull()
+  })
+
+  it('rejects slug with trailing hyphen', async () => {
+    setupFsMocks({ files: [], exists: true })
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('trailing-')
+    expect(post).toBeNull()
+  })
+
+  it('rejects slug with special characters', async () => {
+    setupFsMocks({ files: [], exists: true })
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('hello<world>')
+    expect(post).toBeNull()
+  })
+
+  it('rejects slug with spaces', async () => {
+    setupFsMocks({ files: [], exists: true })
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('hello world')
+    expect(post).toBeNull()
+  })
+
+  it('accepts valid alphanumeric slug', async () => {
+    setupFsMocks({ files: [], exists: true })
+    mockedMatter.mockReturnValue({
+      data: makeFrontmatter(),
+      content: 'body',
+    } as unknown as ReturnType<typeof matter>)
+    const { getPostBySlug } = await import('./posts')
+    // The valid slug passes the regex check; the FS read fails (no fixture)
+    // but the null return is from the file read, not the slug validation
+    const post = await getPostBySlug('hello-world')
+    // With exists: true, the file read happens — that's the right behavior
+    expect(post).not.toBeNull()
+  })
+
+  it('accepts single character slug', async () => {
+    setupFsMocks({ files: [], exists: true })
+    mockedMatter.mockReturnValue({
+      data: makeFrontmatter(),
+      content: 'body',
+    } as unknown as ReturnType<typeof matter>)
+    const { getPostBySlug } = await import('./posts')
+    const post = await getPostBySlug('a')
+    expect(post).not.toBeNull()
+  })
+
+  it('strips extension before validation', async () => {
+    setupFsMocks({ files: [], exists: true })
+    mockedMatter.mockReturnValue({
+      data: makeFrontmatter(),
+      content: 'body',
+    } as unknown as ReturnType<typeof matter>)
+    const { getPostBySlug } = await import('./posts')
+    // 'hello-world.md' → slug after strip is 'hello-world' (valid)
+    const post = await getPostBySlug('hello-world.md')
+    expect(post).not.toBeNull()
+    expect(post?.slug).toBe('hello-world')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// isPostVisible — visibility logic
+// ---------------------------------------------------------------------------
+
+describe('isPostVisible', () => {
+  beforeEach(() => vi.restoreAllMocks())
+  afterEach(() => vi.unstubAllEnvs())
+
+  it('shows any post in development', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.stubEnv('NEXT_PUBLIC_ENVIRONMENT', '')
+    const { isPostVisible } = await import('./posts')
+    expect(isPostVisible({ draft: true } as any)).toBe(true)
+    expect(isPostVisible({ draft: false } as any)).toBe(true)
+    expect(isPostVisible({} as any)).toBe(true)
+  })
+
+  it('shows any post in staging', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_ENVIRONMENT', 'staging')
+    const { isPostVisible } = await import('./posts')
+    expect(isPostVisible({ draft: true } as any)).toBe(true)
+    expect(isPostVisible({ draft: false } as any)).toBe(true)
+  })
+
+  it('hides draft posts in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_ENVIRONMENT', 'production')
+    const { isPostVisible } = await import('./posts')
+    expect(isPostVisible({ draft: true } as any)).toBe(false)
+  })
+
+  it('shows non-draft posts in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_ENVIRONMENT', 'production')
+    const { isPostVisible } = await import('./posts')
+    expect(isPostVisible({ draft: false } as any)).toBe(true)
+  })
+
+  it('treats missing draft field as visible in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_ENVIRONMENT', 'production')
+    const { isPostVisible } = await import('./posts')
+    expect(isPostVisible({} as any)).toBe(true)
+  })
+})

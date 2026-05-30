@@ -14,9 +14,12 @@ fi
 QUESTION="$*"
 
 COUNCIL_PROMPT="$(python3 -c "
-import sys
+import sys, re
+q = sys.argv[1]
+q = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', q)
+q = q.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 template = open('.pi/prompts/council.md').read()
-print(template.replace('<QUESTION>', sys.argv[1]))
+print(template.replace('<QUESTION>', q))
 " "$QUESTION")"
 
 fmt_time() {

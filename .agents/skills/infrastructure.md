@@ -8,16 +8,10 @@ Full guide: `docs/AWS_INFRASTRUCTURE.md`
 - Vars: `infrastructure/vars/`
 - CI/CD: `.github/workflows/`
 
-## Unit Tests
-- Config: `infrastructure/vitest.config.ts` (vitest, node env)
-- Auth worker tests: `infrastructure/stacks/site/staging/auth.test.ts` — tests Cloudflare Worker Basic Auth logic
-- Run: `pnpm test:infra` from repo root
-- **Requirement:** Changed `.js`/`.ts` files in infrastructure must have corresponding tests. CI enforces this via `pr-checks.yml`.
-
 ## Workflow
 1. Review existing state
 2. Implement changes
-3. `terraform validate && terraform plan` (CI runs `terraform validate` in `infra-deploy.yml` fmt job)
+3. `terraform validate && terraform plan`
 4. `terraform apply`
 
 ## Formatting

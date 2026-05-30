@@ -315,7 +315,6 @@ Updated for CI preview testing:
 - `PLAYWRIGHT_BASE_URL` env var — if set, tests target remote preview instead of localhost
 - `PLAYWRIGHT_BASIC_AUTH_USERNAME` & `PLAYWRIGHT_BASIC_AUTH_PASSWORD` env vars — auto-submitted for preview auth
 - `CI=true` captures video/screenshots on failure, used by test report artifact
-- `a11y` project — runs `**/*.a11y.ts` specs (WCAG 2.0 AA / 2.1 AA) via @axe-core/playwright
 
 ---
 
@@ -330,7 +329,6 @@ git commit -m "your message"
 The pre-commit hook runs automatically:
 1. Lint, typecheck, format check
 2. AI docs update — reads the staged diff and surgically edits `AGENTS.md`, `CLAUDE.md`, and files under `.agents/skills/` and `.claude/agents/` to reflect what changed. Any updated doc files are staged and included in the commit.
-3. Unit tests via vitest (jsdom env for frontend, node env for infra)
 
 To skip the docs update (e.g. for a quick WIP commit):
 
@@ -393,9 +391,6 @@ Switching tools doesn't mean starting over. Both harnesses read the same project
 | `web/design/DESIGN.md` | Byte Mark design system spec | Both |
 | `.agents/skills/` | Shared skill specs — design, frontend, infra, security | Both (pi: auto-discovered, Claude: configured in settings) |
 | `.claude/agents/` | Claude agent definitions | Claude Code only |
-| `infrastructure/vitest.config.ts` | Vitest config for infra unit tests | — |
-| `web/vitest.setup.ts` | Vitest setup (jest-dom matchers, jsdom polyfills) | — |
-| `web/e2e/` | Playwright a11y test specs | — |
 
 ---
 
@@ -437,8 +432,6 @@ pnpm pi                  # Start pi (Docker, fallback)
 pnpm pi:fresh            # Rebuild pi image then start
 pi -p "query"            # One-shot prompt with pi
 pi --model google        # Start pi with specific provider
-pnpm test:infra          # Infrastructure tests (vitest)
-cd web && pnpm test:e2e  # Playwright a11y tests
 ```
 
 ### Docker

@@ -77,17 +77,18 @@ export function Navigation({ posts }: { posts: Post[] }) {
     return pathname.startsWith(path)
   }
 
-  // Cmd+K to open search
+  // Cmd+K to open search (avoid race with SearchModal's own Cmd+K close listener)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
+        if (searchOpen) return
         setSearchOpen(true)
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [searchOpen])
 
   return (
     <>

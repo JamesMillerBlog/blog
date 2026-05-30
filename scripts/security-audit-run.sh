@@ -46,7 +46,16 @@ echo '→ Checking audit tools...'
 
 if ! command -v semgrep >/dev/null 2>&1; then
   echo '  Installing semgrep...'
-  python3 -m pip install --quiet "$SEMGREP_SPEC"
+  if command -v brew >/dev/null 2>&1; then
+    brew install semgrep
+  elif command -v pipx >/dev/null 2>&1; then
+    pipx install semgrep
+  elif [ "$(id -u)" = '0' ]; then
+    python3 -m pip install --quiet "$SEMGREP_SPEC"
+  else
+    echo '  Warning: cannot install semgrep automatically — install via: brew install semgrep'
+    echo '  Continuing without semgrep (SAST checks will be skipped)...'
+  fi
 fi
 
 if ! command -v trivy >/dev/null 2>&1; then

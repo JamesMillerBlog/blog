@@ -41,6 +41,7 @@
     "claude:fresh": "sh scripts/claude.sh --fresh",
     "pi": "sh scripts/pi.sh",
     "pi:fresh": "sh scripts/pi.sh --fresh",
+    "audit:security": "pnpm --dir web audit:security",
     "pr:generate": "./scripts/generate-pr.sh",
     "push": "git push -u origin HEAD && ./scripts/generate-pr.sh",
     "push:force": "git push --force-with-lease -u origin HEAD && ./scripts/generate-pr.sh"

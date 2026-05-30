@@ -110,7 +110,9 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.
 
-## GitHub Workflows — Automated AI Development
+## GitHub Workflows
+
+### AI Development (OpenCode/pi)
 
 Six workflows automate issue implementation, PR management, and blog improvement using OpenCode:
 
@@ -125,7 +127,7 @@ Six workflows automate issue implementation, PR management, and blog improvement
 
 See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment architecture, issue template, and E2E test generation.
 
-## GitHub Workflows — Security Scanning
+### Security Scanning & Audit
 
 Four workflows provide continuous security monitoring:
 
@@ -144,6 +146,7 @@ See `docs/SECURITY_AUDIT.md` for manual security audit findings beyond automated
 cd web && pnpm dev                  # dev server
 cd web && pnpm build                # production build
 cd web && pnpm test                 # unit tests (vitest)
+cd web && pnpm audit:security       # run local security audit
 pnpm claude                         # Claude Code (Docker)
 pnpm claude:fresh                   # rebuild Claude image then interactive
 pnpm pi                             # pi (Docker)

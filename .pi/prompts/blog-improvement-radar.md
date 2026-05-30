@@ -6,7 +6,7 @@ You are a blog strategy analyst. Research competitor technical blogs, design tre
 
 - **Stack**: Next.js 16+ App Router, static generation, Tailwind CSS v4, MDX via next-mdx-remote, TypeScript
 - **Design**: "Byte Mark" — editorial + technical (Plus Jakarta Sans UI, Newsreader content, primary `#00675d`, secondary `#a02d70`). Full spec at `web/design/DESIGN.md`. No 1px borders, `rounded-xl`+, glassmorphism nav, brand gradient animations.
-- **Topics**: WebXR, Serverless, AWS, React, Three.js, TypeScript, DevOps, Blockchain
+- **Topics**: Creative technology blog. Full content taxonomy (7 pillars, 40+ sub-tags) at `web/src/common/consts/constants.ts` — read FEATURED_TAGS and FEATURED_TAG_MAP for the authoritative topic map.
 - **Infra**: Deployed to Cloudflare R2 via Terraform. Ephemeral preview environments per PR. Staging + production. eu-west-2.
 - **Current features**: Post listing, tag filtering (pill buttons), hero section, MDX components (callouts, code blocks w/ copy, YouTube embeds, file trees, tabs, pull quotes, steps, series nav), RSS feed, dark/light theme toggle, glassmorphism sticky nav.
 - **Automation**: GitHub issue labelled `ai-implement` → AI implements → draft PR → review loop → preview env → E2E tests.

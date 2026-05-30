@@ -9,12 +9,11 @@ import { SearchModal } from '@/components/ui/search-modal'
 import { Post } from '@/types/post'
 import { ui } from '@/i18n/en'
 
-export function Navigation() {
+export function Navigation({ posts }: { posts: Post[] }) {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [posts] = useState<Post[]>([])
   const logoRef = useRef<HTMLDivElement>(null)
   const searchIconRef = useRef<HTMLDivElement>(null)
   const themeIconRef = useRef<HTMLDivElement>(null)
@@ -186,7 +185,7 @@ export function Navigation() {
         )}
       </header>
 
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} posts={posts} />
+      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} allPosts={posts} />}
     </>
   )
 }

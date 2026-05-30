@@ -159,6 +159,7 @@ export function Navigation({ posts }: { posts: Post[] }) {
               className="md:hidden p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={ui.nav.toggleMenu}
+              aria-expanded={mobileMenuOpen}
             >
               <MenuIcon />
             </button>

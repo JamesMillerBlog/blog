@@ -26,7 +26,6 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Post } from '@/types/post'
 import { projects, Project } from '@/app/projects/data'
@@ -104,6 +103,7 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
   const [rawHighlightedIndex, setRawHighlightedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
+  const triggerRef = useRef<Element | null>(null)
   const router = useRouter()
 
   // Build searchable index: visible posts + all projects
@@ -148,6 +148,11 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
 
   const highlightedIndex = Math.min(rawHighlightedIndex, Math.max(results.length - 1, 0))
 
+  const activeId =
+    results.length > 0
+      ? `search-result-${results[highlightedIndex]?.type}-${results[highlightedIndex]?.slug}`
+      : undefined
+
   // Handle query change: reset highlight since results are changing
   const handleQueryChange = useCallback((value: string) => {
     setQuery(value)
@@ -188,8 +193,10 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
     [results.length, navigateToHighlighted, onClose]
   )
 
-  // Global Escape / Cmd+K listener
+  // Global Escape / Cmd+K listener + focus restoration
   useEffect(() => {
+    triggerRef.current = document.activeElement
+
     const handleGlobalKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -204,6 +211,7 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
     return () => {
       document.removeEventListener('keydown', handleGlobalKey)
       document.body.style.overflow = ''
+      ;(triggerRef.current as HTMLElement)?.focus()
     }
   }, [onClose])
 
@@ -225,7 +233,7 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
       <div className="absolute inset-0 bg-on-background/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative max-w-2xl mx-auto mt-20 mx-4">
+      <div className="relative max-w-2xl mx-auto mt-20 px-4">
         <div className="bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden border border-outline-variant/20">
           {/* Search Input */}
           <div className="flex items-center gap-4 p-4 border-b border-outline-variant/20">
@@ -238,6 +246,8 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleKeyDown}
               className="flex-1 bg-transparent text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none font-headline"
+              aria-activedescendant={activeId ?? ''}
+              aria-label="Search posts and projects"
               autoFocus
             />
             <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-on-surface-variant bg-surface-container rounded">
@@ -258,47 +268,47 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
                 {results.map((item, index) => (
                   <li
                     key={`${item.type}-${item.slug}`}
+                    id={`search-result-${item.type}-${item.slug}`}
                     role="option"
                     aria-selected={index === highlightedIndex}
+                    onClick={() => {
+                      onClose()
+                      router.push(item.href)
+                    }}
+                    onMouseEnter={() => setRawHighlightedIndex(index)}
+                    className={`block p-4 transition-colors border-b border-outline-variant/10 last:border-0 cursor-pointer ${
+                      index === highlightedIndex
+                        ? 'bg-secondary-container/60'
+                        : 'hover:bg-surface-container-low'
+                    }`}
                   >
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      onMouseEnter={() => setRawHighlightedIndex(index)}
-                      className={`block p-4 transition-colors border-b border-outline-variant/10 last:border-0 ${
-                        index === highlightedIndex
-                          ? 'bg-secondary-container/60'
-                          : 'hover:bg-surface-container-low'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2 mb-1">
-                        <span
-                          className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            item.type === 'post'
-                              ? 'bg-primary-container text-on-primary-container'
-                              : 'bg-tertiary-container text-on-tertiary-container'
-                          }`}
-                        >
-                          {item.type === 'post' ? 'Post' : 'Project'}
-                        </span>
-                        <h3 className="font-headline font-bold text-on-surface">{item.title}</h3>
+                    <div className="flex items-start gap-2 mb-1">
+                      <span
+                        className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          item.type === 'post'
+                            ? 'bg-primary-container text-on-primary-container'
+                            : 'bg-tertiary-container text-on-tertiary-container'
+                        }`}
+                      >
+                        {item.type === 'post' ? 'Post' : 'Project'}
+                      </span>
+                      <h3 className="font-headline font-bold text-on-surface">{item.title}</h3>
+                    </div>
+                    <p className="text-sm text-on-surface-variant line-clamp-1 ml-0">
+                      {item.description}
+                    </p>
+                    {item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {item.tags.slice(0, 4).map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-xs px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
-                      <p className="text-sm text-on-surface-variant line-clamp-1 ml-0">
-                        {item.description}
-                      </p>
-                      {item.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {item.tags.slice(0, 4).map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-xs px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </Link>
+                    )}
                   </li>
                 ))}
               </ul>

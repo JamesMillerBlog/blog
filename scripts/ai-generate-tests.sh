@@ -26,15 +26,15 @@ ${ISSUE_BODY}
 
 Preview URL (for context only — tests use relative paths via baseURL): ${PREVIEW_URL:-http://localhost:3000}"
 
-printf '%s' "$PROMPT" \
-  | pi --agent-team-subagent-skills disabled --model opencode-go/deepseek-v4-pro \
-  2>/dev/null \
-  | grep -v '^```' \
-  > "$OUTPUT_FILE" || true
+printf '%s' "$PROMPT" |
+  pi --agent-team-subagent-skills disabled --model opencode-go/deepseek-v4-pro \
+    2>/dev/null |
+  sed -n '/^```/{n; p; b}; p' \
+    >"$OUTPUT_FILE" || true
 
 if [[ ! -s "$OUTPUT_FILE" ]]; then
   echo "AI test generation produced no output, writing placeholder" >&2
-  cat > "$OUTPUT_FILE" << 'EOF'
+  cat >"$OUTPUT_FILE" <<'EOF'
 import { test, expect } from '@playwright/test'
 
 test('page loads successfully', async ({ page }) => {

@@ -9,9 +9,9 @@ jobs:
     if: |
       github.event.issue.pull_request == null &&
       github.event.comment.user.login == github.repository_owner &&
-      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume')
+      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || github.event.comment.body == '/retry')
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
 
     outputs:
       branch: ${{ steps.outputs.outputs.branch }}
@@ -49,7 +49,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
         with:
@@ -133,6 +133,37 @@ jobs:
             gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || echo "")
           echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
 
+      - name: Retry implementation (/retry)
+        if: |
+          steps.detect.outputs.should_implement == 'false' &&
+          env.COMMENT_BODY == '/retry'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
+          BRANCH: ${{ steps.detect.outputs.branch }}
+        run: |
+          # Force re-implementation from scratch on the existing branch
+          gh issue comment "$ISSUE_NUMBER" --body "**Retrying full implementation on existing branch...**
+
+          Branch: \`${BRANCH}\`
+          Model: deepseek-v4-pro (implementation) + kimi-k2.6 (review)
+
+          [View Actions run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+          # Clean checkout of the branch
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
+          git reset --hard "origin/$BRANCH" 2>/dev/null || true
+
+          # Re-run the full implementation pipeline
+          bash scripts/ai-implement.sh
+
+          NEW_PR=$(GH_TOKEN="${GH_PR_CREATE_TOKEN:-$GH_TOKEN}" \
+            gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || echo "")
+          if [[ -n "$NEW_PR" ]]; then
+            echo "pr_number=${NEW_PR}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Apply fix via /ai instruction
         if: |
           steps.detect.outputs.should_implement == 'false' &&
@@ -202,7 +233,7 @@ jobs:
     env:
       PR_NUMBER: ${{ needs.respond.outputs.pr_number }}
       BRANCH: ${{ needs.respond.outputs.branch }}
-      TF_VERSION: '1.9.5'
+      TF_VERSION: "1.9.5"
       PREVIEW_URL: https://pr-${{ needs.respond.outputs.pr_number }}.staging.jamesmiller.blog
 
     steps:
@@ -212,7 +243,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
         with:
@@ -266,7 +297,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ''
+          AWS_SESSION_TOKEN: ""
           R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
           aws s3 sync web/out/ s3://jamesmiller-blog-pr-${PR_NUMBER}/ \

@@ -174,15 +174,17 @@ Five GitHub workflows automate AI-driven development:
 **What happens:**
 1. Creates a branch: `ai/issue-{number}-{slug}`
 2. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title and body
-3. Phase 2 — **Pre-push review loop** (local, up to 10 iterations) — validates changes before any push. Issues found → deepseek fixes locally → re-reviews → passes
-4. Phase 3 — **Push and create draft PR** — writes review stamp, pushes branch, creates draft PR on GitHub
-5. Phase 4 — **Preview deployment** — if PR created successfully:
+3. Phase 2 — **Pre-push review loop** (local, up to 4 iterations) — validates changes before any push. Fix agent receives diff files and prior fix history for context; spinning detection breaks early if findings repeat across iterations; each fix step has a 20m timeout. Issues found → deepseek fixes locally → re-reviews → passes
+4. Phase 3 — **Pre-build check** — runs `pnpm build`; if broken, PR is marked for manual fix and push continues
+5. Phase 4 — **Push and create draft PR** — writes review stamp, pushes branch, creates draft PR on GitHub. If CRITICAL findings remain, creates PR with `ai-review-unresolved` label instead of blocking push
+6. Phase 5 — **Preview deployment** — if PR created successfully:
    - Deploys site to ephemeral Cloudflare R2 bucket: `https://pr-{number}.staging.jamesmiller.blog`
    - Generates AI E2E tests from issue acceptance criteria
    - Runs Playwright tests against preview
    - Registers GitHub deployment and posts Playwright report link
-6. Phase 5 — **PR summary comment** — posts comprehensive implementation + review log to PR
-7. Phase 6 — **Independent code review** — Kimi K2.6 reviews the PR and posts findings as a comment
+7. Phase 6 — **PR summary comment** — posts comprehensive implementation + review log to PR (critical/high counts now go only to private evals Gist, not public Step Summary)
+8. Phase 7 — **Independent code review** — Kimi K2.6 reviews the PR and posts findings as a comment
+9. Phase 8 — **Eval recording** — appends run metrics (verdict, iterations, counts, duration) to private evals Gist `runs.jsonl`; never includes issue content or file paths
 
 **To trigger:** Label an issue with `ai-implement` (repo owner only). Use the template at `.github/ISSUE_TEMPLATE/ai-implement.yml`.
 
@@ -200,22 +202,25 @@ Issue: "Add dark mode toggle to homepage"
 Branch: ai/issue-123-add-dark-mode-toggle
 ↓ (Phase 1: deepseek implements)
 ↓ (Phase 2: review loop locally — fixes issues, passes)
-↓ (Phase 3: push + create draft PR #456)
-↓ (Phase 4: deploy to pr-456.staging.jamesmiller.blog, run generated E2E tests)
-↓ (Phase 5: post implementation + review summary to PR)
-↓ (Phase 6: Kimi K2.6 independent review)
+↓ (Phase 3: pre-build check)
+↓ (Phase 4: push + create draft PR #456)
+↓ (Phase 5: deploy to pr-456.staging.jamesmiller.blog, run generated E2E tests)
+↓ (Phase 6: post implementation + review summary to PR)
+↓ (Phase 7: Kimi K2.6 independent review)
+↓ (Phase 8: eval recording to private Gist)
 Preview live + tests pass/fail visible in Actions
 ```
 
 ### AI Issue Comment Response (`ai-issue-comment` workflow)
 
-**When:** A repo owner comments `/ai <instruction>` or `/resume` on an issue.
+**When:** A repo owner comments `/ai <instruction>`, `/resume`, or `/retry` on an issue.
 
 **What happens:**
 1. Detects existing branch+PR for this issue number
 2. If no branch exists → re-implements from scratch (same as `ai-issue.yml` but runs in the comment workflow)
 3. If branch exists and `/ai <instruction>` → applies fix via `ai-respond.sh`, pushes, runs Kimi K2.6 review, re-deploys preview
 4. If branch exists and `/resume` → re-deploys preview environment without code changes
+5. If `/retry` → force-re-runs full implementation from scratch on the existing branch (clean checkout, re-run ai-implement.sh)
 
 **Why:** Lets you iterate on an AI-generated feature by commenting `/ai` with instructions, or restart preview deployment with `/resume`, all without leaving GitHub.
 
@@ -262,10 +267,11 @@ Preview live + tests pass/fail visible in Actions
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary. Fetches past security learnings from GitHub Gist to inform implementation; captures new findings back to Gist for future runs. |
+| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary. Fetches past security learnings from private GitHub Gist; captures new findings back to Gist. Includes pre-build check, `ai-review-unresolved` labeling, eval recording to private evals Gist, and Gist privacy verification before writing vulnerability data. |
 | `scripts/ai-pr-review.sh` | Kimi K2.6 independent code review |
-| `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>` |
+| `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>`. Writes review stamp before push to satisfy pre-push hook gate. |
 | `scripts/ai-generate-tests.sh` | Generates Playwright E2E tests from issue description using `deepseek-v4-pro` |
+| `scripts/ai-eval-trends.sh` | Reads private evals Gist, computes aggregated trends (avg iterations by prompt version, fix efficiency, critical count trend), writes `trends.md` back to same Gist |
 | `scripts/generate-pr.sh` | Supports `--draft` flag and CI mode |
 | `scripts/pre-push-review-manifest.sh` | Generates file list and diff files for each reviewer category (security, code-quality, frontend, design, infrastructure) |
 
@@ -384,6 +390,7 @@ Switching tools doesn't mean starting over. Both harnesses read the same project
 ├── AGENTS.md             # Shared project context (all tools read this)
 ├── CLAUDE.md             # Claude Code entry point (symlink to AGENTS.md)
 ├── .agents/skills/       # Shared skill definitions (auto-loaded by both)
+├── .ai-evals/             # Quality gate thresholds, run data schema, trends script
 ├── .claude/              # Claude Code agents, commands, settings
 ├── .pi/                  # pi config, extensions, settings
 ├── Dockerfile.claude     # Claude Code Docker image

@@ -3,11 +3,22 @@ name: PR Checks
 on:
   pull_request:
     paths:
-      - 'web/**'
+      - "web/**"
+      - "scripts/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/**"
+      - "Dockerfile.*"
+
+permissions:
+  contents: read
 
 concurrency:
   group: pr-checks-${{ github.head_ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   ci:
@@ -50,9 +61,113 @@ jobs:
       - name: Type check
         run: pnpm typecheck
 
-      # TODO: re-enable build once infra work is done
-      # - name: Build
-      #   run: pnpm build
+      - name: Build
+        run: pnpm build
 
       - name: Test
         run: pnpm test
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+
+      - name: Lint shell scripts
+        run: |
+          find scripts/ -type f \( -name '*.sh' -o -executable \) -print0 | \
+            xargs -0 shellcheck --severity=warning
+
+  coverage:
+    name: "Coverage (80% per changed file)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('web/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+
+      - name: Check per-file coverage on changed files
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          echo "Base: $BASE"
+
+          # Changed source files (not tests, not types)
+          changed=$(git diff --name-only "$BASE"...HEAD | grep -E '^web/src/.*\.(ts|tsx)$' | grep -vE '(test|spec)\.' | grep -v '/types/' || true)
+
+          if [ -z "$changed" ]; then
+            echo "No source files changed — skipping per-file check"
+            exit 0
+          fi
+
+          echo "Changed source files:"
+          echo "$changed"
+          echo ""
+
+          COV_JSON="coverage/coverage-summary.json"
+          if [ ! -f "$COV_JSON" ]; then
+            echo "Coverage report missing"
+            exit 1
+          fi
+
+          root="$(pwd)"
+          failed=0
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            key="$root/$file"
+            pct=$(node --input-type=module -e "
+              import { readFileSync } from 'fs';
+              const data = JSON.parse(readFileSync('$COV_JSON', 'utf8'));
+              const entry = data['$key'];
+              if (entry && entry.lines) {
+                process.stdout.write(String(entry.lines.pct));
+              } else {
+                process.stdout.write('0');
+              }
+            " 2>/dev/null || echo "0")
+
+            if [ "$pct" != "Unknown" ] && [ "$pct" != "0" ] && [ "${pct%.*}" -lt 80 ] 2>/dev/null; then
+              echo "::error file=$file::${pct}% line coverage (threshold: 80%)"
+              failed=$((failed + 1))
+            else
+              echo "  ✓ $file — ${pct}%"
+            fi
+          done <<< "$changed"
+
+          if [ "$failed" -gt 0 ]; then
+            echo ""
+            echo "$failed file(s) below 80% line coverage"
+            exit 1
+          fi
+
+          echo "All changed files meet 80% coverage ✓"

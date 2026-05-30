@@ -9,6 +9,7 @@
     "build": "pnpm --dir web build",
     "start": "pnpm --dir web start",
     "test": "pnpm --dir web test",
+    "test:infra": "cd infrastructure && vitest run",
     "test:watch": "pnpm --dir web test:watch",
     "test:coverage": "pnpm --dir web test:coverage",
     "test:e2e": "pnpm --dir web test:e2e",
@@ -49,6 +50,7 @@
     "@commitlint/types": "^19.0.0",
     "@types/node": "^25.6.0",
     "husky": "^9.0.0",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "vitest": "^2.0.0"
   }
 }

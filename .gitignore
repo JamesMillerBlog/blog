@@ -5,6 +5,9 @@ node_modules
 .pnp
 .pnp.*
 
+# pnpm
+.pnpm-store/
+
 # temporary files
 temp/
 

@@ -31,12 +31,28 @@ jobs:
       COMMENT_BODY: ${{ github.event.comment.body }}
 
     steps:
+      - name: Acknowledge comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
+            -f content=eyes
+
       - name: Get PR branch
         id: pr
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          DATA=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json headRefName,number)
+          DATA=$(gh pr view ${{ github.event.issue.number }} \
+            --repo ${{ github.repository }} \
+            --json headRefName,number,headRepository)
+          HEAD_REPO=$(echo "$DATA" | jq -r '.headRepository.nameWithOwner')
+          if [[ "$HEAD_REPO" != "${{ github.repository }}" ]]; then
+            echo "PR is from a fork (${HEAD_REPO}) — refusing to check out untrusted code" >&2
+            exit 1
+          fi
           echo "branch=$(echo "$DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
           echo "number=$(echo "$DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
 

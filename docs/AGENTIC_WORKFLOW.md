@@ -78,20 +78,22 @@ For complex questions or tasks that benefit from multiple perspectives, pi has a
 **How it works:**
 
 ```
-[scout] → maps the question, identifies sub-angles
+[scout-a]     [scout-b]       ← decompose question into dimensions
+(deepseek-v4-flash)
      ↓              ↓
 [analyst]       [critic]       ← run in parallel
-(deepseek-v4-pro) (kimi-k2.6)
+(claude-sonnet-4-6) (gpt-5.5)
      ↓              ↓
        [synthesizer]           ← combines both perspectives
-       (deepseek-v4-pro)
+       (gemini-3.5-flash)
 ```
 
 | Agent | Model | Role |
 |-------|-------|------|
-| `council-analyst` | deepseek-v4-pro | Deep analytical thinking, structured reasoning |
-| `council-critic` | kimi-k2.6 | Adversarial critique, risks, failure modes |
-| `council-synthesizer` | deepseek-v4-pro | Synthesises perspectives into final answer |
+| `council-scout` | deepseek-v4-flash | Decomposes question into structured dimensions |
+| `council-analyst` | claude-sonnet-4-6 | Deep analytical thinking, structured reasoning |
+| `council-critic` | gpt-5.5 | Adversarial critique, risks, failure modes |
+| `council-synthesizer` | gemini-3.5-flash | Synthesises perspectives into final answer |
 
 Agent definitions live in `.pi/agents/`. The orchestration prompt is `.pi/prompts/council.md`.
 

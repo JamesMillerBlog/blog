@@ -149,7 +149,20 @@ jobs:
             gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || echo "")
           echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
 
+      - name: Review loop (new implementation)
+        if: steps.implement.outputs.pr_number != ''
+        id: review-new
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          BRANCH: ${{ steps.detect.outputs.branch }}
+          PR_NUMBER: ${{ steps.implement.outputs.pr_number }}
+        run: bash scripts/ai-review-loop.sh
+
       - name: Retry implementation (/retry)
+        id: retry
         if: |
           steps.detect.outputs.should_implement == 'false' &&
           env.COMMENT_BODY == '/retry'
@@ -179,6 +192,18 @@ jobs:
           if [[ -n "$NEW_PR" ]]; then
             echo "pr_number=${NEW_PR}" >> $GITHUB_OUTPUT
           fi
+
+      - name: Review loop (retry)
+        if: steps.retry.outputs.pr_number != ''
+        id: review-retry
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          BRANCH: ${{ steps.detect.outputs.branch }}
+          PR_NUMBER: ${{ steps.retry.outputs.pr_number }}
+        run: bash scripts/ai-review-loop.sh
 
       - name: Apply fix via /ai instruction
         if: |
@@ -228,6 +253,8 @@ jobs:
           PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
           if [[ -n "${{ steps.implement.outputs.pr_number }}" ]]; then
             PR_NUMBER="${{ steps.implement.outputs.pr_number }}"
+          elif [[ -n "${{ steps.retry.outputs.pr_number }}" ]]; then
+            PR_NUMBER="${{ steps.retry.outputs.pr_number }}"
           fi
           SHOULD_PREVIEW='false'
           if [[ "$COMMENT_BODY" != /council\ * ]] && [[ -n "$PR_NUMBER" ]]; then

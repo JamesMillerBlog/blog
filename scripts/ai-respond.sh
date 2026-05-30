@@ -14,6 +14,14 @@ fi
 
 echo "=== Responding to PR comment on #${PR_NUMBER} ===" >&2
 
+gh pr comment "$PR_NUMBER" --body "## 🔄 Working on it...
+
+**Instruction:** ${INSTRUCTION}
+**Model:** deepseek-v4-pro
+**ETA:** ~3-8 minutes
+
+[View Actions run](https://github.com/${GITHUB_REPOSITORY:-}/actions/runs/${GITHUB_RUN_ID:-})" || true
+
 PR_CONTEXT=$(gh pr view "$PR_NUMBER" --json title,body | jq -r '"Title: \(.title)\n\nBody: \(.body)"')
 PR_DIFF=$(gh pr diff "$PR_NUMBER" 2>/dev/null | head -500 || echo "(diff unavailable)")
 
@@ -48,7 +56,7 @@ fi
 git rev-parse HEAD >.review-stamp
 
 cat >/tmp/ai-respond-result.md <<EOFRESULT
-## 🤖 OpenCode Response
+## ✅ Fix Applied
 
 **Instruction actioned:** ${INSTRUCTION}
 
@@ -60,4 +68,6 @@ $(cat /tmp/respond-output.txt)
 \`\`\`
 
 </details>
+
+[View Actions run](https://github.com/${GITHUB_REPOSITORY:-}/actions/runs/${GITHUB_RUN_ID:-})
 EOFRESULT

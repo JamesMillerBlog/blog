@@ -107,7 +107,8 @@ jobs:
 
           gh issue comment "${ISSUE_NUMBER}" --body-file /tmp/council-comment.md
 
-      - name: Implement and review loop
+      - name: Implement and create draft PR
+        id: implement
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
@@ -118,13 +119,23 @@ jobs:
           BRANCH: ${{ steps.branch.outputs.name }}
         run: bash scripts/ai-implement.sh
 
+      - name: Review loop
+        id: review
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+          PR_NUMBER: ${{ steps.implement.outputs.pr_number }}
+        run: bash scripts/ai-review-loop.sh
+
       - name: Get PR number
         id: pr
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          PR=$(gh pr view "${{ steps.branch.outputs.name }}" --json number --jq '.number' 2>/dev/null || echo "")
-          echo "number=${PR}" >> $GITHUB_OUTPUT
+          echo "number=${{ steps.implement.outputs.pr_number }}" >> $GITHUB_OUTPUT
 
       - name: Run Kimi PR review
         if: steps.pr.outputs.number != ''
@@ -132,12 +143,6 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: bash scripts/ai-pr-review.sh "${{ steps.pr.outputs.number }}"
-
-      - name: Mark PR ready
-        if: steps.pr.outputs.number != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh pr ready ${{ steps.pr.outputs.number }}
 
       - name: Notify issue — done
         if: steps.pr.outputs.number != ''
@@ -148,6 +153,7 @@ jobs:
 
           https://github.com/${{ github.repository }}/pull/${{ steps.pr.outputs.number }}
 
+          Review verdict: \`${{ steps.review.outputs.review_verdict }}\`  
           Kimi code review posted. Reply to any PR comment with \`/ai <instruction>\` to have OpenCode action it."
 
   preview:

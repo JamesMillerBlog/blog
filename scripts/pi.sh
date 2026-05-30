@@ -64,23 +64,13 @@ if [ -t 0 ]; then
   # Interactive session: reuse named container
   printf '\033[1;36m▶ pi — AI coding assistant\033[0m\n'
   printf '\033[0;33m  Tip: use pnpm pi:fresh if Dockerfile.pi or deps changed\033[0m\n'
-  STATUS=$(docker inspect "$CONTAINER" --format '{{.State.Status}}' 2>/dev/null || echo "missing")
-  case "$STATUS" in
-  exited | created | paused)
-    if [ "$RESUME" = true ] && [ $# -eq 0 ]; then
-      printf '\033[0;33mResuming container: %s\033[0m\n' "$CONTAINER"
-      docker start -ai "$CONTAINER"
-    else
-      docker rm "$CONTAINER" 2>/dev/null || true
-      printf '\033[0;33mStarting container: %s\033[0m\n' "$CONTAINER"
-      docker compose run --name "$CONTAINER" "${OPTS[@]}" pi "$@"
-    fi
-    ;;
-  *)
-    printf '\033[0;33mStarting container: %s\033[0m\n' "$CONTAINER"
+  docker rm "$CONTAINER" 2>/dev/null || true
+  printf '\033[0;33mStarting container: %s\033[0m\n' "$CONTAINER"
+  if [ "$RESUME" = true ]; then
+    docker compose run --name "$CONTAINER" "${OPTS[@]}" pi --resume "$@"
+  else
     docker compose run --name "$CONTAINER" "${OPTS[@]}" pi "$@"
-    ;;
-  esac
+  fi
 else
   # Non-interactive (piped, git hook, CI): one-shot container, no TTY
   docker compose run --rm -T "${OPTS[@]}" pi "$@"

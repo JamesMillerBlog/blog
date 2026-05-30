@@ -1,7 +1,7 @@
 ---
 name: council-analyst
 description: Deep analytical specialist for the council. Provides structured, thorough analysis.
-model: opencode-go/deepseek-v4-pro
+model: opencode/claude-sonnet-4-6
 thinking: medium
 ---
 

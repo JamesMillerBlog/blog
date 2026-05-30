@@ -5,6 +5,7 @@
     ".agents/skills"
   ],
   "enabledModels": [
+    "opencode/*",
     "opencode-go/*"
   ],
   "packages": [

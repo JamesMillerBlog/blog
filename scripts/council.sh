@@ -32,7 +32,7 @@ fmt_time() {
 if [ -t 1 ]; then
   printf '\033[1;36m▶ council of agents\033[0m\n'
   printf '\033[0;33m  Question: %s\033[0m\n' "$QUESTION"
-  printf '\033[0;90m  scout (v4-flash) → analyst (v4-pro) + critic (kimi-k2.6) → synthesizer (v4-pro)\033[0m\n\n'
+  printf '\033[0;90m  scouts A+B (v4-flash) → analyst (claude-sonnet-4-6) + critic (gpt-5.5) → synthesizer (gemini-3.5-flash)\033[0m\n\n'
 
   RESULT_FILE=$(mktemp /tmp/council-result.XXXXXX.txt)
   cleanup() { rm -f "$RESULT_FILE"; }
@@ -43,7 +43,7 @@ if [ -t 1 ]; then
 
   SPINNER_FRAMES=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
   STAGE_LABELS=('scout' 'analyst + critic' 'synthesizer' 'present answer')
-  STAGE_MODELS=('v4-flash' 'v4-pro + kimi-k2.6' 'v4-pro (thinking↑)' '')
+  STAGE_MODELS=('v4-flash × 2' 'claude-sonnet-4-6 + gpt-5.5' 'gemini-3.5-flash' '')
   STAGE_DURATIONS=(45 180 90 45)
   STAGE_STARTS=(0 45 225 315)
   NUM_STAGES=4

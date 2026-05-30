@@ -11,6 +11,7 @@
     ".pi/agents"
   ],
   "enabledModels": [
+    "opencode/*",
     "opencode-go/*"
   ],
   "compaction": {

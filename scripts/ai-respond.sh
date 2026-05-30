@@ -4,7 +4,8 @@ set -euo pipefail
 PR_NUMBER="$1"
 BRANCH="$2"
 INSTRUCTION="${3:-}"
-PI="pi --agent-team-subagent-skills disabled"
+PI="pi --agent-team-subagent-skills disabled --no-session"
+export PI_SKIP_VERSION_CHECK=1
 
 if [[ -z "$INSTRUCTION" ]]; then
   echo "Error: no instruction provided" >&2

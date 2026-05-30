@@ -37,16 +37,24 @@ jobs:
 
       - name: Install audit tools
         run: |
-          # semgrep — SAST
-          python3 -m pip install --quiet semgrep
+          # semgrep — SAST (version-pinned to prevent silent upgrades)
+          python3 -m pip install --quiet 'semgrep>=1.0.0,<2.0.0'
 
-          # trivy v0.70.0 — container + IaC scanning (replaces tfsec for Terraform too)
-          curl -sL 'https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz' | \
-            tar -xz -C /usr/local/bin trivy
+          # trivy v0.70.0 — container + IaC scanning; verify checksum before extracting
+          TRIVY_VERSION='0.70.0'
+          curl -sLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"
+          sha256sum --check --ignore-missing "trivy_${TRIVY_VERSION}_checksums.txt"
+          tar -xzf "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -C /usr/local/bin trivy
+          rm "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" "trivy_${TRIVY_VERSION}_checksums.txt"
 
-          # zizmor v1.25.2 — GitHub Actions security
-          curl -sL 'https://github.com/zizmorcore/zizmor/releases/download/v1.25.2/zizmor_1.25.2_linux_amd64.tar.gz' | \
-            tar -xz -C /usr/local/bin zizmor
+          # zizmor v1.25.2 — GitHub Actions security; verify checksum before extracting
+          ZIZMOR_VERSION='1.25.2'
+          curl -sLO "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor_${ZIZMOR_VERSION}_linux_amd64.tar.gz"
+          curl -sLO "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor_${ZIZMOR_VERSION}_checksums.txt"
+          sha256sum --check --ignore-missing "zizmor_${ZIZMOR_VERSION}_checksums.txt"
+          tar -xzf "zizmor_${ZIZMOR_VERSION}_linux_amd64.tar.gz" -C /usr/local/bin zizmor
+          rm "zizmor_${ZIZMOR_VERSION}_linux_amd64.tar.gz" "zizmor_${ZIZMOR_VERSION}_checksums.txt"
 
           # jq — report parsing
           sudo apt-get update -qq && sudo apt-get install -y -qq jq > /dev/null
@@ -85,41 +93,34 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          REPORT=$(cat audit-report.md 2>/dev/null || echo 'Report not available.')
-          WARNINGS=$(cat audit-warnings.md 2>/dev/null || true)
+          TODAY=$(date +%Y-%m-%d)
+
+          # Build body in a file so tool output is never evaluated as shell code
+          BODY_FILE=$(mktemp)
+          {
+            printf '## Security Audit Findings — %s\n\n' "$TODAY"
+            printf 'The weekly automated security audit found issues that require attention. Please review each finding and implement the appropriate fixes.\n\n'
+            printf '### What to do\n\n'
+            printf 'For each finding below:\n'
+            printf -- '- **Dependency vulnerabilities**: bump the affected packages in `web/package.json` to a patched version and update `pnpm-lock.yaml`\n'
+            printf -- '- **SAST findings**: fix the code pattern at the location mentioned\n'
+            printf -- '- **Dockerfile misconfigurations**: update the relevant `Dockerfile.*`\n'
+            printf -- '- **Terraform issues**: update the relevant `.tf` files under `infrastructure/`\n'
+            printf -- '- **GitHub Actions issues**: update the workflow files in `.github/workflows/`\n\n'
+            printf 'Only make changes that are clearly safe and correct. If a finding is a false positive, add a comment in the code explaining why it can be ignored and do not change the code.\n\n'
+            printf '### Audit Report\n\n'
+            printf '<details>\n<summary>Full report</summary>\n\n```\n'
+            cat audit-report.md 2>/dev/null || printf 'Report not available.'
+            printf '\n```\n\n</details>\n\n'
+            cat audit-warnings.md 2>/dev/null || true
+            printf '\n[View CI run for full tool output](%s/%s/actions/runs/%s)\n' \
+              "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+          } > "$BODY_FILE"
 
           ISSUE_NUMBER=$(gh issue create \
-            --title "🔒 Security audit findings — $(date +%Y-%m-%d)" \
+            --title "🔒 Security audit findings — ${TODAY}" \
             --label 'security' \
-            --body "## Security Audit Findings — $(date +%Y-%m-%d)
-
-          The weekly automated security audit found issues that require attention. Please review each finding and implement the appropriate fixes.
-
-          ### What to do
-
-          For each finding below:
-          - **Dependency vulnerabilities**: bump the affected packages in \`web/package.json\` to a patched version and update \`pnpm-lock.yaml\`
-          - **SAST findings**: fix the code pattern at the location mentioned
-          - **Dockerfile misconfigurations**: update the relevant \`Dockerfile.*\`
-          - **Terraform issues**: update the relevant \`.tf\` files under \`infrastructure/\`
-          - **GitHub Actions issues**: update the workflow files in \`.github/workflows/\`
-
-          Only make changes that are clearly safe and correct. If a finding is a false positive, add a comment in the code explaining why it can be ignored and do not change the code.
-
-          ### Audit Report
-
-          <details>
-          <summary>Full report</summary>
-
-          \`\`\`
-          $REPORT
-          \`\`\`
-
-          </details>
-
-          $WARNINGS
-
-          [View CI run for full tool output]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
+            --body-file "$BODY_FILE" \
             --json number --jq '.number')
 
           # Apply ai-implement label after security label is already on the issue

@@ -46,6 +46,10 @@ jobs:
       - name: Audit for critical CVEs
         run: pnpm audit --audit-level=critical
 
+      - name: Report high/medium CVEs (informational)
+        continue-on-error: true
+        run: pnpm audit --audit-level=high
+
   secret-scan:
     name: 'Secret Scan'
     runs-on: ubuntu-latest
@@ -57,13 +61,19 @@ jobs:
 
       - name: Install gitleaks
         run: |
-          curl -sL 'https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz' | \
-            tar -xz -C /usr/local/bin gitleaks
+          GITLEAKS_VERSION='8.30.1'
+          curl -sLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          sha256sum --check --ignore-missing "gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          tar -xzf "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -C /usr/local/bin gitleaks
+          rm "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" "gitleaks_${GITLEAKS_VERSION}_checksums.txt"
 
       - name: Scan commits in this PR
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           gitleaks detect \
             --no-banner \
             --redact \
             --source . \
-            --log-opts='origin/${{ github.base_ref }}..HEAD'
+            --log-opts="origin/${BASE_REF}..HEAD"

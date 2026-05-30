@@ -35,30 +35,6 @@ jobs:
           version: 10
           run_install: false
 
-      - name: Install audit tools
-        run: |
-          # semgrep — SAST (version-pinned to prevent silent upgrades)
-          python3 -m pip install --quiet 'semgrep>=1.0.0,<2.0.0'
-
-          # trivy v0.70.0 — container + IaC scanning; verify checksum before extracting
-          TRIVY_VERSION='0.70.0'
-          curl -sLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
-          curl -sLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"
-          sha256sum --check --ignore-missing "trivy_${TRIVY_VERSION}_checksums.txt"
-          tar -xzf "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -C /usr/local/bin trivy
-          rm "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" "trivy_${TRIVY_VERSION}_checksums.txt"
-
-          # zizmor v1.25.2 — GitHub Actions security; verify checksum before extracting
-          ZIZMOR_VERSION='1.25.2'
-          curl -sLO "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor_${ZIZMOR_VERSION}_linux_amd64.tar.gz"
-          curl -sLO "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor_${ZIZMOR_VERSION}_checksums.txt"
-          sha256sum --check --ignore-missing "zizmor_${ZIZMOR_VERSION}_checksums.txt"
-          tar -xzf "zizmor_${ZIZMOR_VERSION}_linux_amd64.tar.gz" -C /usr/local/bin zizmor
-          rm "zizmor_${ZIZMOR_VERSION}_linux_amd64.tar.gz" "zizmor_${ZIZMOR_VERSION}_checksums.txt"
-
-          # jq — report parsing
-          sudo apt-get update -qq && sudo apt-get install -y -qq jq > /dev/null
-
       - name: Restore pnpm store
         id: pnpm-cache
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
@@ -74,7 +50,7 @@ jobs:
       - name: Run security audit
         id: audit
         continue-on-error: true
-        run: bash scripts/security-audit.sh
+        run: bash scripts/security-audit-run.sh
         env:
           CI: 'true'
           FIX_MODE: 'false'

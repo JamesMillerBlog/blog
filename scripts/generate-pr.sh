@@ -24,7 +24,7 @@ command -v gh >/dev/null 2>&1 || {
 }
 
 if [[ "${CI:-false}" != "true" ]]; then
-  gh auth status >/dev/null 2>&1 || {
+  { [[ -n "${GH_TOKEN:-}" ]] || gh auth status >/dev/null 2>&1; } || {
     echo "gh not authenticated. Please run 'gh auth login'."
     exit 1
   }

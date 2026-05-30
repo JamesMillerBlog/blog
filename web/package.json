@@ -14,8 +14,12 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "precommit": "lint-staged",
+<<<<<<< HEAD
     "health": "cd .. && ./scripts/code-health-check.sh --quick",
     "health:full": "cd .. && ./scripts/code-health-check.sh"
+=======
+    "audit:security": "bash ../scripts/security-audit-run.sh"
+>>>>>>> a45249c5 (chore: tidy script)
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [

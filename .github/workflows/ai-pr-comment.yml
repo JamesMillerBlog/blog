@@ -35,7 +35,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          DATA=$(gh pr view ${{ github.event.issue.number }} --json headRefName,number)
+          DATA=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json headRefName,number)
           echo "branch=$(echo "$DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
           echo "number=$(echo "$DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
 

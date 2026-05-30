@@ -45,8 +45,18 @@ jobs:
             echo "PR is from a fork (${HEAD_REPO}) — refusing to check out untrusted code" >&2
             exit 1
           fi
-          echo "branch=$(echo "$DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
-          echo "number=$(echo "$DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
+          BRANCH=$(echo "$DATA" | jq -r '.headRefName')
+          PR_NUM=$(echo "$DATA" | jq -r '.number')
+          if [[ ! "$BRANCH" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "Branch name contains unsafe characters: ${BRANCH}" >&2
+            exit 1
+          fi
+          if [[ ! "$PR_NUM" =~ ^[0-9]+$ ]]; then
+            echo "PR number is not numeric: ${PR_NUM}" >&2
+            exit 1
+          fi
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "number=${PR_NUM}" >> $GITHUB_OUTPUT
 
   respond:
     needs: gate
@@ -73,6 +83,8 @@ jobs:
       PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
 
     steps:
+      # Branch validated as non-fork with alphanumeric name in gate job; owner-only trigger.
+      # CodeQL flags this ref as user-controlled by design — accepted trade-off.
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ needs.gate.outputs.branch }}
@@ -137,6 +149,7 @@ jobs:
           PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
         run: |
           QUESTION="${COMMENT_BODY#/council }"
+          QUESTION="${QUESTION:0:2000}"
           bash scripts/council.sh "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
           {
             printf '**Council Answer**\n\n'

@@ -49,15 +49,13 @@ Specialist agents focus Claude on a specific domain. Switch agents with `/agent 
 
 Dispatched automatically by `/pre-push-review`. Never write code — they review diffs adversarially.
 
-| Agent | Model | What it checks |
-|-------|-------|---------------|
-| `reviewer-security` | claude-sonnet-4-6 | Secrets, injection, CVEs, exploitable logic, prompt injection in diff |
-| `reviewer-frontend` | claude-haiku-4-5 | React/Next.js patterns, TypeScript safety, accessibility, performance |
-| `reviewer-design` | claude-haiku-4-5 | Byte Mark compliance — tokens, typography, borders, corner radii |
-| `reviewer-infrastructure` | claude-haiku-4-5 | GitHub Actions injection, IAM permissions, Terraform misconfigs |
-| `reviewer-code-quality` | claude-haiku-4-5 | Syntax, code smells, complexity, naming, reusability, best practices |
-
-(Security reviewer runs on Sonnet for deeper adversarial coverage; others use Haiku for speed.)
+| Agent | What it checks |
+|-------|---------------|
+| `reviewer-security` | Secrets, injection, CVEs, exploitable logic, prompt injection in diff |
+| `reviewer-frontend` | React/Next.js patterns, TypeScript safety, accessibility, performance |
+| `reviewer-design` | Byte Mark compliance — tokens, typography, borders, corner radii |
+| `reviewer-infrastructure` | GitHub Actions injection, IAM permissions, Terraform misconfigs |
+| `reviewer-code-quality` | Syntax, code smells, complexity, naming, reusability, best practices |
 
 ### pi — Skills & Multi-Agent
 
@@ -79,21 +77,18 @@ For complex questions or tasks that benefit from multiple perspectives, pi has a
 
 ```
 [scout-a]     [scout-b]       ← decompose question into dimensions
-(deepseek-v4-flash)
      ↓              ↓
 [analyst]       [critic]       ← run in parallel
-(claude-sonnet-4-6) (gpt-5.5)
      ↓              ↓
        [synthesizer]           ← combines both perspectives
-       (gemini-3.5-flash)
 ```
 
-| Agent | Model | Role |
-|-------|-------|------|
-| `council-scout` | deepseek-v4-flash | Decomposes question into structured dimensions |
-| `council-analyst` | claude-sonnet-4-6 | Deep analytical thinking, structured reasoning |
-| `council-critic` | gpt-5.5 | Adversarial critique, risks, failure modes |
-| `council-synthesizer` | gemini-3.5-flash | Synthesises perspectives into final answer |
+| Agent | Role |
+|-------|------|
+| `council-scout` | Decomposes question into structured dimensions |
+| `council-analyst` | Deep analytical thinking, structured reasoning |
+| `council-critic` | Adversarial critique, risks, failure modes |
+| `council-synthesizer` | Synthesises perspectives into final answer |
 
 Agent definitions live in `.pi/agents/`. The orchestration prompt is `.pi/prompts/council.md`.
 
@@ -177,7 +172,7 @@ Six GitHub workflows automate AI-driven development:
 1. Creates a branch: `ai/issue-{number}-{slug}`
 2. Phase 0 — **Council pre-implementation review** (`deepseek-v4-pro` + `kimi-k2.6`) — analyst + critic perspectives on architecture
 3. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title and body
-4. Phase 2 — **Pre-push review loop** (local, up to 4 iterations) — validates changes before any push. Fix agent receives diff files and prior fix history for context; spinning detection breaks early if findings repeat across iterations; each fix step has a 20m timeout. Issues found → deepseek fixes locally → re-reviews → passes
+4. Phase 2 — **Pre-push review loop** (local, iterative) — validates changes before any push. Issues found → fixes locally → re-reviews → passes
 5. Phase 3 — **Pre-build check** — runs `pnpm build`; if broken, PR is marked for manual fix and push continues
 6. Phase 4 — **Push and create draft PR** — writes review stamp, pushes branch, creates draft PR on GitHub. If CRITICAL findings remain, creates PR with `ai-review-unresolved` label instead of blocking push
 7. Phase 5 — **Preview deployment** — if PR created successfully:
@@ -185,9 +180,9 @@ Six GitHub workflows automate AI-driven development:
    - Generates AI E2E tests from issue acceptance criteria
    - Runs Playwright tests against preview
    - Registers GitHub deployment and posts Playwright report link
-8. Phase 6 — **PR summary comment** — posts comprehensive implementation + review log to PR (critical/high counts now go only to private evals Gist, not public Step Summary)
+8. Phase 6 — **PR summary comment** — posts comprehensive implementation + review log to PR
 9. Phase 7 — **Independent code review** — Kimi K2.6 reviews the PR and posts findings as a comment
-10. Phase 8 — **Eval recording** — appends run metrics (verdict, iterations, counts, duration) to private evals Gist `runs.jsonl`; never includes issue content or file paths
+10. Phase 8 — **Eval recording** — appends run metrics to internal telemetry
 
 **To trigger:** Label an issue with `ai-implement` (repo owner only). Use the template at `.github/ISSUE_TEMPLATE/ai-implement.yml`.
 
@@ -210,7 +205,7 @@ Branch: ai/issue-123-add-dark-mode-toggle
 ↓ (Phase 5: deploy to pr-456.staging.jamesmiller.blog, run generated E2E tests)
 ↓ (Phase 6: post implementation + review summary to PR)
 ↓ (Phase 7: Kimi K2.6 independent review)
-↓ (Phase 8: eval recording to private Gist)
+↓ (Phase 8: eval recording)
 Preview live + tests pass/fail visible in Actions
 ```
 
@@ -295,11 +290,11 @@ Preview live + tests pass/fail visible in Actions
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary. Fetches past security learnings from private GitHub Gist; captures new findings back to Gist. Includes pre-build check, `ai-review-unresolved` labeling, eval recording to private evals Gist, and Gist privacy verification before writing vulnerability data. |
+| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary. Includes pre-build check, `ai-review-unresolved` labeling, and eval recording. |
 | `scripts/ai-pr-review.sh` | Kimi K2.6 independent code review |
 | `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>`. Writes review stamp before push to satisfy pre-push hook gate. |
 | `scripts/ai-generate-tests.sh` | Generates Playwright E2E tests from issue description using `deepseek-v4-pro` |
-| `scripts/ai-eval-trends.sh` | Reads private evals Gist, computes aggregated trends (avg iterations by prompt version, fix efficiency, critical count trend), writes `trends.md` back to same Gist |
+| `scripts/ai-eval-trends.sh` | Computes aggregated eval trends and writes trend summary |
 | `scripts/ai-blog-suggestions.sh` | Monthly blog improvement radar — research, generate, and issue creation |
 | `scripts/generate-pr.sh` | Supports `--draft` flag and CI mode |
 | `scripts/pre-push-review-manifest.sh` | Generates file list and diff files for each reviewer category (security, code-quality, frontend, design, infrastructure) |
@@ -308,7 +303,7 @@ Preview live + tests pass/fail visible in Actions
 
 Each AI-generated PR gets an ephemeral preview environment for live testing:
 
-- **R2 Bucket:** `jamesmiller-blog-pr-{number}` — auto-created, ephemeral (no `prevent_destroy`)
+- **R2 Bucket:** auto-created, ephemeral (no `prevent_destroy`)
 - **Domain:** `pr-{number}.staging.jamesmiller.blog` — custom domain via Cloudflare
 - **Auth:** Basic Auth via Cloudflare Workers (same credentials as staging)
 - **Lifecycle:** Created when PR is created, destroyed when PR is merged (or manually via destroy-preview-manual workflow)
@@ -355,7 +350,7 @@ Then push:
 git push
 ```
 
-The pre-push hook runs a local `gitleaks` scan when available, then tests, then checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked. Bypass with `git push --no-verify` only if you have a good reason.
+The pre-push hook runs a local `gitleaks` scan when available, then tests, then checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked.
 
 **When using pi:** You can still run the review scripts manually (`bash scripts/pre-push-review-manifest.sh`, `bash scripts/pre-push-static-checks.sh`) and ask pi to review the output, but pi has no equivalent of the full multi-agent `/pre-push-review` command. Use `git push --no-verify` or run the review in Claude before switching.
 

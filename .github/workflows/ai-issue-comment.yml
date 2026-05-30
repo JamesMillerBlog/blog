@@ -80,6 +80,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           QUESTION="${COMMENT_BODY#/council }"
+          QUESTION="${QUESTION:0:2000}"
           bash scripts/council.sh "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
           {
             printf '**Council Answer**\n\n'

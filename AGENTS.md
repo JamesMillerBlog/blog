@@ -98,13 +98,13 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 
 | Agent                        | Dispatched when                         | Checks                                      |
 | ---------------------------- | --------------------------------------- | ------------------------------------------- |
-| `reviewer-security` (Sonnet) | always                                  | Secrets, injection, CVEs, exploitable logic |
+| `reviewer-security`          | always                                  | Secrets, injection, CVEs, exploitable logic |
 | `reviewer-code-quality`      | app / infra changes                     | Smells, complexity, best practices          |
 | `reviewer-frontend`          | `*.tsx/ts/jsx/js/css`                   | React, TypeScript, a11y                     |
 | `reviewer-design`            | `*.tsx/jsx/css`                         | Byte Mark tokens, typography                |
 | `reviewer-infrastructure`    | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform              |
 
-(Security reviewer uses claude-sonnet-4-6 for deeper adversarial coverage; others use Haiku for speed.)
+(Security reviewer uses a more capable model for deeper adversarial coverage.)
 
 ## Docker
 

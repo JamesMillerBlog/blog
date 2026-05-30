@@ -163,9 +163,9 @@ In pi with the `pi-multiagent` extension installed, the `agent_team` tool can sp
 
 ---
 
-## GitHub Workflows — Automated AI Issue Implementation & Review
+## GitHub Workflows — Automated AI Issue Implementation, Review & Blog Radar
 
-Five GitHub workflows automate AI-driven development:
+Six GitHub workflows automate AI-driven development:
 
 ### AI Issue Implementation (`ai-implement` label)
 
@@ -252,6 +252,28 @@ Preview live + tests pass/fail visible in Actions
 2. Destroys that PR's preview environment and marks deployment inactive
 3. Useful if PR is abandoned or preview needs early cleanup
 
+### AI Blog Improvement Radar (`ai-blog-suggestions` workflow)
+
+**When:** On a schedule (1st of month at 08:00 UTC) or manually triggered.
+
+**What happens:**
+1. Installs web dependencies and OpenCode tooling
+2. Ensures `blog-radar` label exists on the repo
+3. Runs `scripts/ai-blog-suggestions.sh`, which:
+   - Passes `blog-improvement-radar.md` prompt to `deepseek-v4-pro`
+   - Researches competitor blogs, design trends, and web technology
+   - Reads codebase to identify concrete gaps across 4 domains
+   - Generates 8-15 prioritized, independently actionable suggestions
+   - Validates output format and suggestion count
+4. Creates or updates a GitHub issue with title "Blog Improvement Radar — [Month Year]" and `blog-radar` label
+5. Outputs issue number and suggestion count to GitHub Actions
+
+**Research scope:** Competitor technical blogs (overreacted.io, joshwcomeau.com, leeerob.io, etc.), 2026 design trends, Next.js/React ecosystem, performance optimization, MDX content layer.
+
+**Domains covered:** Features, Design & UX, Infrastructure, DX & Workflow. Content strategy suggestions are deferred to the content repo.
+
+**Why:** Monthly automated competitive + trend analysis keeps the blog evolving with current best practices without manual research time.
+
 ### Configuration
 
 - **`.pi/settings.ci.json`** — CI-specific pi settings: uses `deepseek-v4-pro` by default, enables `pi-lens` and `pi-multiagent` extensions
@@ -259,6 +281,7 @@ Preview live + tests pass/fail visible in Actions
   - `ai-issue-implement.md` — issue implementation instructions
   - `ai-pr-respond.md` — PR comment response instructions
   - `ai-pr-review.md` — independent PR review (Kimi K2.6)
+  - `blog-improvement-radar.md` — blog strategy analysis & suggestion generation
 - **`infrastructure/stacks/site/ephemeral/`** — Terraform for ephemeral preview environments:
   - `main.tf` — Cloudflare R2 bucket, custom domain, Workers Basic Auth
   - `variables.tf` — PR number, Cloudflare credentials, Basic Auth credentials
@@ -272,6 +295,7 @@ Preview live + tests pass/fail visible in Actions
 | `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>`. Writes review stamp before push to satisfy pre-push hook gate. |
 | `scripts/ai-generate-tests.sh` | Generates Playwright E2E tests from issue description using `deepseek-v4-pro` |
 | `scripts/ai-eval-trends.sh` | Reads private evals Gist, computes aggregated trends (avg iterations by prompt version, fix efficiency, critical count trend), writes `trends.md` back to same Gist |
+| `scripts/ai-blog-suggestions.sh` | Monthly blog improvement radar — research, generate, and issue creation |
 | `scripts/generate-pr.sh` | Supports `--draft` flag and CI mode |
 | `scripts/pre-push-review-manifest.sh` | Generates file list and diff files for each reviewer category (security, code-quality, frontend, design, infrastructure) |
 

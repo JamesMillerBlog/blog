@@ -1,0 +1,46 @@
+name: "OSSF Scorecard"
+
+on:
+  schedule:
+    # Weekly on Saturday at 07:00 UTC
+    - cron: "0 7 * * 6"
+  # Run on push to main to keep scorecard badge updated
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  scorecard:
+    name: "Scorecard Analysis"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      # Needed for Code scanning upload
+      security-events: write
+      # Needed for publishing results to OSSF REST API
+      id-token: write
+      # Needed for branch protection checks
+      checks: write
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Run OSSF Scorecard
+        uses: ossf/scorecard-action@f9f6b9a8b7a4b3e6f2f0e4b7e2b5a9c1d3e5f7a9 # v2.4.1
+        with:
+          results_file: scorecard-results.json
+          results_format: json
+          publish_results: true
+          # Publish to OSSF Scorecard REST API for badge generation
+          # Requires id-token: write
+
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@7445892132d5fcf26d5795bfaf694c0bf522cc77 # v3.28.14
+        with:
+          sarif_file: scorecard-results.sarif
+          category: scorecard

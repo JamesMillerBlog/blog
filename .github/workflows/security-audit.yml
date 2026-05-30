@@ -1,0 +1,129 @@
+name: 'Weekly Security Audit'
+
+on:
+  schedule:
+    # Saturday 06:00 UTC — catch new CVEs early weekend
+    - cron: '0 6 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: security-audit-main
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: 'Security Audit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+        with:
+          version: 10
+          run_install: false
+
+      - name: Install audit tools
+        run: |
+          # semgrep — SAST
+          python3 -m pip install --quiet semgrep
+
+          # trivy v0.70.0 — container + IaC scanning (replaces tfsec for Terraform too)
+          curl -sL 'https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_Linux-64bit.tar.gz' | \
+            tar -xz -C /usr/local/bin trivy
+
+          # zizmor v1.25.2 — GitHub Actions security
+          curl -sL 'https://github.com/zizmorcore/zizmor/releases/download/v1.25.2/zizmor_1.25.2_linux_amd64.tar.gz' | \
+            tar -xz -C /usr/local/bin zizmor
+
+          # jq — report parsing
+          sudo apt-get update -qq && sudo apt-get install -y -qq jq > /dev/null
+
+      - name: Restore pnpm store
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        id: audit
+        continue-on-error: true
+        run: bash scripts/security-audit.sh
+        env:
+          CI: 'true'
+          FIX_MODE: 'false'
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@69d79ce213269bbf6b7fe2e6e55f02baa2396be4 # v4.7.1
+        with:
+          name: security-audit-report
+          path: |
+            audit-report.md
+            audit-report.json
+
+      - name: Create ai-implement issue
+        if: always() && (steps.audit.outputs.has_fixes == 'true' || steps.audit.outputs.has_warnings == 'true')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPORT=$(cat audit-report.md 2>/dev/null || echo 'Report not available.')
+          WARNINGS=$(cat audit-warnings.md 2>/dev/null || true)
+
+          ISSUE_NUMBER=$(gh issue create \
+            --title "🔒 Security audit findings — $(date +%Y-%m-%d)" \
+            --label 'security' \
+            --body "## Security Audit Findings — $(date +%Y-%m-%d)
+
+          The weekly automated security audit found issues that require attention. Please review each finding and implement the appropriate fixes.
+
+          ### What to do
+
+          For each finding below:
+          - **Dependency vulnerabilities**: bump the affected packages in \`web/package.json\` to a patched version and update \`pnpm-lock.yaml\`
+          - **SAST findings**: fix the code pattern at the location mentioned
+          - **Dockerfile misconfigurations**: update the relevant \`Dockerfile.*\`
+          - **Terraform issues**: update the relevant \`.tf\` files under \`infrastructure/\`
+          - **GitHub Actions issues**: update the workflow files in \`.github/workflows/\`
+
+          Only make changes that are clearly safe and correct. If a finding is a false positive, add a comment in the code explaining why it can be ignored and do not change the code.
+
+          ### Audit Report
+
+          <details>
+          <summary>Full report</summary>
+
+          \`\`\`
+          $REPORT
+          \`\`\`
+
+          </details>
+
+          $WARNINGS
+
+          [View CI run for full tool output]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
+            --json number --jq '.number')
+
+          # Apply ai-implement label after security label is already on the issue
+          # so ai-issue.yml sees both labels when it triggers
+          gh issue edit "$ISSUE_NUMBER" --add-label 'ai-implement'
+
+          echo "Created issue #$ISSUE_NUMBER"

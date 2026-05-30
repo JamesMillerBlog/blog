@@ -116,7 +116,7 @@ Six workflows automate issue implementation, PR management, and blog improvement
 
 | Workflow                     | Trigger                                                              | What it does                                                                                                                                              |
 | ---------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                       | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
+| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only, or auto from security audit) | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
 | `ai-issue-comment.yml`       | Issue comment `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; finds existing branch/PR for `/ai`/`/resume`/`/retry`; if no branch → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
 | `ai-pr-comment.yml`          | PR comment `/ai <instruction>`, `/resume`, or `/council <question>` (repo owner only)        | Runs council for `/council <question>`; `/ai` applies fix via ai-respond.sh, runs Kimi review, re-deploys preview; `/resume` re-deploys preview without code change                               |
 | `ai-pr-merged.yml`           | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
@@ -124,6 +124,19 @@ Six workflows automate issue implementation, PR management, and blog improvement
 | `destroy-preview-manual.yml` | Manual workflow trigger (repo owner)                                 | Destroys a specific PR's ephemeral preview environment                                                                                                    |
 
 See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment architecture, issue template, and E2E test generation.
+
+## GitHub Workflows — Security Scanning
+
+Four workflows provide continuous security monitoring:
+
+| Workflow                  | Trigger                                               | What it does                                                                                                                                                                                          |
+| ------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codeql.yml`              | Push to main, PRs touching `web/src/**`, weekly Sat 8am UTC | CodeQL static analysis on JavaScript/TypeScript with extended security rules, publishes findings to code scanning                                                                                        |
+| `pr-security.yml`         | All pull requests                                     | Runs pnpm audit (critical CVEs only) and gitleaks secret scanning on commits in the PR                                                                                                                 |
+| `security-audit.yml`      | Weekly Saturday 6am UTC, manual dispatch              | Comprehensive security audit using semgrep (SAST), trivy (containers + IaC), and zizmor (GitHub Actions). Creates `ai-implement` issue if findings detected, which triggers `ai-issue.yml` for auto-fixes |
+| `security-scorecard.yml`  | Weekly Saturday 7am UTC, push to main, manual dispatch | OSSF Scorecard analysis, publishes badge and SARIF results to code scanning                                                                                                                            |
+
+See `docs/SECURITY_AUDIT.md` for manual security audit findings beyond automated scanning (prompt injection, MDX content, AI isolation, etc.).
 
 ## Commands
 

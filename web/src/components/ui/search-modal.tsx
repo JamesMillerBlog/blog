@@ -26,7 +26,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Post } from '@/types/post'
 import { projects, Project } from '@/app/projects/data'
 
@@ -102,9 +102,14 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
   const [query, setQuery] = useState('')
   const [rawHighlightedIndex, setRawHighlightedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const listRef = useRef<HTMLUListElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<Element | null>(null)
-  const router = useRouter()
+  const onCloseRef = useRef(onClose)
+
+  // Keep onClose ref current for the stable global listener effect
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   // Build searchable index: visible posts + all projects
   const searchIndex = useMemo<SearchResult[]>(() => {
@@ -165,8 +170,9 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
     const item = results[highlightedIndex]
     if (!item) return
     onClose()
-    router.push(item.href)
-  }, [results, highlightedIndex, onClose, router])
+    // Programmatic navigation for Enter key; clicks use <Link>
+    window.location.href = item.href
+  }, [results, highlightedIndex, onClose])
 
   // Keyboard handling
   const handleKeyDown = useCallback(
@@ -188,9 +194,6 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
           e.preventDefault()
           onClose()
           break
-        case 'Tab':
-          e.preventDefault()
-          break
       }
     },
     [results.length, navigateToHighlighted, onClose]
@@ -198,13 +201,14 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
 
   // Global Escape / Cmd+K listener + focus restoration
   useEffect(() => {
-    triggerRef.current = document.activeElement
+    const savedTrigger = document.activeElement
+    triggerRef.current = savedTrigger
 
     const handleGlobalKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        onClose()
+        onCloseRef.current()
       }
     }
 
@@ -214,9 +218,9 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
     return () => {
       document.removeEventListener('keydown', handleGlobalKey)
       document.body.style.overflow = ''
-      ;(triggerRef.current as HTMLElement)?.focus()
+      ;(savedTrigger as HTMLElement)?.focus()
     }
-  }, [onClose])
+  }, [])
 
   // Focus input on mount
   useEffect(() => {
@@ -267,19 +271,17 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
             )}
 
             {results.length > 0 && (
-              <ul ref={listRef} role="listbox" aria-label="Search results">
+              <div ref={listRef} role="listbox" aria-label="Search results">
                 {results.map((item, index) => (
-                  <li
+                  <Link
                     key={`${item.type}-${item.slug}`}
                     id={`search-result-${item.type}-${item.slug}`}
                     role="option"
                     aria-selected={index === highlightedIndex}
-                    onClick={() => {
-                      onClose()
-                      router.push(item.href)
-                    }}
+                    href={item.href}
+                    onClick={onClose}
                     onMouseEnter={() => setRawHighlightedIndex(index)}
-                    className={`block p-4 transition-colors border-b border-outline-variant/10 last:border-0 cursor-pointer ${
+                    className={`block p-4 transition-colors border-b border-outline-variant/10 last:border-0 ${
                       index === highlightedIndex
                         ? 'bg-secondary-container/60'
                         : 'hover:bg-surface-container-low'
@@ -312,9 +314,9 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
                         ))}
                       </div>
                     )}
-                  </li>
+                  </Link>
                 ))}
-              </ul>
+              </div>
             )}
 
             {!query && (

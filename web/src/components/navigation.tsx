@@ -73,6 +73,7 @@ export function Navigation({ posts }: { posts: Post[] }) {
   }
 
   const isActive = (path: string) => {
+    if (pathname === null) return false
     if (path === '/') return pathname === '/'
     return pathname.startsWith(path)
   }

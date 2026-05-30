@@ -5,30 +5,22 @@ on:
     types: [created]
 
 jobs:
-  respond:
+  gate:
+    name: Authorize and reject fork PRs
     if: |
       github.event.issue.pull_request != null &&
       github.event.comment.user.login == github.repository_owner &&
       (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '/council '))
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 5
 
     outputs:
       branch: ${{ steps.pr.outputs.branch }}
       pr_number: ${{ steps.pr.outputs.number }}
-      should_preview: ${{ steps.set_preview.outputs.should_preview }}
-
-    concurrency:
-      group: ai-pr-${{ github.event.issue.number }}
-      cancel-in-progress: true
 
     permissions:
-      contents: write
-      pull-requests: write
       issues: write
-
-    env:
-      COMMENT_BODY: ${{ github.event.comment.body }}
+      pull-requests: read
 
     steps:
       - name: Acknowledge comment
@@ -40,7 +32,7 @@ jobs:
             repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
             -f content=eyes
 
-      - name: Get PR branch
+      - name: Get PR branch and reject forks
         id: pr
         env:
           GH_TOKEN: ${{ github.token }}
@@ -56,9 +48,32 @@ jobs:
           echo "branch=$(echo "$DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
           echo "number=$(echo "$DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
 
+  respond:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    outputs:
+      branch: ${{ needs.gate.outputs.branch }}
+      pr_number: ${{ needs.gate.outputs.pr_number }}
+      should_preview: ${{ steps.set_preview.outputs.should_preview }}
+
+    concurrency:
+      group: ai-pr-${{ github.event.issue.number }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    env:
+      COMMENT_BODY: ${{ github.event.comment.body }}
+
+    steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ steps.pr.outputs.branch }}
+          ref: ${{ needs.gate.outputs.branch }}
           fetch-depth: 0
           token: ${{ github.token }}
 
@@ -89,7 +104,7 @@ jobs:
       - name: Acknowledge comment
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [[ "$COMMENT_BODY" == '/resume' ]]; then
@@ -117,7 +132,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
         run: |
           QUESTION="${COMMENT_BODY#/council }"
           bash scripts/council.sh "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
@@ -132,15 +147,15 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.pr.outputs.number }}
-          BRANCH: ${{ steps.pr.outputs.branch }}
+          PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
+          BRANCH: ${{ needs.gate.outputs.branch }}
         run: |
           INSTRUCTION="${COMMENT_BODY#/ai }"
           bash scripts/ai-respond.sh "$PR_NUMBER" "$BRANCH" "$INSTRUCTION"
 
       - name: Push changes
         if: startsWith(env.COMMENT_BODY, '/ai ')
-        run: git push origin ${{ steps.pr.outputs.branch }}
+        run: git push origin ${{ needs.gate.outputs.branch }}
 
       - name: Post AI response result
         if: startsWith(env.COMMENT_BODY, '/ai ')
@@ -148,7 +163,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [[ -f /tmp/ai-respond-result.md ]]; then
-            gh pr comment ${{ steps.pr.outputs.number }} --body "$(cat /tmp/ai-respond-result.md)"
+            gh pr comment ${{ needs.gate.outputs.pr_number }} --body "$(cat /tmp/ai-respond-result.md)"
           fi
 
       - name: Run Kimi PR review
@@ -156,7 +171,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
-        run: bash scripts/ai-pr-review.sh "${{ steps.pr.outputs.number }}"
+        run: bash scripts/ai-pr-review.sh "${{ needs.gate.outputs.pr_number }}"
 
       - name: Set preview flag
         id: set_preview

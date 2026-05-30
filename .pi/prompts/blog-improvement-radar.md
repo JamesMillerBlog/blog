@@ -155,7 +155,7 @@ _Researched [N] competitor blogs, design trend sources, and current web technolo
 
 ---
 
-_Each suggestion below is independently implementable. Approve any by creating a GitHub issue from it with the ` + '`ai-implement`' + ` label, or comment `/approve [N]` to auto-create._
+_Each suggestion below is independently implementable. Approve any by creating a GitHub issue from it with the `ai-implement` label, or comment `/approve [N]` to auto-create._
 ```
 
 Then list all suggestions.

@@ -11,7 +11,7 @@ jobs:
       github.event.comment.user.login == github.repository_owner &&
       (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume')
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
 
     outputs:
       branch: ${{ steps.pr.outputs.branch }}
@@ -47,7 +47,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
         with:
@@ -122,7 +122,7 @@ jobs:
     needs: respond
     if: needs.respond.outputs.pr_number != ''
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     environment: staging
 
     permissions:
@@ -134,7 +134,7 @@ jobs:
     env:
       PR_NUMBER: ${{ needs.respond.outputs.pr_number }}
       BRANCH: ${{ needs.respond.outputs.branch }}
-      TF_VERSION: '1.9.5'
+      TF_VERSION: "1.9.5"
       PREVIEW_URL: https://pr-${{ needs.respond.outputs.pr_number }}.staging.jamesmiller.blog
 
     steps:
@@ -144,7 +144,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
         with:
@@ -198,7 +198,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ''
+          AWS_SESSION_TOKEN: ""
           R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
           aws s3 sync web/out/ s3://jamesmiller-blog-pr-${PR_NUMBER}/ \

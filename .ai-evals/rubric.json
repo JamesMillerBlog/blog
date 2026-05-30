@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "Quality gates for AI implementation pipeline. Thresholds are guidelines — PRs that exceed these should be flagged for manual review but are not blocked.",
+  "gates": {
+    "max_critical": 0,
+    "max_iterations_warning": 3,
+    "min_fix_efficiency": 0.3,
+    "min_e2e_pass_rate": 0.7,
+    "max_any_count": 5
+  },
+  "comparison_window": 10,
+  "private_gist_description": "AI Implementation Evals — private, append-only JSONL"
+}

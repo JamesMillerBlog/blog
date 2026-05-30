@@ -1,0 +1,27 @@
+{
+  "ignores": [
+    "@tailwindcss/postcss",
+    "postcss",
+    "tailwindcss",
+    "@types/react",
+    "@types/react-dom",
+    "@types/node",
+    "@types/hast",
+    "@vitest/coverage-v8",
+    "eslint",
+    "eslint-config-next",
+    "eslint-config-prettier",
+    "prettier",
+    "typescript",
+    "playwright",
+    "@playwright/test",
+    "vitest",
+    "lint-staged",
+    "depcheck",
+    "jscpd",
+    "knip",
+    "cspell",
+    "hast"
+  ],
+  "skip-missing": false
+}

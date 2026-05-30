@@ -1,0 +1,60 @@
+name: Weekly Code Health Check
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+    inputs:
+      quick_mode:
+        description: "Skip AI deep review (faster)"
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  code-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('web/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Run code health check
+        env:
+          CI: "true"
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event.inputs.quick_mode }}" = "true" ]; then
+            ./scripts/code-health-check.sh --ci --quick
+          else
+            ./scripts/code-health-check.sh --ci
+          fi

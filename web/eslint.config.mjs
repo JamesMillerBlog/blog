@@ -12,6 +12,8 @@ const eslintConfig = [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      complexity: ['warn', 10],
+      'max-lines': ['warn', { max: 200, skipBlankLines: true, skipComments: true }],
     },
   },
 ]

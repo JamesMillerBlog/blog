@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "health": "cd .. && ./scripts/code-health-check.sh --quick",
+    "health:full": "cd .. && ./scripts/code-health-check.sh"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -47,9 +49,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^2.0.0",
+    "cspell": "^10.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.1",
     "eslint-config-prettier": "^10.1.8",
+    "jscpd": "^4.2.4",
+    "knip": "^6.14.2",
     "lint-staged": "^16.4.0",
     "playwright": "^1.58.2",
     "postcss": "^8.5.6",

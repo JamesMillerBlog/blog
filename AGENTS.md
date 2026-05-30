@@ -21,6 +21,7 @@ Read extra skill files only when relevant:
 - `web/src/app/_components/` — shared components
 - `web/_posts/` — local MDX preview
 - `.agents/skills/` — on-demand cross-tool skills
+- `.ai-evals/` — quality gate thresholds, run data, trends
 - `.claude/agents/` — Claude Code agents
 - `.pi/agents/` — pi custom agent definitions (council, etc.)
 - `.pi/prompts/` — pi workflow prompt templates
@@ -116,7 +117,7 @@ Six workflows automate issue implementation, PR management, and blog improvement
 | Workflow                     | Trigger                                                              | What it does                                                                                                                                              |
 | ---------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                       | Implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
-| `ai-issue-comment.yml`       | Issue comment `/ai <instruction>` or `/resume` (repo owner only)     | Finds existing branch/PR; if none → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change |
+| `ai-issue-comment.yml`       | Issue comment `/ai <instruction>`, `/resume`, or `/retry` (repo owner only) | Finds existing branch/PR; if none → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
 | `ai-pr-comment.yml`          | PR comment `/ai <instruction>` or `/resume` (repo owner only)        | `/ai` applies fix via ai-respond.sh, runs Kimi review, re-deploys preview; `/resume` re-deploys preview without code change                               |
 | `ai-pr-merged.yml`           | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
 | `ai-blog-suggestions.yml`    | Monthly schedule (1st of month) or manual trigger (repo owner)       | Runs blog improvement radar: researches competitor blogs & trends, generates 8-15 prioritized suggestions, creates GitHub issue with `blog-radar` label  |

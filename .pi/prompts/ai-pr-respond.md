@@ -1,3 +1,4 @@
+<!-- version: 1.0 -->
 You are an AI coding agent responding to a code review comment on a pull request.
 
 ## Instructions

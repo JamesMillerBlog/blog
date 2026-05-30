@@ -41,6 +41,11 @@ quality_files="$out_dir/code-quality-files.txt"
 frontend_files="$out_dir/frontend-files.txt"
 design_files="$out_dir/design-files.txt"
 infra_files="$out_dir/infrastructure-files.txt"
+security_diff="$out_dir/security-diff.txt"
+quality_diff="$out_dir/code-quality-diff.txt"
+frontend_diff="$out_dir/frontend-diff.txt"
+design_diff="$out_dir/design-diff.txt"
+infra_diff="$out_dir/infrastructure-diff.txt"
 manifest_file="$out_dir/manifest.txt"
 
 : >"$all_files"
@@ -179,6 +184,23 @@ sort -u -o "$frontend_files" "$frontend_files"
 sort -u -o "$design_files" "$design_files"
 sort -u -o "$infra_files" "$infra_files"
 
+generate_diff() {
+  local file_list="$1"
+  local out_file="$2"
+  : >"$out_file"
+  [ ! -s "$file_list" ] && return
+  if [ -n "$merge_base" ]; then
+    xargs -a "$file_list" git diff --unified=3 "$merge_base"...HEAD -- >>"$out_file" 2>/dev/null || true
+  fi
+  xargs -a "$file_list" git diff --cached --unified=3 -- >>"$out_file" 2>/dev/null || true
+}
+
+generate_diff "$security_files" "$security_diff"
+generate_diff "$quality_files" "$quality_diff"
+generate_diff "$frontend_files" "$frontend_diff"
+generate_diff "$design_files" "$design_diff"
+generate_diff "$infra_files" "$infra_diff"
+
 diff_lines=0
 if [ -s "$numstat_tmp" ]; then
   diff_lines=$(awk '{ add += ($1 ~ /^[0-9]+$/ ? $1 : 0); del += ($2 ~ /^[0-9]+$/ ? $2 : 0) } END { print add + del + 0 }' "$numstat_tmp")
@@ -204,10 +226,15 @@ fi
   echo "Paths:"
   echo "- All files: $all_files"
   echo "- Security files: $security_files"
+  echo "- Security diff: $security_diff"
   echo "- Code quality files: $quality_files"
+  echo "- Code quality diff: $quality_diff"
   echo "- Frontend files: $frontend_files"
+  echo "- Frontend diff: $frontend_diff"
   echo "- Design files: $design_files"
+  echo "- Design diff: $design_diff"
   echo "- Infrastructure files: $infra_files"
+  echo "- Infrastructure diff: $infra_diff"
 } >"$manifest_file"
 
 cat "$manifest_file"

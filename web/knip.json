@@ -1,0 +1,35 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/app/**/page.tsx",
+    "src/app/**/layout.tsx",
+    "src/app/**/not-found.tsx",
+    "src/app/robots.ts",
+    "src/app/sitemap.ts",
+    "next.config.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": ["src/**/*.test.ts", "src/**/*.test.tsx", ".next/**", "src/lib/imageLoader.ts"],
+  "ignoreExports": ["BRAND_COLOR_PRIMARY", "BRAND_COLOR_SECONDARY", "BRAND_COLOR_TERTIARY"],
+  "ignoreDependencies": [
+    "@tailwindcss/postcss",
+    "@types/hast",
+    "@types/node",
+    "@types/react",
+    "@types/react-dom",
+    "cspell",
+    "depcheck",
+    "hast",
+    "jscpd",
+    "knip",
+    "playwright",
+    "postcss",
+    "tailwindcss"
+  ],
+  "rules": {
+    "exports": "warn",
+    "types": "warn",
+    "enumMembers": "off",
+    "duplicates": "warn"
+  }
+}

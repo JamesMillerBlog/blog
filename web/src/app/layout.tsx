@@ -27,6 +27,16 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'James Miller', url: SITE_URL }],
   creator: 'James Miller',
+  icons: {
+    icon: [
+      { url: '/favicon/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon/favicon-96x96.png', type: 'image/png', sizes: '96x96' },
+    ],
+    shortcut: '/favicon/favicon.ico',
+    apple: '/favicon/apple-touch-icon.png',
+  },
+  manifest: '/favicon/site.webmanifest',
+  themeColor: '#00675d',
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -75,15 +85,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-        <link rel="icon" type="image/png" sizes="96x96" href="/favicon/favicon-96x96.png" />
-        <link rel="shortcut icon" href="/favicon/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-        <link rel="manifest" href="/favicon/site.webmanifest" />
-        <meta name="theme-color" content="#00675d" />
-        <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
-      </head>
       <body className="font-label antialiased bg-surface text-on-surface">
         <ThemeProvider>
           <div className="min-h-screen">

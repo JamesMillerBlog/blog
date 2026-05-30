@@ -137,7 +137,7 @@ export function Navigation({ posts }: { posts: Post[] }) {
                 setSearchOpen(true)
               }}
               onMouseEnter={() => triggerSearchAnim('hover')}
-              className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors duration-150 focus:outline-none"
+              className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               aria-label={ui.nav.searchLabel}
             >
               <div ref={searchIconRef} className="w-5 h-5">

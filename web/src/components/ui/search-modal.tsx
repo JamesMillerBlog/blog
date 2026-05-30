@@ -188,6 +188,9 @@ export function SearchModal({ onClose, allPosts }: SearchModalProps) {
           e.preventDefault()
           onClose()
           break
+        case 'Tab':
+          e.preventDefault()
+          break
       }
     },
     [results.length, navigateToHighlighted, onClose]

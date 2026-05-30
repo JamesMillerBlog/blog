@@ -262,11 +262,12 @@ Preview live + tests pass/fail visible in Actions
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary |
+| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary. Fetches past security learnings from GitHub Gist to inform implementation; captures new findings back to Gist for future runs. |
 | `scripts/ai-pr-review.sh` | Kimi K2.6 independent code review |
 | `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>` |
 | `scripts/ai-generate-tests.sh` | Generates Playwright E2E tests from issue description using `deepseek-v4-pro` |
 | `scripts/generate-pr.sh` | Supports `--draft` flag and CI mode |
+| `scripts/pre-push-review-manifest.sh` | Generates file list and diff files for each reviewer category (security, code-quality, frontend, design, infrastructure) |
 
 ### Infrastructure — Ephemeral Preview Environments
 
@@ -327,7 +328,7 @@ The pre-push hook runs a local `gitleaks` scan when available, then tests, then 
 
 1. **Architecture / Flow Diagram** — ASCII diagram if changes affect structure, data flow, or CI
 2. **Findings by severity** — aggregated across the reviewers selected for the current diff (CRITICAL / HIGH / MEDIUM / LOW)
-3. **Verdict** — SAFE TO PUSH / DO NOT PUSH / PUSH WITH CAUTION
+3. **Structured verdict** — JSON format with `verdict` (SAFE_TO_PUSH, PUSH_WITH_CAUTION, or DO_NOT_PUSH), `critical_count`, `high_count`, and summary
 
 ### Reviewers
 

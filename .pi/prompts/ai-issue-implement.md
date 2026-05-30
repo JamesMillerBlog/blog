@@ -1,3 +1,4 @@
+<!-- version: 1.0 -->
 You are an AI coding agent. Implement the GitHub issue described below. Work fully autonomously — do not ask for confirmation at any step.
 
 ## Instructions

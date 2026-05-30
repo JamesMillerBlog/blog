@@ -1,3 +1,4 @@
+<!-- version: 1.0 -->
 You are orchestrating a council of specialist AI agents to answer a question. Execute the steps below immediately. Do not ask for confirmation.
 
 ## Step 1: Extract and validate the question

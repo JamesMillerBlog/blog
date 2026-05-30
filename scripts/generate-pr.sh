@@ -52,19 +52,19 @@ PROMPT_STEPS="Steps:
 2. Run: git log main...HEAD --oneline
 3. Run: git diff main...HEAD --stat
 4. Generate: concise summary of changes, and a mermaid diagram of affected components/files
-5. Fill the template sections (Summary, Changes, Architecture, Test Plan)
+5. Write the filled template to /tmp/pr-body.md (do NOT inline the body in the gh command — write to the file first)
 Note: PR title must follow conventional commits — start with feat:, fix:, chore:, docs:, refactor:, perf:, or test:"
 
 if [[ -n "$PR_NUMBER" ]]; then
   echo "-> Requesting AI to update PR #$PR_NUMBER..."
-  PROMPT_ACTION="6. Run: gh pr edit \"${PR_NUMBER}\" --body '<filled template content>'"
+  PROMPT_ACTION="6. Run: gh pr edit \"${PR_NUMBER}\" --body-file /tmp/pr-body.md"
   PROMPT_INTRO="Update PR #${PR_NUMBER} for branch: ${BRANCH}."
   FALLBACK="AI failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
 else
   echo "-> Requesting AI to create PR for branch ${BRANCH}..."
   DRAFT_ARG=""
   [[ -n "$DRAFT_FLAG" ]] && DRAFT_ARG=" --draft"
-  PROMPT_ACTION="6. Run: gh pr create${DRAFT_ARG} --title '<conventional commit title: must start with feat:|fix:|chore:|docs:|refactor:|perf:|test: followed by short description>' --body '<filled template content>'"
+  PROMPT_ACTION="6. Run: gh pr create${DRAFT_ARG} --title '<conventional commit title: must start with feat:|fix:|chore:|docs:|refactor:|perf:|test: followed by short description>' --body-file /tmp/pr-body.md"
   PROMPT_INTRO="Create a PR for branch: ${BRANCH}."
   FALLBACK="AI failed to create PR. Run manually: gh pr create"
 fi

@@ -35,6 +35,7 @@ services:
       - '0'
     environment:
       - GH_TOKEN=${GH_TOKEN:-}
+      - OPENCODE_API_KEY=${OPENCODE_API_KEY:-}
       - HERDR_ENV=${HERDR_ENV:-}
       - HERDR_SOCKET_PATH=${HERDR_SOCKET_PATH:-}
       - HERDR_PANE_ID=${HERDR_PANE_ID:-}

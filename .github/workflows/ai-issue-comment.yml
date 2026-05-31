@@ -9,13 +9,14 @@ jobs:
     if: |
       github.event.issue.pull_request == null &&
       github.event.comment.user.login == github.repository_owner &&
-      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || github.event.comment.body == '/retry')
+      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || github.event.comment.body == '/retry' || startsWith(github.event.comment.body, '/council '))
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
     outputs:
       branch: ${{ steps.outputs.outputs.branch }}
       pr_number: ${{ steps.outputs.outputs.pr_number }}
+      should_preview: ${{ steps.outputs.outputs.should_preview }}
 
     concurrency:
       group: ai-issue-${{ github.event.issue.number }}
@@ -80,6 +81,22 @@ jobs:
           mkdir -p .pi/extensions/pi-permission-system
           echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
 
+      - name: Run council
+        if: startsWith(env.COMMENT_BODY, '/council ')
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          QUESTION="${COMMENT_BODY#/council }"
+          QUESTION="${QUESTION:0:2000}"
+          git show origin/main:scripts/council.sh | bash -s -- "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
+          {
+            printf '**Council Answer**\n\n'
+            cat /tmp/council-output.txt
+          } > /tmp/council-comment.md
+          gh issue comment "${ISSUE_NUMBER}" --body-file /tmp/council-comment.md
+
       - name: Detect existing branch and PR
         id: detect
         env:
@@ -115,7 +132,7 @@ jobs:
           echo "should_implement=${SHOULD_IMPLEMENT}" >> $GITHUB_OUTPUT
 
       - name: Implement from scratch
-        if: steps.detect.outputs.should_implement == 'true'
+        if: steps.detect.outputs.should_implement == 'true' && !startsWith(env.COMMENT_BODY, '/council ')
         id: implement
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -142,7 +159,20 @@ jobs:
             gh pr view "$BRANCH" --json number --jq '.number' 2>/dev/null || echo "")
           echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
 
+      - name: Review loop (new implementation)
+        if: steps.implement.outputs.pr_number != ''
+        id: review-new
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          BRANCH: ${{ steps.detect.outputs.branch }}
+          PR_NUMBER: ${{ steps.implement.outputs.pr_number }}
+        run: bash scripts/ai-review-loop.sh
+
       - name: Retry implementation (/retry)
+        id: retry
         if: |
           steps.detect.outputs.should_implement == 'false' &&
           env.COMMENT_BODY == '/retry'
@@ -172,6 +202,18 @@ jobs:
           if [[ -n "$NEW_PR" ]]; then
             echo "pr_number=${NEW_PR}" >> $GITHUB_OUTPUT
           fi
+
+      - name: Review loop (retry)
+        if: steps.retry.outputs.pr_number != ''
+        id: review-retry
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          BRANCH: ${{ steps.detect.outputs.branch }}
+          PR_NUMBER: ${{ steps.retry.outputs.pr_number }}
+        run: bash scripts/ai-review-loop.sh
 
       - name: Apply fix via /ai instruction
         if: |
@@ -221,14 +263,21 @@ jobs:
           PR_NUMBER="${{ steps.detect.outputs.pr_number }}"
           if [[ -n "${{ steps.implement.outputs.pr_number }}" ]]; then
             PR_NUMBER="${{ steps.implement.outputs.pr_number }}"
+          elif [[ -n "${{ steps.retry.outputs.pr_number }}" ]]; then
+            PR_NUMBER="${{ steps.retry.outputs.pr_number }}"
+          fi
+          SHOULD_PREVIEW='false'
+          if [[ "$COMMENT_BODY" != /council\ * ]] && [[ -n "$PR_NUMBER" ]]; then
+            SHOULD_PREVIEW='true'
           fi
           echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
           echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+          echo "should_preview=${SHOULD_PREVIEW}" >> $GITHUB_OUTPUT
 
   preview:
     name: Deploy preview environment
     needs: respond
-    if: needs.respond.outputs.pr_number != ''
+    if: needs.respond.outputs.should_preview == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: staging

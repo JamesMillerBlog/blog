@@ -3,18 +3,23 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
 import { Post } from '@/types/post'
+import { SearchItem } from '@/types/search'
+import { projects } from '@/app/projects/data'
 import { ui } from '@/i18n/en'
 
-export function Navigation() {
+interface NavigationProps {
+  posts?: Post[]
+}
+
+export function Navigation({ posts = [] }: NavigationProps) {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [posts] = useState<Post[]>([])
   const logoRef = useRef<HTMLDivElement>(null)
   const searchIconRef = useRef<HTMLDivElement>(null)
   const themeIconRef = useRef<HTMLDivElement>(null)
@@ -25,6 +30,29 @@ export function Navigation() {
   useEffect(() => {
     setIconDark(theme === 'dark')
   }, [theme])
+
+  // Build search index from posts + projects
+  const searchItems = useMemo<SearchItem[]>(() => {
+    const postItems: SearchItem[] = posts.map((post) => ({
+      slug: post.slug,
+      title: post.title,
+      description: post.excerpt,
+      type: 'post' as const,
+      href: `/posts/${post.slug}`,
+      tags: post.tags ?? [],
+    }))
+
+    const projectItems: SearchItem[] = projects.map((project) => ({
+      slug: project.slug,
+      title: project.title,
+      description: project.description,
+      type: 'project' as const,
+      href: `/projects#${project.slug}`,
+      tags: project.tags ?? [],
+    }))
+
+    return [...postItems, ...projectItems]
+  }, [posts])
 
   const triggerLogoAnim = (type: 'hover' | 'click') => {
     const el = logoRef.current
@@ -186,7 +214,7 @@ export function Navigation() {
         )}
       </header>
 
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} posts={posts} />
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} items={searchItems} />
     </>
   )
 }

@@ -8,6 +8,16 @@ export const ui = {
     toggleMenu: 'Toggle menu',
   },
 
+  search: {
+    placeholder: 'Search posts and projects...',
+    noResults: (query: string) => `No results found for "${query}"`,
+    prompt: 'Start typing to search posts and projects',
+    shortcutHint: 'Press',
+    toOpen: 'to open search anytime',
+    postLabel: 'Post',
+    projectLabel: 'Project',
+  },
+
   footer: {
     copyright: (year: number) => `© ${year} James Miller`,
     social: {

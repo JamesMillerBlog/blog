@@ -1,6 +1,17 @@
 name: AI PR Review — Auto Fix
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+      branch:
+        required: true
+        type: string
+      fix_iter:
+        required: true
+        type: string
   repository_dispatch:
     types: [pr-review-needs-fix]
 
@@ -10,7 +21,7 @@ jobs:
     timeout-minutes: 60
 
     concurrency:
-      group: ai-pr-review-fix-${{ github.event.client_payload.pr_number }}
+      group: ai-pr-review-fix-${{ github.event.inputs.pr_number || github.event.client_payload.pr_number }}
       cancel-in-progress: false
 
     permissions:
@@ -21,9 +32,9 @@ jobs:
       - name: Validate client_payload inputs
         id: validate
         env:
-          RAW_PR: ${{ github.event.client_payload.pr_number }}
-          RAW_BRANCH: ${{ github.event.client_payload.branch }}
-          RAW_ITER: ${{ github.event.client_payload.fix_iter }}
+          RAW_PR: ${{ github.event.inputs.pr_number || github.event.client_payload.pr_number }}
+          RAW_BRANCH: ${{ github.event.inputs.branch || github.event.client_payload.branch }}
+          RAW_ITER: ${{ github.event.inputs.fix_iter || github.event.client_payload.fix_iter }}
         run: |
           if [[ ! "${RAW_PR}" =~ ^[0-9]+$ ]]; then
             echo "Invalid PR number: ${RAW_PR}" >&2

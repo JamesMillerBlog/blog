@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 60
 
     permissions:
-      contents: write
+      actions: write
       pull-requests: write
 
     env:
@@ -79,12 +79,13 @@ jobs:
         run: |
           NEXT_ITER=$(( ITER_COUNT + 1 ))
           jq -n \
-            --arg event_type 'pr-review-needs-fix' \
-            --argjson pr_number "${PR_NUMBER}" \
+            --arg ref "${PR_HEAD_REF}" \
+            --arg pr_number "${PR_NUMBER}" \
             --arg branch "${PR_HEAD_REF}" \
-            --argjson fix_iter "${NEXT_ITER}" \
-            '{event_type: $event_type, client_payload: {pr_number: $pr_number, branch: $branch, fix_iter: $fix_iter}}' | \
-            gh api "repos/${REPO}/dispatches" --method POST --input -
+            --arg fix_iter "${NEXT_ITER}" \
+            '{ref: $ref, inputs: {pr_number: $pr_number, branch: $branch, fix_iter: $fix_iter}}' | \
+            gh api "repos/${REPO}/actions/workflows/ai-pr-review-respond.yml/dispatches" \
+              --method POST --input -
 
       - name: Label PR and post actionable escalation after max iterations
         if: >-

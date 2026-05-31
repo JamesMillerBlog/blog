@@ -1,6 +1,21 @@
 name: AI PR Checks — Auto Fix
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+      branch:
+        required: true
+        type: string
+      fix_iter:
+        required: true
+        type: string
+      failures:
+        required: false
+        type: string
+        default: ''
   repository_dispatch:
     types: [pr-checks-failed]
 
@@ -10,7 +25,7 @@ jobs:
     timeout-minutes: 60
 
     concurrency:
-      group: ai-pr-checks-fix-${{ github.event.client_payload.pr_number }}
+      group: ai-pr-checks-fix-${{ github.event.inputs.pr_number || github.event.client_payload.pr_number }}
       cancel-in-progress: false
 
     permissions:
@@ -21,10 +36,10 @@ jobs:
       - name: Validate client_payload inputs
         id: validate
         env:
-          RAW_PR: ${{ github.event.client_payload.pr_number }}
-          RAW_BRANCH: ${{ github.event.client_payload.branch }}
-          RAW_ITER: ${{ github.event.client_payload.fix_iter }}
-          RAW_FAILURES: ${{ github.event.client_payload.failures }}
+          RAW_PR: ${{ github.event.inputs.pr_number || github.event.client_payload.pr_number }}
+          RAW_BRANCH: ${{ github.event.inputs.branch || github.event.client_payload.branch }}
+          RAW_ITER: ${{ github.event.inputs.fix_iter || github.event.client_payload.fix_iter }}
+          RAW_FAILURES: ${{ github.event.inputs.failures || github.event.client_payload.failures }}
         run: |
           if [[ ! "${RAW_PR}" =~ ^[0-9]+$ ]]; then
             echo "Invalid PR number: ${RAW_PR}" >&2

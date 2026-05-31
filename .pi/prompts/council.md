@@ -45,7 +45,7 @@ Call agent_team with action "start" using the JSON graph below. The question is 
       "id": "synthesizer",
       "agent": { "ref": "project:council-synthesizer" },
       "after": ["analyst", "critic"],
-      "task": "Question: <QUESTION>\n\nRead both scout breakdowns, the analyst output, and the critic output above. Synthesize into a final answer. Weigh competing perspectives. Produce a clear, actionable response."
+      "task": "Question: <QUESTION>\n\nRead both scout breakdowns, the analyst output, and the critic output above. Synthesize into a final answer. Weigh competing perspectives. Produce a clear, actionable response.\n\nEnd your response with a '## Implementation Checklist' section: 5-8 specific, concrete things the implementation must do or must not do for this issue. Each item must be verifiable (observable in code or output) — no vague guidance. Format as a markdown checklist."
     }
   ],
   "limits": {

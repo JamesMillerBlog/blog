@@ -1,0 +1,129 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: ai-pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
+
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+
+    steps:
+      - name: Post reviewing indicator
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "${PR_NUMBER}" \
+            --repo '${{ github.repository }}' \
+            --body '👀 AI review running...' || true
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+        with:
+          version: 9
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Install OpenCode
+        run: npm install -g @earendil-works/pi-coding-agent@0.75.5 pi-multiagent@0.9.4 pi-gh-cli@0.2.4 pi-lens@3.8.45
+
+      - name: Run AI review
+        id: review
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ai-pr-review-run.sh
+
+      - name: Check fix iteration count
+        if: steps.review.outputs.verdict == 'DO_NOT_PUSH'
+        id: iter_check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ITER_COUNT=$(gh pr view "${PR_NUMBER}" --json labels \
+            --jq '[.labels[].name | select(startswith("ai-fix-iter-"))] | length' \
+            2>/dev/null || echo '0')
+          echo "iter_count=${ITER_COUNT}" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch fix workflow
+        if: >-
+          steps.review.outputs.verdict == 'DO_NOT_PUSH' &&
+          steps.iter_check.outputs.iter_count < 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          ITER_COUNT: ${{ steps.iter_check.outputs.iter_count }}
+        run: |
+          NEXT_ITER=$(( ITER_COUNT + 1 ))
+          jq -n \
+            --arg ref "${PR_HEAD_REF}" \
+            --arg pr_number "${PR_NUMBER}" \
+            --arg branch "${PR_HEAD_REF}" \
+            --arg fix_iter "${NEXT_ITER}" \
+            '{ref: $ref, inputs: {pr_number: $pr_number, branch: $branch, fix_iter: $fix_iter}}' | \
+            gh api "repos/${REPO}/actions/workflows/ai-pr-review-respond.yml/dispatches" \
+              --method POST --input -
+
+      - name: Label PR and post actionable escalation after max iterations
+        if: >-
+          steps.review.outputs.verdict == 'DO_NOT_PUSH' &&
+          steps.iter_check.outputs.iter_count >= 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create 'ai-review-needs-human' \
+            --color 'b60205' \
+            --description 'AI review found issues that could not be auto-fixed' \
+            2>/dev/null || true
+          gh pr edit "${PR_NUMBER}" --add-label 'ai-review-needs-human'
+
+          # Fetch the last review verdict and extract the HIGH/CRITICAL findings
+          LAST_REVIEW=$(gh pr view "${PR_NUMBER}" --json comments \
+            --jq '[.comments[] | select(.author.login == "github-actions[bot]") | select(.body | test("\\*\\*Verdict:\\*\\*"))] | last | .body' \
+            2>/dev/null || echo '')
+
+          HIGH_SECTION=$(printf '%s' "${LAST_REVIEW}" | \
+            sed -n '/^\*\*HIGH\|^### HIGH\|^## HIGH/,/^\*\*MEDIUM\|^### MEDIUM\|^## MEDIUM\|^---\|^### Verdict/p' | \
+            head -c 3000 || echo '(could not extract findings)')
+
+          cat <<ESCALATION_EOF | gh pr comment "${PR_NUMBER}" --body-file -
+          🚨 **Auto-fix loop exhausted after 3 attempts — unresolved HIGH findings remain.**
+
+          The AI fix agent attempted 3 times but could not fully resolve the review findings. The unresolved issues are likely structural rather than mechanical.
+
+          **Remaining HIGH findings:**
+
+          ${HIGH_SECTION}
+
+          ---
+
+          **To trigger another targeted fix attempt**, post this command as a comment:
+
+          \`/ai Fix the remaining HIGH severity findings from the AI code review. Focus only on HIGH issues — read the last review comment for the full list.\`
+
+          Or to address a specific finding, post a more targeted \`/ai\` instruction.
+          ESCALATION_EOF

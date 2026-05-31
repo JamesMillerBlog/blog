@@ -30,7 +30,7 @@ jobs:
           gh api \
             --method POST \
             repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
-            -f content=eyes
+            -f content=eyes || true
 
       - name: Get PR branch and reject forks
         id: pr
@@ -196,13 +196,6 @@ jobs:
           if [[ -f /tmp/ai-respond-result.md ]]; then
             gh pr comment "${PR_NUMBER}" --body "$(cat /tmp/ai-respond-result.md)"
           fi
-
-      - name: Run Kimi PR review
-        if: startsWith(env.COMMENT_BODY, '/ai ')
-        env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GH_TOKEN: ${{ github.token }}
-        run: bash scripts/ai-pr-review.sh "$PR_NUMBER"
 
       - name: Set preview flag
         id: set_preview

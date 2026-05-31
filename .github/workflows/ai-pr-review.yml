@@ -103,7 +103,7 @@ jobs:
 
           # Fetch the last review verdict and extract the HIGH/CRITICAL findings
           LAST_REVIEW=$(gh pr view "${PR_NUMBER}" --json comments \
-            --jq '[.comments[] | select(.author.login == "github-actions[bot]") | select(.body | test("\\*\\*Verdict:\\*\\*"))] | last | .body' \
+            --jq '[.comments[] | select(.author.login == "github-actions") | select(.body | test("\\*\\*Verdict:\\*\\*"))] | last | .body' \
             2>/dev/null || echo '')
 
           HIGH_SECTION=$(printf '%s' "${LAST_REVIEW}" | \

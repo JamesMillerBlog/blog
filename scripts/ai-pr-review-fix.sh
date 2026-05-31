@@ -14,7 +14,7 @@ strip_ansi() {
 
 echo "=== Fetching latest review from PR #${PR_NUMBER} ===" >&2
 REVIEW_BODY=$(gh pr view "$PR_NUMBER" --json comments \
-  --jq '[.comments[] | select(.author.login == "github-actions[bot]") | select(.body | test("^[✅⚠️❌] \\*\\*AI Code Review"))] | last | .body' \
+  --jq '[.comments[] | select(.author.login == "github-actions") | select(.body | test("^[✅⚠️❌] \\*\\*AI Code Review"))] | last | .body' \
   2>/dev/null || true)
 
 if [[ -z "$REVIEW_BODY" ]] && [[ -f /tmp/latest-review.txt ]]; then

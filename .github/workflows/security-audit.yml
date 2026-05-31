@@ -1,0 +1,160 @@
+name: 'Weekly Security Audit'
+
+on:
+  schedule:
+    # Saturday 06:00 UTC — catch new CVEs early weekend
+    - cron: '0 6 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  security-events: write
+
+concurrency:
+  group: security-audit-main
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: 'Security Audit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+        with:
+          version: 10
+          run_install: false
+
+      - name: Restore pnpm store
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        id: audit
+        continue-on-error: true
+        run: bash scripts/security-audit-run.sh
+        env:
+          CI: 'true'
+          FIX_MODE: 'false'
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@69d79ce213269bbf6b7fe2e6e55f02baa2396be4 # v4.7.1
+        with:
+          name: security-audit-report
+          path: |
+            audit-report.md
+            audit-report.json
+
+      - name: Update security advisory
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+
+          # Read full report — stays private inside the advisory
+          FULL_REPORT=$(cat audit-report.md 2>/dev/null || echo 'No report generated.')
+          CRITICAL_COUNT=$(jq -r '[.findings[] | select(.severity=="critical")] | length' audit-report.json 2>/dev/null || echo '0')
+          HIGH_COUNT=$(jq -r '[.findings[] | select(.severity=="high")] | length' audit-report.json 2>/dev/null || echo '0')
+
+          # Map finding counts to advisory severity
+          if [ "$CRITICAL_COUNT" -gt 0 ] 2>/dev/null; then
+            ADVISORY_SEVERITY='critical'
+          elif [ "$HIGH_COUNT" -gt 0 ] 2>/dev/null; then
+            ADVISORY_SEVERITY='high'
+          else
+            ADVISORY_SEVERITY='medium'
+          fi
+
+          ADVISORY_SUMMARY="Weekly security audit — ${TODAY}"
+          ADVISORY_DESCRIPTION=$(printf '## Security Audit Report — %s\n\n%s' "$TODAY" "$FULL_REPORT")
+
+          # Check for existing open draft advisory from a prior audit run
+          EXISTING_ID=$(gh api "repos/${GITHUB_REPOSITORY}/security-advisories" \
+            --jq '[.[] | select(.state=="draft" and (.summary | startswith("Weekly security audit")))] | first | .ghsa_id // ""' \
+            2>/dev/null || echo '')
+
+          if [ -n "$EXISTING_ID" ]; then
+            # Update existing draft
+            jq -n \
+              --arg summary "$ADVISORY_SUMMARY" \
+              --arg description "$ADVISORY_DESCRIPTION" \
+              --arg severity "$ADVISORY_SEVERITY" \
+              '{"summary":$summary,"description":$description,"severity":$severity}' | \
+            gh api "repos/${GITHUB_REPOSITORY}/security-advisories/${EXISTING_ID}" \
+              --method PATCH --input -
+            echo "Updated advisory ${EXISTING_ID}"
+          else
+            # Create new draft advisory
+            jq -n \
+              --arg summary "$ADVISORY_SUMMARY" \
+              --arg description "$ADVISORY_DESCRIPTION" \
+              --arg severity "$ADVISORY_SEVERITY" \
+              '{"summary":$summary,"description":$description,"severity":$severity,"vulnerabilities":[{"package":{"ecosystem":"other","name":"blog-infrastructure"}}]}' | \
+            gh api "repos/${GITHUB_REPOSITORY}/security-advisories" \
+              --method POST --input -
+            echo "Created new draft advisory"
+          fi
+
+      - name: Create ai-implement issue
+        if: always() && (steps.audit.outputs.has_fixes == 'true' || steps.audit.outputs.has_warnings == 'true')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+
+          # Extract summary counts from the JSON report — no finding details in public issue
+          CRITICAL_COUNT=$(jq -r '[.findings[] | select(.severity=="critical")] | length' audit-report.json 2>/dev/null || echo '?')
+          HIGH_COUNT=$(jq -r '[.findings[] | select(.severity=="high")] | length' audit-report.json 2>/dev/null || echo '?')
+          MEDIUM_COUNT=$(jq -r '[.findings[] | select(.severity=="medium")] | length' audit-report.json 2>/dev/null || echo '?')
+          TOOL_SUMMARY=$(jq -r '.tools[]? | "- \(.name): \(.status)"' audit-report.json 2>/dev/null || echo '- See CI artifact for tool breakdown')
+
+          # Build body with counts only — full details stay in the access-controlled CI artifact
+          BODY_FILE=$(mktemp)
+          {
+            printf '## Security Audit — %s\n\n' "$TODAY"
+            printf 'The weekly automated security audit found issues requiring attention.\n\n'
+            printf '### Finding counts\n\n'
+            printf '| Severity | Count |\n|----------|-------|\n'
+            printf '| Critical | %s |\n| High | %s |\n| Medium | %s |\n\n' \
+              "$CRITICAL_COUNT" "$HIGH_COUNT" "$MEDIUM_COUNT"
+            printf '### Tools run\n\n%s\n\n' "$TOOL_SUMMARY"
+            printf '### How to fix\n\n'
+            printf 'Run `pnpm audit:security` locally or check the CI artifact for the full report, then:\n\n'
+            printf -- '- **Dependency CVEs**: bump affected packages in `web/package.json`, run `pnpm install`\n'
+            printf -- '- **SAST findings**: run `pnpm audit:security` to see exact locations and fix the flagged pattern\n'
+            printf -- '- **Dockerfile/IaC**: update the relevant file per tool output\n'
+            printf -- '- **GitHub Actions**: update workflow files in `.github/workflows/`\n\n'
+            printf 'Only make changes that are clearly safe and correct. If a finding is a false positive, add an inline comment explaining why.\n\n'
+            printf '[Full report in CI artifact (requires GitHub login)](%s/%s/actions/runs/%s)\n' \
+              "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+          } > "$BODY_FILE"
+
+          ISSUE_NUMBER=$(gh issue create \
+            --title "🔒 Security audit findings — ${TODAY}" \
+            --label 'security' \
+            --body-file "$BODY_FILE" \
+            --json number --jq '.number')
+
+          echo "Created issue #$ISSUE_NUMBER"
+          echo "Apply the 'ai-implement' label manually to trigger AI-assisted fixes."

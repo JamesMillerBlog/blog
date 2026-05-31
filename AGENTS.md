@@ -110,13 +110,15 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.
 
-## GitHub Workflows — Automated AI Development
+## GitHub Workflows
+
+### AI Development (OpenCode/pi)
 
 Six workflows automate issue implementation, PR management, and blog improvement using OpenCode:
 
 | Workflow                     | Trigger                                                              | What it does                                                                                                                                              |
 | ---------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                       | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
+| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                              | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
 | `ai-issue-comment.yml`       | Issue comment `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; finds existing branch/PR for `/ai`/`/resume`/`/retry`; if no branch → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
 | `ai-pr-comment.yml`          | PR comment `/ai <instruction>`, `/resume`, or `/council <question>` (repo owner only)        | Runs council for `/council <question>`; `/ai` applies fix via ai-respond.sh, runs Kimi review, re-deploys preview; `/resume` re-deploys preview without code change                               |
 | `ai-pr-merged.yml`           | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
@@ -125,12 +127,24 @@ Six workflows automate issue implementation, PR management, and blog improvement
 
 See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment architecture, issue template, and E2E test generation.
 
+### Security Scanning & Audit
+
+Four workflows provide continuous security monitoring:
+
+| Workflow                     | Trigger                                                | What it does                                                                                                                                    |
+| ---------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codeql.yml`                 | Push to main, PR, scheduled Saturday 08:00 UTC         | CodeQL static analysis for JavaScript/TypeScript, uploads results to code scanning tab                                                           |
+| `pr-security.yml`            | All PRs                                                | Dependency audit (critical CVEs block, high/medium informational), gitleaks secret scanning on PR commits                                       |
+| `security-audit.yml`         | Scheduled Saturday 06:00 UTC, manual trigger           | Weekly comprehensive audit: dependencies, secrets, SAST, containers, Terraform, CI/CD. Creates or updates draft security advisory, creates `ai-implement` issue with summary counts if findings exist |
+| `security-scorecard.yml`     | Scheduled Saturday 07:00 UTC, push to main, manual     | OSSF Scorecard analysis, publishes badge and uploads SARIF to code scanning                                                                    |
+
 ## Commands
 
 ```bash
 cd web && pnpm dev                  # dev server
 cd web && pnpm build                # production build
 cd web && pnpm test                 # unit tests (vitest)
+cd web && pnpm audit:security       # run local security audit
 pnpm claude                         # Claude Code (Docker)
 pnpm claude:fresh                   # rebuild Claude image then interactive
 pnpm pi                             # pi (Docker)

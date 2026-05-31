@@ -37,6 +37,7 @@ append_matches() {
 }
 
 append_matches "Possible hardcoded secrets" "HIGH" '(AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{20,}|ghp_[0-9A-Za-z]{20,}|xox[baprs]-[0-9A-Za-z-]{10,}|(api|secret|access)[_-]?(key|token)["'"'"' ]*[:=]["'"'"' ]*[A-Za-z0-9_\/+=.-]{12,})'
+append_matches "Prompt injection payload in docs" "HIGH" '(ignore (all )?(previous|prior) instructions|INSTRUCTION OVERRIDE|system prompt override|forget (all )?previous instructions)'
 append_matches "Dangerous code execution primitives" "HIGH" '(dangerouslySetInnerHTML|eval\(|execSync\(|spawnSync\(|exec\(|child_process)'
 append_matches "Shell pipe to sh/bash" "HIGH" 'curl[^[:cntrl:]]*\|[[:space:]]*(sh|bash)'
 append_matches "Overly broad GitHub Actions permissions" "HIGH" 'permissions:[[:space:]]*write-all'

@@ -1,19 +1,11 @@
-<!-- version: 1.0 -->
+<!-- version: 1.1 -->
 You are orchestrating a council of specialist AI agents to answer a question. Execute the steps below immediately. Do not ask for confirmation.
 
-## Step 1: Extract and validate the question
+The question has already been embedded verbatim in each agent task below. Do not try to extract it from context — just call agent_team now.
 
-Look at your user message (the text the user sent when invoking this prompt). That text IS the question.
+## Step 1: Call agent_team
 
-If the user message is empty, blank, or only whitespace:
-- Output exactly: "Error: no question provided. Usage: /council <your question>"
-- Stop. Do not proceed further.
-
-Capture the question text exactly as provided in the user message. You will insert it verbatim into each agent step below.
-
-## Step 2: Call agent_team
-
-Call agent_team with action "start". In the JSON graph below, replace every occurrence of `<QUESTION>` with the actual question text you extracted in Step 1 before making the call.
+Call agent_team with action "start" using the JSON graph below. The question is already substituted into each task.
 
 ```json
 {
@@ -28,27 +20,32 @@ Call agent_team with action "start". In the JSON graph below, replace every occu
   },
   "steps": [
     {
-      "id": "scout",
-      "agent": { "ref": "package:scout" },
-      "task": "Question to analyse: <QUESTION>\n\nMap exactly what is being asked. Return a structured breakdown: (1) core question restated, (2) key sub-questions, (3) recommended angles for analyst and critic."
+      "id": "scout-a",
+      "agent": { "ref": "project:council-scout" },
+      "task": "Question to analyse: <QUESTION>\n\nMap the technical and factual dimensions: (1) restate the core question precisely, (2) identify key sub-questions and hard constraints, (3) note what specific information the analyst will need to reason well."
+    },
+    {
+      "id": "scout-b",
+      "agent": { "ref": "project:council-scout" },
+      "task": "Question to analyse: <QUESTION>\n\nMap the strategic and contextual dimensions: (1) broader implications and second-order effects the question implies, (2) related considerations not explicitly asked, (3) angles and assumptions the critic should challenge."
     },
     {
       "id": "analyst",
       "agent": { "ref": "project:council-analyst" },
-      "needs": ["scout"],
-      "task": "Question: <QUESTION>\n\nRead the scout's breakdown above. Provide deep analytical thinking: technical depth, logical structure, key insights, and concrete recommendations."
+      "needs": ["scout-a", "scout-b"],
+      "task": "Question: <QUESTION>\n\nRead both scout breakdowns above. Provide deep analytical thinking: technical depth, logical structure, key insights, and concrete recommendations."
     },
     {
       "id": "critic",
       "agent": { "ref": "project:council-critic" },
-      "needs": ["scout"],
-      "task": "Question: <QUESTION>\n\nRead the scout's breakdown above. Challenge the obvious answers: what are the risks, failure modes, unstated assumptions, and second-order effects?"
+      "needs": ["scout-a", "scout-b"],
+      "task": "Question: <QUESTION>\n\nRead both scout breakdowns above. Challenge the obvious answers: what are the risks, failure modes, unstated assumptions, and second-order effects?"
     },
     {
       "id": "synthesizer",
       "agent": { "ref": "project:council-synthesizer" },
       "after": ["analyst", "critic"],
-      "task": "Question: <QUESTION>\n\nRead the scout breakdown, analyst output, and critic output above. Synthesize into a final answer. Weigh competing perspectives. Produce a clear, actionable response."
+      "task": "Question: <QUESTION>\n\nRead both scout breakdowns, the analyst output, and the critic output above. Synthesize into a final answer. Weigh competing perspectives. Produce a clear, actionable response."
     }
   ],
   "limits": {
@@ -58,10 +55,10 @@ Call agent_team with action "start". In the JSON graph below, replace every occu
 }
 ```
 
-## Step 3: Wait for results
+## Step 2: Wait for results
 
 Use run_status with waitSeconds to poll until all steps are complete.
 
-## Step 4: Present the answer
+## Step 3: Present the answer
 
-Retrieve the synthesizer's output with step_result and present it. If synthesizer did not run due to upstream failures, summarise any partial results and explain what failed.
+Retrieve the synthesizer's output with step_result. Then copy the full text of that output verbatim into your response — do not summarise, do not say "the answer was presented", do not confirm completion. Just print the synthesizer's exact output text and nothing else. If synthesizer did not run due to upstream failures, print the critic or analyst output instead and explain what failed.

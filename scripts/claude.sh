@@ -3,12 +3,24 @@ WORKTREE_ROOT=$(pwd)
 WT_NAME=$(basename "$WORKTREE_ROOT" | tr -cd '[:alnum:]._-')
 CONTAINER_BASE="claude-${WT_NAME}"
 
+RESUME=false
 if [[ "${1:-}" == "--fresh" ]]; then
   shift
   CONTAINER="$CONTAINER_BASE"
   INSTANCE=1
   docker rm -f "$CONTAINER" 2>/dev/null || true
   docker compose build claude
+elif [[ "${1:-}" == "--resume" ]]; then
+  shift
+  RESUME=true
+  CONTAINER="$CONTAINER_BASE"
+  INSTANCE=1
+  COUNTER=2
+  while [ "$(docker inspect "$CONTAINER" --format '{{.State.Status}}' 2>/dev/null || echo 'missing')" = "running" ]; do
+    INSTANCE=$COUNTER
+    CONTAINER="${CONTAINER_BASE}-${COUNTER}"
+    ((COUNTER++))
+  done
 else
   # Find a container slot that isn't currently running
   CONTAINER="$CONTAINER_BASE"
@@ -48,24 +60,13 @@ fi
 if [ -t 0 ]; then
   # Interactive session: reuse named container
   printf '\033[0;33m  Tip: use pnpm claude:fresh if Dockerfile.claude or deps changed\033[0m\n'
-  STATUS=$(docker inspect "$CONTAINER" --format '{{.State.Status}}' 2>/dev/null || echo "missing")
-  case "$STATUS" in
-  exited | created | paused)
-    if [ $# -gt 0 ]; then
-      # Args can't be forwarded to docker start — run one-shot and auto-remove
-      docker rm "$CONTAINER" 2>/dev/null || true
-      printf '\033[0;33mStarting container: %s\033[0m\n' "$CONTAINER"
-      docker compose run --rm "${EXTRA_OPTS[@]}" claude "$@"
-    else
-      printf '\033[0;33mResuming container: %s\033[0m\n' "$CONTAINER"
-      docker start -ai "$CONTAINER"
-    fi
-    ;;
-  *)
-    printf '\033[0;33mStarting container: %s\033[0m\n' "$CONTAINER"
+  docker rm "$CONTAINER" 2>/dev/null || true
+  printf '\033[0;33mStarting container: %s\033[0m\n' "$CONTAINER"
+  if [ "$RESUME" = true ]; then
+    docker compose run --name "$CONTAINER" "${EXTRA_OPTS[@]}" claude --resume "$@"
+  else
     docker compose run --name "$CONTAINER" "${EXTRA_OPTS[@]}" claude "$@"
-    ;;
-  esac
+  fi
 else
   # Non-interactive (piped, git hook, CI): one-shot container, no TTY
   docker compose run --rm -T "${EXTRA_OPTS[@]}" claude "$@"

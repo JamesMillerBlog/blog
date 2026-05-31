@@ -98,13 +98,13 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 
 | Agent                        | Dispatched when                         | Checks                                      |
 | ---------------------------- | --------------------------------------- | ------------------------------------------- |
-| `reviewer-security` (Sonnet) | always                                  | Secrets, injection, CVEs, exploitable logic |
+| `reviewer-security`          | always                                  | Secrets, injection, CVEs, exploitable logic |
 | `reviewer-code-quality`      | app / infra changes                     | Smells, complexity, best practices          |
 | `reviewer-frontend`          | `*.tsx/ts/jsx/js/css`                   | React, TypeScript, a11y                     |
 | `reviewer-design`            | `*.tsx/jsx/css`                         | Byte Mark tokens, typography                |
 | `reviewer-infrastructure`    | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform              |
 
-(Security reviewer uses claude-sonnet-4-6 for deeper adversarial coverage; others use Haiku for speed.)
+(Security reviewer uses a more capable model for deeper adversarial coverage.)
 
 ## Docker
 
@@ -116,9 +116,9 @@ Six workflows automate issue implementation, PR management, and blog improvement
 
 | Workflow                     | Trigger                                                              | What it does                                                                                                                                              |
 | ---------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                       | Implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
-| `ai-issue-comment.yml`       | Issue comment `/ai <instruction>`, `/resume`, or `/retry` (repo owner only) | Finds existing branch/PR; if none → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
-| `ai-pr-comment.yml`          | PR comment `/ai <instruction>` or `/resume` (repo owner only)        | `/ai` applies fix via ai-respond.sh, runs Kimi review, re-deploys preview; `/resume` re-deploys preview without code change                               |
+| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                       | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
+| `ai-issue-comment.yml`       | Issue comment `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; finds existing branch/PR for `/ai`/`/resume`/`/retry`; if no branch → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
+| `ai-pr-comment.yml`          | PR comment `/ai <instruction>`, `/resume`, or `/council <question>` (repo owner only)        | Runs council for `/council <question>`; `/ai` applies fix via ai-respond.sh, runs Kimi review, re-deploys preview; `/resume` re-deploys preview without code change                               |
 | `ai-pr-merged.yml`           | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
 | `ai-blog-suggestions.yml`    | Monthly schedule (1st of month) or manual trigger (repo owner)       | Runs blog improvement radar: researches competitor blogs & trends, generates 8-15 prioritized suggestions, creates GitHub issue with `blog-radar` label  |
 | `destroy-preview-manual.yml` | Manual workflow trigger (repo owner)                                 | Destroys a specific PR's ephemeral preview environment                                                                                                    |
@@ -132,5 +132,8 @@ cd web && pnpm dev                  # dev server
 cd web && pnpm build                # production build
 cd web && pnpm test                 # unit tests (vitest)
 pnpm claude                         # Claude Code (Docker)
+pnpm claude:fresh                   # rebuild Claude image then interactive
 pnpm pi                             # pi (Docker)
+pnpm pi:fresh                       # rebuild pi image then interactive
+pnpm council                        # Council of agents (pi-based)
 ```

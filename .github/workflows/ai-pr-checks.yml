@@ -43,6 +43,9 @@ jobs:
       - name: Install web dependencies
         run: cd web && pnpm install --frozen-lockfile
 
+      - name: Install shellcheck
+        run: sudo apt-get install -y -qq shellcheck
+
       - name: Create placeholder post for build
         run: |
           mkdir -p web/_posts

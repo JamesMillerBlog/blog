@@ -101,6 +101,9 @@ jobs:
       - name: Install web dependencies
         run: cd web && pnpm install --frozen-lockfile
 
+      - name: Install shellcheck
+        run: sudo apt-get install -y -qq shellcheck
+
       - name: Install OpenCode
         run: npm install -g @earendil-works/pi-coding-agent@0.75.5 pi-multiagent@0.9.4 pi-gh-cli@0.2.4 pi-lens@3.8.45
 

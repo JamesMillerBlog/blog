@@ -114,10 +114,10 @@ UNRESOLVED_FINDINGS='[]'
 UNRESOLVED_DELTA_RESULTS='[]'
 
 for i in $(seq 0 $(( RESULT_COUNT - 1 ))); do
-  RESULT=$(printf '%s' "$DELTA_JSON" | jq -c ".results[$i]" 2>/dev/null || continue)
-  FINDING_IDX=$(printf '%s' "$RESULT" | jq -r '.index' 2>/dev/null || continue)
-  STATUS=$(printf '%s' "$RESULT" | jq -r '.status' 2>/dev/null || continue)
-  REASON=$(printf '%s' "$RESULT" | jq -r '.reason' 2>/dev/null || continue)
+  RESULT=$(printf '%s' "$DELTA_JSON" | jq -c ".results[$i]" 2>/dev/null) || continue
+  FINDING_IDX=$(printf '%s' "$RESULT" | jq -r '.index' 2>/dev/null) || continue
+  STATUS=$(printf '%s' "$RESULT" | jq -r '.status' 2>/dev/null) || continue
+  REASON=$(printf '%s' "$RESULT" | jq -r '.reason' 2>/dev/null) || continue
 
   LOCATION=$(printf '%s' "$FINDINGS" | jq -r ".[$FINDING_IDX].location" 2>/dev/null || true)
 

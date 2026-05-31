@@ -24,7 +24,10 @@ function ProjectCard({ project, priority }: { project: Project; priority?: boole
   const [imgSrc, setImgSrc] = useState(thumbUrl)
 
   return (
-    <div className="group relative bg-surface-container-lowest rounded-xl p-6 hover:shadow-xl transition-all duration-300 overflow-hidden">
+    <div
+      id={project.slug}
+      className="group relative bg-surface-container-lowest rounded-xl p-6 hover:shadow-xl transition-all duration-300 overflow-hidden scroll-mt-24"
+    >
       {/* Left border accent */}
       <div className="absolute inset-y-0 left-0 w-[3px] bg-primary rounded-full scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-300" />
 

@@ -6,15 +6,15 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
-import { Post } from '@/types/post'
+import type { SearchItem } from '@/types/search'
 import { ui } from '@/i18n/en'
 
-export function Navigation() {
+export function Navigation({ searchItems }: { searchItems: SearchItem[] }) {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchOpenCount, setSearchOpenCount] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [posts] = useState<Post[]>([])
   const logoRef = useRef<HTMLDivElement>(null)
   const searchIconRef = useRef<HTMLDivElement>(null)
   const themeIconRef = useRef<HTMLDivElement>(null)
@@ -135,6 +135,7 @@ export function Navigation() {
               onClick={() => {
                 triggerSearchAnim('click')
                 setSearchOpen(true)
+                setSearchOpenCount((c) => c + 1)
               }}
               onMouseEnter={() => triggerSearchAnim('hover')}
               className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors duration-150 focus:outline-none"
@@ -186,7 +187,12 @@ export function Navigation() {
         )}
       </header>
 
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} posts={posts} />
+      <SearchModal
+        key={searchOpenCount}
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        searchItems={searchItems}
+      />
     </>
   )
 }

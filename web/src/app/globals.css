@@ -3,6 +3,10 @@
 
 @import 'tailwindcss';
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   /* Design System: "Byte Mark" */
 

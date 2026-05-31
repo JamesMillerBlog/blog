@@ -32,6 +32,7 @@
     "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
+    "fuse.js": "^7.4.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.577.0",
     "next": "latest",

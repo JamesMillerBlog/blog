@@ -44,6 +44,16 @@ export const ui = {
     empty: 'No projects found for the selected category.',
   },
 
+  search: {
+    placeholder: 'Search posts and projects...',
+    empty: 'Start typing to search posts and projects',
+    noResults: (query: string) => `No results found for "${query}"`,
+    shortcut: 'Press',
+    toOpen: 'to open search anytime',
+    posts: 'Posts',
+    projects: 'Projects',
+  },
+
   notFound: {
     code: '404',
     heading: 'Oops! Page not found',

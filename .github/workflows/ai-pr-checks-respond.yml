@@ -130,6 +130,12 @@ jobs:
             2>/dev/null || true
           gh pr edit "${PR_NUMBER}" --add-label "${LABEL}"
 
+      - name: Create placeholder post for build
+        run: |
+          mkdir -p web/_posts
+          printf -- '---\ntitle: CI Placeholder\ndate: "2024-01-01"\ncoverImage: /placeholder.jpg\nauthor:\n  name: CI\n  picture: /placeholder.jpg\nexcerpt: Placeholder post for CI builds.\nogImage:\n  url: /placeholder.jpg\n---\nPlaceholder.\n' \
+            > web/_posts/ci-placeholder.mdx
+
       - name: Run fix agent
         id: fix
         env:

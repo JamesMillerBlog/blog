@@ -76,6 +76,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: write
 
     env:
       COMMENT_BODY: ${{ github.event.comment.body }}

@@ -64,12 +64,7 @@ EMOJI="✅"
 [[ "$VERDICT" == "PUSH_WITH_CAUTION" ]] && EMOJI="⚠️"
 [[ "$VERDICT" == "DO_NOT_PUSH" ]] && EMOJI="❌"
 
-gh pr comment "$PR_NUMBER" --body "${EMOJI} **AI Code Review**
-
-$(cat /tmp/pr-review-output.txt)
-
----
-**Verdict:** \`${VERDICT}\` · Critical: ${CRITICAL_COUNT} · High: ${HIGH_COUNT}"
+VERDICT_LINE="${EMOJI} **AI Code Review** — \`${VERDICT}\` · Critical: ${CRITICAL_COUNT} · High: ${HIGH_COUNT}"
 
 # Post each HIGH/CRITICAL finding as a separate comment for independent resolution
 FINDINGS_JSON=$(echo "$VERDICT_JSON" | jq -c '.findings // [] | map(select(.severity == "CRITICAL" or .severity == "HIGH"))' 2>/dev/null || echo '[]')
@@ -151,6 +146,9 @@ if [[ "$FINDING_COUNT" -gt 0 ]]; then
     fi
   done
 fi
+
+[[ "$FINDING_COUNT" -gt 0 ]] && VERDICT_LINE="${VERDICT_LINE} — findings posted as inline comments"
+gh pr comment "$PR_NUMBER" --body "${VERDICT_LINE}" || true
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   echo "verdict=${VERDICT}" >> "$GITHUB_OUTPUT"

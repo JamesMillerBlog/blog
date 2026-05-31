@@ -61,8 +61,6 @@ jobs:
           if [[ $EXIT_CODE -eq 0 ]]; then
             echo 'passed=true' >> "$GITHUB_OUTPUT"
             echo 'failures=' >> "$GITHUB_OUTPUT"
-            gh pr comment "${PR_NUMBER}" \
-              --body '✅ **CI checks passed.**' || true
           else
             SAFE_OUTPUT=$(printf '%s' "$OUTPUT" | head -c 4000)
             echo 'passed=false' >> "$GITHUB_OUTPUT"

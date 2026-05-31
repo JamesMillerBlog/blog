@@ -2,6 +2,7 @@
 set -euo pipefail
 
 PR_NUMBER="${PR_NUMBER:?PR_NUMBER not set}"
+COMMENT_ID="${COMMENT_ID:-}"
 COMMENT_BODY="${COMMENT_BODY:?COMMENT_BODY not set}"
 FILE_PATH="${FILE_PATH:?FILE_PATH not set}"
 DIFF_HUNK="${DIFF_HUNK:-}"
@@ -78,6 +79,12 @@ printf '%s' "$ASSESS_PROMPT" | \
 
 echo "=== Posting assessment to PR ===" >&2
 ASSESSMENT_BODY=$(cat /tmp/review-comment-assess.txt)
-gh pr comment "$PR_NUMBER" --body "${ASSESSMENT_BODY}" || true
+if [[ -n "$COMMENT_ID" && "$COMMENT_ID" =~ ^[0-9]+$ ]]; then
+  gh api "repos/${GITHUB_REPOSITORY}/pulls/comments/${COMMENT_ID}/replies" \
+    --method POST --field body="${ASSESSMENT_BODY}" 2>/dev/null || \
+  gh pr comment "$PR_NUMBER" --body "${ASSESSMENT_BODY}" || true
+else
+  gh pr comment "$PR_NUMBER" --body "${ASSESSMENT_BODY}" || true
+fi
 
 echo "Assessment complete" >&2

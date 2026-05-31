@@ -129,12 +129,9 @@ log_section "2. Secret Scanning (gitleaks)"
 
 if command -v gitleaks >/dev/null 2>&1; then
   GITLEAKS_OUT=$(mktemp)
-  GITLEAKS_EXIT=0
-
   if gitleaks detect --no-banner --redact --source . --report-format=json --report-path="$GITLEAKS_OUT" 2>/dev/null; then
     GITLEAKS_COUNT=0
   else
-    GITLEAKS_EXIT=$?
     GITLEAKS_COUNT=$(jq 'length' "$GITLEAKS_OUT" 2>/dev/null || echo "?")
   fi
 
@@ -301,7 +298,7 @@ LICENSE_OUT=$(mktemp)
 # Copyleft / restrictive licenses to flag for a permissive project
 RESTRICTIVE_LICENSES='GPL|AGPL|LGPL|CC-BY-SA|EUPL|OSL|Sleepycat|Server Side Public'
 
-if pnpm licenses list --json 2>/dev/null >"$LICENSE_OUT" 2>/dev/null; then
+if pnpm licenses list --json 2>/dev/null >"$LICENSE_OUT"; then
   FLAGGED=$(jq -r '.[] | select(.license? | test("'$RESTRICTIVE_LICENSES'"; "i")) | "\(.name)@\(.version // "?") — \(.license)"' "$LICENSE_OUT" 2>/dev/null || true)
   FLAG_COUNT=$(echo "$FLAGGED" | grep -c . 2>/dev/null || echo 0)
 
@@ -331,7 +328,7 @@ log_section "8. Outdated Dependencies"
 cd "$REPO_ROOT/web" || exit 1
 OUTDATED_OUT=$(mktemp)
 
-if pnpm outdated --no-table --format json 2>/dev/null >"$OUTDATED_OUT" 2>/dev/null || true; then
+if pnpm outdated --no-table --format json 2>/dev/null >"$OUTDATED_OUT" || true; then
   OUTDATED_COUNT=$(jq 'length' "$OUTDATED_OUT" 2>/dev/null || echo 0)
 
   echo "| outdated deps | — | 0 | $OUTDATED_COUNT | — |" >>"$REPORT_MD"
@@ -401,8 +398,6 @@ fi
 log_section "10. Deployed Site Probe"
 
 SITE_URL="${SECURITY_AUDIT_SITE_URL:-https://jamesmiller.blog}"
-PROBE_TMP=$(mktemp)
-
 # 10a. Check for commonly exposed sensitive paths
 EXPOSED_PATHS=(
   "/.git/HEAD"

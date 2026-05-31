@@ -2,6 +2,7 @@
 set -euo pipefail
 
 PR_NUMBER="$1"
+# shellcheck disable=SC2034
 BRANCH="$2"
 INSTRUCTION="${3:-}"
 PI="pi --agent-team-subagent-skills disabled --no-session"

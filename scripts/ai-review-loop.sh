@@ -8,7 +8,6 @@ if [[ -f /tmp/ai-pr-state.env ]]; then
   BRANCH=$(_get BRANCH)
   ISSUE_NUMBER=$(_get ISSUE_NUMBER)
   LEARNINGS_GIST_ID=$(_get LEARNINGS_GIST_ID)
-  BUILD_FAILED=$(_get BUILD_FAILED)
   START_TIME=$(_get START_TIME)
   TODAY=$(_get TODAY)
   unset -f _get

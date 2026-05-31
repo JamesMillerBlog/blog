@@ -34,6 +34,7 @@ async function fetchS3Object(key: string): Promise<string> {
 
 export async function getPostSlugs(): Promise<string[]> {
   if (!POSTS_BUCKET) {
+    if (!fs.existsSync(postsDirectory)) return []
     return fs.readdirSync(postsDirectory)
   }
 

@@ -150,7 +150,7 @@ jobs:
         run: |
           QUESTION="${COMMENT_BODY#/council }"
           QUESTION="${QUESTION:0:2000}"
-          bash scripts/council.sh "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
+          git show origin/main:scripts/council.sh | bash -s -- "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
           {
             printf '**Council Answer**\n\n'
             cat /tmp/council-output.txt

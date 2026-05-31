@@ -83,8 +83,24 @@ jobs:
       PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
 
     steps:
-      # Branch validated as non-fork with alphanumeric name in gate job; owner-only trigger.
-      # CodeQL flags this ref as user-controlled by design — accepted trade-off.
+      - name: Verify actor
+        env:
+          ACTOR: ${{ github.event.comment.user.login }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [ "$ACTOR" != "$OWNER" ]; then
+            echo "Unauthorized actor: $ACTOR" && exit 1
+          fi
+
+      - name: Get PR branch
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DATA=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json headRefName,number)
+          echo "branch=$(echo "$DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
+          echo "number=$(echo "$DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
+
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ needs.gate.outputs.branch }}
@@ -249,7 +265,7 @@ jobs:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_cloudflare_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
           TF_VAR_basic_auth_username: ${{ secrets.BASIC_AUTH_USERNAME }}
           TF_VAR_basic_auth_password: ${{ secrets.BASIC_AUTH_PASSWORD }}
         working-directory: infrastructure/stacks/site/ephemeral

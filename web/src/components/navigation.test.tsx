@@ -1,10 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
 
 // Mock Next.js dependencies
 vi.mock('next/navigation', () => ({
   usePathname: () => '/',
+  useRouter: () => ({
+    push: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
 }))
 
 vi.mock('next/image', () => ({
@@ -51,14 +58,14 @@ describe('Navigation', () => {
 
   it('renders logo with alt text', async () => {
     const { Navigation } = await import('@/components/navigation')
-    render(<Navigation />)
+    render(<Navigation posts={[]} />)
     const logos = screen.getAllByAltText('James Miller Logo')
     expect(logos.length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders Posts and Projects nav links', async () => {
     const { Navigation } = await import('@/components/navigation')
-    render(<Navigation />)
+    render(<Navigation posts={[]} />)
     const postsLinks = screen.getAllByText('Posts')
     const projectsLinks = screen.getAllByText('Projects')
     expect(postsLinks.length).toBeGreaterThanOrEqual(1)
@@ -67,17 +74,17 @@ describe('Navigation', () => {
 
   it('opens search on Cmd+K', async () => {
     const { Navigation } = await import('@/components/navigation')
-    render(<Navigation />)
+    render(<Navigation posts={[]} />)
 
     fireEvent.keyDown(document, { key: 'k', metaKey: true })
 
     // Search modal should be visible
-    expect(screen.getByPlaceholderText('Search posts...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search posts and projects...')).toBeInTheDocument()
   })
 
   it('toggles theme on button click', async () => {
     const { Navigation } = await import('@/components/navigation')
-    render(<Navigation />)
+    render(<Navigation posts={[]} />)
 
     const themeBtn = screen.getByLabelText('Toggle theme')
     fireEvent.click(themeBtn)
@@ -87,7 +94,7 @@ describe('Navigation', () => {
 
   it('mobile menu toggle shows and hides nav links', async () => {
     const { Navigation } = await import('@/components/navigation')
-    render(<Navigation />)
+    render(<Navigation posts={[]} />)
 
     // Mobile menu should be initially closed
     const menuBtn = screen.getByLabelText('Toggle menu')

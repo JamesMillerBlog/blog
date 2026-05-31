@@ -3,18 +3,32 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTheme } from '@/providers/theme-provider'
 import { SearchModal } from '@/components/ui/search-modal'
-import { Post } from '@/types/post'
+import type { SearchItem } from '@/types/search'
+import { projects } from '@/app/projects/data'
 import { ui } from '@/i18n/en'
 
-export function Navigation() {
+function buildProjectItems(): SearchItem[] {
+  return projects.map((p) => ({
+    type: 'project' as const,
+    slug: p.slug,
+    title: p.title,
+    description: p.description,
+    tags: p.tags,
+    url: `/projects/#${p.slug}`,
+    dateOrYear: p.year,
+  }))
+}
+
+export function Navigation({ posts = [] }: { posts?: SearchItem[] }) {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchKey, setSearchKey] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [posts] = useState<Post[]>([])
+  const allItems = useMemo(() => [...posts, ...buildProjectItems()], [posts])
   const logoRef = useRef<HTMLDivElement>(null)
   const searchIconRef = useRef<HTMLDivElement>(null)
   const themeIconRef = useRef<HTMLDivElement>(null)
@@ -134,6 +148,7 @@ export function Navigation() {
             <button
               onClick={() => {
                 triggerSearchAnim('click')
+                setSearchKey((k) => k + 1)
                 setSearchOpen(true)
               }}
               onMouseEnter={() => triggerSearchAnim('hover')}
@@ -186,7 +201,12 @@ export function Navigation() {
         )}
       </header>
 
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} posts={posts} />
+      <SearchModal
+        key={searchKey}
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        items={allItems}
+      />
     </>
   )
 }

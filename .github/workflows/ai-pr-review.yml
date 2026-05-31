@@ -58,7 +58,7 @@ jobs:
         run: bash scripts/ai-pr-review-run.sh
 
       - name: Check fix iteration count
-        if: steps.review.outputs.verdict == 'DO_NOT_PUSH'
+        if: steps.review.outputs.high_count != '0' || steps.review.outputs.critical_count != '0'
         id: iter_check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -70,7 +70,7 @@ jobs:
 
       - name: Dispatch fix workflow
         if: >-
-          steps.review.outputs.verdict == 'DO_NOT_PUSH' &&
+          (steps.review.outputs.high_count != '0' || steps.review.outputs.critical_count != '0') &&
           steps.iter_check.outputs.iter_count < 3
         env:
           GH_TOKEN: ${{ github.token }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Label PR and post actionable escalation after max iterations
         if: >-
-          steps.review.outputs.verdict == 'DO_NOT_PUSH' &&
+          (steps.review.outputs.high_count != '0' || steps.review.outputs.critical_count != '0') &&
           steps.iter_check.outputs.iter_count >= 3
         env:
           GH_TOKEN: ${{ github.token }}

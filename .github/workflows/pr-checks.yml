@@ -61,7 +61,7 @@ jobs:
       - name: Create placeholder post for build
         run: |
           mkdir -p _posts
-          printf '---\ntitle: CI Placeholder\ndate: "2024-01-01"\ncoverImage: /placeholder.jpg\nauthor:\n  name: CI\n  picture: /placeholder.jpg\nexcerpt: Placeholder post for CI builds.\nogImage:\n  url: /placeholder.jpg\ndraft: true\n---\nPlaceholder.\n' \
+          printf -- '---\ntitle: CI Placeholder\ndate: "2024-01-01"\ncoverImage: /placeholder.jpg\nauthor:\n  name: CI\n  picture: /placeholder.jpg\nexcerpt: Placeholder post for CI builds.\nogImage:\n  url: /placeholder.jpg\ndraft: true\n---\nPlaceholder.\n' \
             > _posts/ci-placeholder.mdx
 
       - name: Build

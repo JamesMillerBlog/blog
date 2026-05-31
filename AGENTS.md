@@ -131,14 +131,12 @@ See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment arc
 
 Four workflows provide continuous security monitoring:
 
-| Workflow                  | Trigger                                               | What it does                                                                                                                                                                                          |
-| ------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codeql.yml`              | Push to main, PRs touching `web/src/**`, weekly Sat 8am UTC | CodeQL static analysis on JavaScript/TypeScript with extended security rules, publishes findings to code scanning                                                                                        |
-| `pr-security.yml`         | All pull requests                                     | Runs pnpm audit (critical CVEs only) and gitleaks secret scanning on commits in the PR                                                                                                                 |
-| `security-audit.yml`      | Weekly Saturday 6am UTC, manual dispatch              | Comprehensive security audit using semgrep (SAST), trivy (containers + IaC), and zizmor (GitHub Actions). Creates `ai-implement` issue if findings detected, which triggers `ai-issue.yml` for auto-fixes |
-| `security-scorecard.yml`  | Weekly Saturday 7am UTC, push to main, manual dispatch | OSSF Scorecard analysis, publishes badge and SARIF results to code scanning                                                                                                                            |
-
-See `docs/SECURITY_AUDIT.md` for manual security audit findings beyond automated scanning (prompt injection, MDX content, AI isolation, etc.).
+| Workflow                     | Trigger                                                | What it does                                                                                                                                    |
+| ---------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codeql.yml`                 | Push to main, PR, scheduled Saturday 08:00 UTC         | CodeQL static analysis for JavaScript/TypeScript, uploads results to code scanning tab                                                           |
+| `pr-security.yml`            | All PRs                                                | Dependency audit (critical CVEs block, high/medium informational), gitleaks secret scanning on PR commits                                       |
+| `security-audit.yml`         | Scheduled Saturday 06:00 UTC, manual trigger           | Weekly comprehensive audit: dependencies, secrets, SAST, containers, Terraform, CI/CD. Creates or updates draft security advisory, creates `ai-implement` issue with summary counts if findings exist |
+| `security-scorecard.yml`     | Scheduled Saturday 07:00 UTC, push to main, manual     | OSSF Scorecard analysis, publishes badge and uploads SARIF to code scanning                                                                    |
 
 ## Commands
 

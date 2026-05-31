@@ -14,7 +14,6 @@ Content-related docs (SEO, social automation, skills) have moved to the `blog-co
 | [GIT_WORKTREES.md](./GIT_WORKTREES.md)                     | Working on multiple branches and worktrees.                    |
 | [AGENTIC_WORKFLOW.md](./AGENTIC_WORKFLOW.md)               | Notes on using multiple AI tools in the workflow.              |
 | [DOCKER.md](./DOCKER.md)                                   | Running Claude Code or pi in a Docker container — why and how.  |
-| [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)                   | Adversarial security analysis and workflow automation.         |
 
 ## Key Files in Project Root
 

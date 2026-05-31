@@ -10,6 +10,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  security-events: write
 
 concurrency:
   group: security-audit-main
@@ -64,6 +65,57 @@ jobs:
             audit-report.md
             audit-report.json
 
+      - name: Update security advisory
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+
+          # Read full report — stays private inside the advisory
+          FULL_REPORT=$(cat audit-report.md 2>/dev/null || echo 'No report generated.')
+          CRITICAL_COUNT=$(jq -r '[.findings[] | select(.severity=="critical")] | length' audit-report.json 2>/dev/null || echo '0')
+          HIGH_COUNT=$(jq -r '[.findings[] | select(.severity=="high")] | length' audit-report.json 2>/dev/null || echo '0')
+
+          # Map finding counts to advisory severity
+          if [ "$CRITICAL_COUNT" -gt 0 ] 2>/dev/null; then
+            ADVISORY_SEVERITY='critical'
+          elif [ "$HIGH_COUNT" -gt 0 ] 2>/dev/null; then
+            ADVISORY_SEVERITY='high'
+          else
+            ADVISORY_SEVERITY='medium'
+          fi
+
+          ADVISORY_SUMMARY="Weekly security audit — ${TODAY}"
+          ADVISORY_DESCRIPTION=$(printf '## Security Audit Report — %s\n\n%s' "$TODAY" "$FULL_REPORT")
+
+          # Check for existing open draft advisory from a prior audit run
+          EXISTING_ID=$(gh api "repos/${GITHUB_REPOSITORY}/security-advisories" \
+            --jq '[.[] | select(.state=="draft" and (.summary | startswith("Weekly security audit")))] | first | .ghsa_id // ""' \
+            2>/dev/null || echo '')
+
+          if [ -n "$EXISTING_ID" ]; then
+            # Update existing draft
+            jq -n \
+              --arg summary "$ADVISORY_SUMMARY" \
+              --arg description "$ADVISORY_DESCRIPTION" \
+              --arg severity "$ADVISORY_SEVERITY" \
+              '{"summary":$summary,"description":$description,"severity":$severity}' | \
+            gh api "repos/${GITHUB_REPOSITORY}/security-advisories/${EXISTING_ID}" \
+              --method PATCH --input -
+            echo "Updated advisory ${EXISTING_ID}"
+          else
+            # Create new draft advisory
+            jq -n \
+              --arg summary "$ADVISORY_SUMMARY" \
+              --arg description "$ADVISORY_DESCRIPTION" \
+              --arg severity "$ADVISORY_SEVERITY" \
+              '{"summary":$summary,"description":$description,"severity":$severity,"vulnerabilities":[{"package":{"ecosystem":"other","name":"blog-infrastructure"}}]}' | \
+            gh api "repos/${GITHUB_REPOSITORY}/security-advisories" \
+              --method POST --input -
+            echo "Created new draft advisory"
+          fi
+
       - name: Create ai-implement issue
         if: always() && (steps.audit.outputs.has_fixes == 'true' || steps.audit.outputs.has_warnings == 'true')
         env:
@@ -71,25 +123,30 @@ jobs:
         run: |
           TODAY=$(date +%Y-%m-%d)
 
-          # Build body in a file so tool output is never evaluated as shell code
+          # Extract summary counts from the JSON report — no finding details in public issue
+          CRITICAL_COUNT=$(jq -r '[.findings[] | select(.severity=="critical")] | length' audit-report.json 2>/dev/null || echo '?')
+          HIGH_COUNT=$(jq -r '[.findings[] | select(.severity=="high")] | length' audit-report.json 2>/dev/null || echo '?')
+          MEDIUM_COUNT=$(jq -r '[.findings[] | select(.severity=="medium")] | length' audit-report.json 2>/dev/null || echo '?')
+          TOOL_SUMMARY=$(jq -r '.tools[]? | "- \(.name): \(.status)"' audit-report.json 2>/dev/null || echo '- See CI artifact for tool breakdown')
+
+          # Build body with counts only — full details stay in the access-controlled CI artifact
           BODY_FILE=$(mktemp)
           {
-            printf '## Security Audit Findings — %s\n\n' "$TODAY"
-            printf 'The weekly automated security audit found issues that require attention. Please review each finding and implement the appropriate fixes.\n\n'
-            printf '### What to do\n\n'
-            printf 'For each finding below:\n'
-            printf -- '- **Dependency vulnerabilities**: bump the affected packages in `web/package.json` to a patched version and update `pnpm-lock.yaml`\n'
-            printf -- '- **SAST findings**: fix the code pattern at the location mentioned\n'
-            printf -- '- **Dockerfile misconfigurations**: update the relevant `Dockerfile.*`\n'
-            printf -- '- **Terraform issues**: update the relevant `.tf` files under `infrastructure/`\n'
-            printf -- '- **GitHub Actions issues**: update the workflow files in `.github/workflows/`\n\n'
-            printf 'Only make changes that are clearly safe and correct. If a finding is a false positive, add a comment in the code explaining why it can be ignored and do not change the code.\n\n'
-            printf '### Audit Report\n\n'
-            printf '<details>\n<summary>Full report</summary>\n\n```\n'
-            cat audit-report.md 2>/dev/null || printf 'Report not available.'
-            printf '\n```\n\n</details>\n\n'
-            cat audit-warnings.md 2>/dev/null || true
-            printf '\n[View CI run for full tool output](%s/%s/actions/runs/%s)\n' \
+            printf '## Security Audit — %s\n\n' "$TODAY"
+            printf 'The weekly automated security audit found issues requiring attention.\n\n'
+            printf '### Finding counts\n\n'
+            printf '| Severity | Count |\n|----------|-------|\n'
+            printf '| Critical | %s |\n| High | %s |\n| Medium | %s |\n\n' \
+              "$CRITICAL_COUNT" "$HIGH_COUNT" "$MEDIUM_COUNT"
+            printf '### Tools run\n\n%s\n\n' "$TOOL_SUMMARY"
+            printf '### How to fix\n\n'
+            printf 'Run `pnpm audit:security` locally or check the CI artifact for the full report, then:\n\n'
+            printf -- '- **Dependency CVEs**: bump affected packages in `web/package.json`, run `pnpm install`\n'
+            printf -- '- **SAST findings**: run `pnpm audit:security` to see exact locations and fix the flagged pattern\n'
+            printf -- '- **Dockerfile/IaC**: update the relevant file per tool output\n'
+            printf -- '- **GitHub Actions**: update workflow files in `.github/workflows/`\n\n'
+            printf 'Only make changes that are clearly safe and correct. If a finding is a false positive, add an inline comment explaining why.\n\n'
+            printf '[Full report in CI artifact (requires GitHub login)](%s/%s/actions/runs/%s)\n' \
               "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
           } > "$BODY_FILE"
 

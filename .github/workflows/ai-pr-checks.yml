@@ -16,6 +16,7 @@ jobs:
 
     permissions:
       actions: write
+      contents: read
       pull-requests: write
 
     env:
@@ -64,8 +65,15 @@ jobs:
             echo "failures<<${EOF_DELIM}" >> "$GITHUB_OUTPUT"
             echo "${SAFE_OUTPUT}" >> "$GITHUB_OUTPUT"
             echo "${EOF_DELIM}" >> "$GITHUB_OUTPUT"
-            printf '⚠️ **CI checks failed.** Auto-fix running...\n\n```\n%s\n```' "${SAFE_OUTPUT}" | \
-              gh pr comment "${PR_NUMBER}" --body-file - || true
+            COMMENT_RESP=$(printf '⚠️ **CI checks failed.** Auto-fix running...\n\n```\n%s\n```' "${SAFE_OUTPUT}" | \
+              gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+                --method POST --field body=@- 2>/dev/null || true)
+            FAILURE_COMMENT_ID=$(printf '%s' "${COMMENT_RESP}" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || true)
+            if [[ -n "${FAILURE_COMMENT_ID}" && "${FAILURE_COMMENT_ID}" =~ ^[0-9]+$ ]]; then
+              echo "failure_comment_id=${FAILURE_COMMENT_ID}" >> "$GITHUB_OUTPUT"
+              gh api "repos/${GITHUB_REPOSITORY}/issues/comments/${FAILURE_COMMENT_ID}/reactions" \
+                --method POST --field content='eyes' 2>/dev/null || true
+            fi
           fi
 
       - name: Check fix iteration count
@@ -89,6 +97,7 @@ jobs:
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           ITER_COUNT: ${{ steps.iter_check.outputs.iter_count }}
           FAILURES: ${{ steps.run_checks.outputs.failures }}
+          FAILURE_COMMENT_ID: ${{ steps.run_checks.outputs.failure_comment_id }}
         run: |
           NEXT_ITER=$(( ITER_COUNT + 1 ))
           jq -n \
@@ -97,7 +106,8 @@ jobs:
             --arg branch "${PR_HEAD_REF}" \
             --arg fix_iter "${NEXT_ITER}" \
             --arg failures "${FAILURES}" \
-            '{ref: $ref, inputs: {pr_number: $pr_number, branch: $branch, fix_iter: $fix_iter, failures: $failures}}' | \
+            --arg failure_comment_id "${FAILURE_COMMENT_ID}" \
+            '{ref: $ref, inputs: {pr_number: $pr_number, branch: $branch, fix_iter: $fix_iter, failures: $failures, failure_comment_id: $failure_comment_id}}' | \
             gh api "repos/${REPO}/actions/workflows/ai-pr-checks-respond.yml/dispatches" \
               --method POST --input -
 

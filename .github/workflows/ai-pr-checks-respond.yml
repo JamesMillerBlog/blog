@@ -16,6 +16,10 @@ on:
         required: false
         type: string
         default: ''
+      failure_comment_id:
+        required: false
+        type: string
+        default: ''
   repository_dispatch:
     types: [pr-checks-failed]
 
@@ -40,6 +44,7 @@ jobs:
           RAW_BRANCH: ${{ github.event.inputs.branch || github.event.client_payload.branch }}
           RAW_ITER: ${{ github.event.inputs.fix_iter || github.event.client_payload.fix_iter }}
           RAW_FAILURES: ${{ github.event.inputs.failures || github.event.client_payload.failures }}
+          RAW_FAILURE_COMMENT_ID: ${{ github.event.inputs.failure_comment_id || github.event.client_payload.failure_comment_id }}
         run: |
           if [[ ! "${RAW_PR}" =~ ^[0-9]+$ ]]; then
             echo "Invalid PR number: ${RAW_PR}" >&2
@@ -61,15 +66,23 @@ jobs:
           echo "failures<<${EOF_DELIM}" >> "$GITHUB_OUTPUT"
           echo "${TRUNCATED_FAILURES}" >> "$GITHUB_OUTPUT"
           echo "${EOF_DELIM}" >> "$GITHUB_OUTPUT"
+          SAFE_CID=$(printf '%s' "${RAW_FAILURE_COMMENT_ID}" | tr -cd '0-9' | head -c 20)
+          echo "failure_comment_id=${SAFE_CID}" >> "$GITHUB_OUTPUT"
 
       - name: Post working indicator
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
           FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+          FAILURE_COMMENT_ID: ${{ steps.validate.outputs.failure_comment_id }}
+          REPO: ${{ github.repository }}
         run: |
           gh pr comment "${PR_NUMBER}" \
             --body "🔨 Fixing CI check failures (iteration ${FIX_ITER})..." || true
+          if [[ -n "${FAILURE_COMMENT_ID}" && "${FAILURE_COMMENT_ID}" =~ ^[0-9]+$ ]]; then
+            gh api "repos/${REPO}/issues/comments/${FAILURE_COMMENT_ID}/reactions" \
+              --method POST --field content='rocket' 2>/dev/null || true
+          fi
 
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -97,6 +110,9 @@ jobs:
           git config --global user.email 'pi[bot]@users.noreply.github.com'
 
       - name: Setup OpenCode permissions
+        # TRUST: FAILURES content originates from same-repo CI output only (enforced by
+        # pull_request trigger guard in ai-pr-checks.yml). Content is truncated to 4000 chars
+        # and fenced in triple-backticks in the AI prompt to reduce prompt-injection surface.
         run: |
           mkdir -p .pi/extensions/pi-permission-system
           echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
@@ -145,14 +161,21 @@ jobs:
           FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
           PUSHED: ${{ steps.push.outputs.pushed }}
           FIX_OUTCOME: ${{ steps.fix.outcome }}
+          FAILURE_COMMENT_ID: ${{ steps.validate.outputs.failure_comment_id }}
+          REPO: ${{ github.repository }}
         run: |
+          RETRY_CMD='`/ai Fix the failing CI checks — run pnpm build, resolve all errors, then commit`'
           if [[ "${PUSHED}" == 'true' ]]; then
-            gh pr comment "${PR_NUMBER}" \
-              --body "✅ **CI fix applied (iteration ${FIX_ITER}).** Re-running checks on updated code..." || true
+            SUMMARY="✅ **CI fix applied (iteration ${FIX_ITER}).** Re-running checks on updated code..."
           elif [[ "${FIX_OUTCOME}" == 'failure' ]]; then
-            gh pr comment "${PR_NUMBER}" \
-              --body "❌ **Fix agent failed (iteration ${FIX_ITER}).** Manual intervention required." || true
+            SUMMARY="❌ **Fix agent failed (iteration ${FIX_ITER}).** To retry, post ${RETRY_CMD} as a PR comment."
           else
-            gh pr comment "${PR_NUMBER}" \
-              --body "⚠️ **Fix agent produced no changes (iteration ${FIX_ITER}).** Fix the failing checks manually." || true
+            SUMMARY="⚠️ **Fix agent produced no changes (iteration ${FIX_ITER}).** To retry, post ${RETRY_CMD} as a PR comment."
+          fi
+          gh pr comment "${PR_NUMBER}" --body "${SUMMARY}" || true
+          if [[ -n "${FAILURE_COMMENT_ID}" && "${FAILURE_COMMENT_ID}" =~ ^[0-9]+$ ]]; then
+            REACTION='confused'
+            [[ "${PUSHED}" == 'true' ]] && REACTION='+1'
+            gh api "repos/${REPO}/issues/comments/${FAILURE_COMMENT_ID}/reactions" \
+              --method POST --field content="${REACTION}" 2>/dev/null || true
           fi

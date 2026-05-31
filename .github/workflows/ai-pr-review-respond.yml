@@ -154,15 +154,16 @@ jobs:
           PUSHED: ${{ steps.push.outputs.pushed }}
           FIX_OUTCOME: ${{ steps.fix.outcome }}
         run: |
+          RETRY_CMD='`/ai Fix the remaining HIGH and CRITICAL findings from the AI code review`'
           if [[ "${PUSHED}" == 'true' ]]; then
             gh pr comment "${PR_NUMBER}" \
               --body "✅ **Fix applied (iteration ${FIX_ITER}).** Re-running AI review on updated code..." || true
           elif [[ "${FIX_OUTCOME}" == 'failure' ]]; then
             gh pr comment "${PR_NUMBER}" \
-              --body "❌ **Fix agent failed (iteration ${FIX_ITER}).** Manual intervention required." || true
+              --body "❌ **Fix agent failed (iteration ${FIX_ITER}).** To retry, post ${RETRY_CMD} as a PR comment." || true
           else
             gh pr comment "${PR_NUMBER}" \
-              --body "⚠️ **Fix agent produced no changes (iteration ${FIX_ITER}).** Review the findings manually." || true
+              --body "⚠️ **Fix agent produced no changes (iteration ${FIX_ITER}).** To retry, post ${RETRY_CMD} as a PR comment." || true
           fi
 
       - name: Update finding comment status

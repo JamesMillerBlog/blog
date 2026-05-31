@@ -53,13 +53,33 @@ jobs:
       - name: Install OpenCode
         run: npm install -g @earendil-works/pi-coding-agent@0.75.5 pi-multiagent@0.9.4 pi-gh-cli@0.2.4 pi-lens@3.8.45
 
+      - name: Sanitize attacker-controlled inputs
+        id: sanitize
+        # COMMENT_BODY/DIFF_HUNK/FILE_PATH come from PR author — truncate to limit prompt-injection
+        # surface. Trust boundary: workflow only fires for repo-owner comments (checked above).
+        env:
+          RAW_COMMENT_BODY: ${{ github.event.comment.body }}
+          RAW_DIFF_HUNK: ${{ github.event.comment.diff_hunk }}
+          RAW_FILE_PATH: ${{ github.event.comment.path }}
+        run: |
+          COMMENT_BODY=$(printf '%s' "${RAW_COMMENT_BODY}" | head -c 4000)
+          DIFF_HUNK=$(printf '%s' "${RAW_DIFF_HUNK}" | head -c 2000)
+          FILE_PATH=$(printf '%s' "${RAW_FILE_PATH}" | head -c 500 | tr -cd 'a-zA-Z0-9/._-')
+          echo "comment_body<<SANITIZE_EOF" >> "$GITHUB_OUTPUT"
+          echo "${COMMENT_BODY}" >> "$GITHUB_OUTPUT"
+          echo "SANITIZE_EOF" >> "$GITHUB_OUTPUT"
+          echo "diff_hunk<<SANITIZE_EOF" >> "$GITHUB_OUTPUT"
+          echo "${DIFF_HUNK}" >> "$GITHUB_OUTPUT"
+          echo "SANITIZE_EOF" >> "$GITHUB_OUTPUT"
+          echo "file_path=${FILE_PATH}" >> "$GITHUB_OUTPUT"
+
       - name: Run assessment
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          FILE_PATH: ${{ github.event.comment.path }}
-          DIFF_HUNK: ${{ github.event.comment.diff_hunk }}
+          COMMENT_BODY: ${{ steps.sanitize.outputs.comment_body }}
+          FILE_PATH: ${{ steps.sanitize.outputs.file_path }}
+          DIFF_HUNK: ${{ steps.sanitize.outputs.diff_hunk }}
           COMMENT_LINE: ${{ github.event.comment.line }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
         run: bash scripts/ai-pr-review-comment-assess.sh

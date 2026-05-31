@@ -6,11 +6,9 @@ on:
 
 jobs:
   implement:
-    if: |
-      github.event.label.name == 'ai-implement' && (
-        github.event.sender.login == github.repository_owner ||
-        (github.event.sender.login == 'github-actions[bot]' && contains(github.event.issue.labels.*.name, 'security'))
-      )
+    if: >-
+      github.event.label.name == 'ai-implement' &&
+      github.event.sender.login == github.repository_owner
     runs-on: ubuntu-latest
     timeout-minutes: 360
 

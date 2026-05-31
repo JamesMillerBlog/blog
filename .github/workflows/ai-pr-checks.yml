@@ -43,6 +43,9 @@ jobs:
       - name: Install web dependencies
         run: cd web && pnpm install --frozen-lockfile
 
+      - name: Install shellcheck
+        run: sudo apt-get install -y -qq shellcheck
+
       - name: Create placeholder post for build
         run: |
           mkdir -p web/_posts
@@ -55,23 +58,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
-          OUTPUT=$(bash scripts/ai-criteria-check.sh 2>&1)
+          bash scripts/ai-criteria-check.sh 2>&1
           EXIT_CODE=$?
           set -e
           if [[ $EXIT_CODE -eq 0 ]]; then
             echo 'passed=true' >> "$GITHUB_OUTPUT"
             echo 'failures=' >> "$GITHUB_OUTPUT"
-            gh pr comment "${PR_NUMBER}" \
-              --body '✅ **CI checks passed.**' || true
           else
-            SAFE_OUTPUT=$(printf '%s' "$OUTPUT" | head -c 4000)
+            FAILURES_JSON=$(cat /tmp/checks-failures.json 2>/dev/null || echo '[]')
+            SUMMARY=$(printf '%s' "$FAILURES_JSON" | \
+              jq -r '.[] | "- \(.type): \(.message)"' 2>/dev/null || \
+              echo 'Check output unavailable')
             echo 'passed=false' >> "$GITHUB_OUTPUT"
-            # Use delimiter to safely capture multiline output
+            # Pass structured JSON as failures payload for the fix script
             EOF_DELIM="FAILURES_EOF_$(openssl rand -hex 8)"
             echo "failures<<${EOF_DELIM}" >> "$GITHUB_OUTPUT"
-            echo "${SAFE_OUTPUT}" >> "$GITHUB_OUTPUT"
+            printf '%s' "$FAILURES_JSON" >> "$GITHUB_OUTPUT"
+            echo "" >> "$GITHUB_OUTPUT"
             echo "${EOF_DELIM}" >> "$GITHUB_OUTPUT"
-            COMMENT_RESP=$(printf '⚠️ **CI checks failed.** Auto-fix running...\n\n```\n%s\n```' "${SAFE_OUTPUT}" | \
+            COMMENT_RESP=$(printf '⚠️ **CI checks failed.** Auto-fix running...\n\n%s' "${SUMMARY}" | \
               gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
                 --method POST --field body=@- 2>/dev/null || true)
             FAILURE_COMMENT_ID=$(printf '%s' "${COMMENT_RESP}" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || true)

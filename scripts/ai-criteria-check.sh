@@ -1,18 +1,36 @@
 #!/bin/bash
 set -euo pipefail
 
-FAILURES=()
+FAILURES_JSON='[]'
+
+add_failure() {
+  local type="$1" message="$2"
+  shift 2
+  local steps_json
+  steps_json=$(printf '%s\n' "$@" | jq -Rsc 'split("\n") | map(select(. != ""))')
+  FAILURES_JSON=$(printf '%s' "$FAILURES_JSON" | jq -c \
+    --arg t "$type" --arg m "$message" --argjson v "$steps_json" \
+    '. + [{"type": $t, "message": $m, "verification_steps": $v}]')
+}
 
 # 1. Build check
 echo "=== Build check ===" >&2
-if ! (cd web && pnpm build 2>&1); then
-  FAILURES+=("BUILD_FAILED: pnpm build exited non-zero")
+if ! (cd web && pnpm build) > /tmp/build-output.txt 2>&1; then
+  cat /tmp/build-output.txt
+  add_failure 'BUILD_FAILED' 'pnpm build exited non-zero' \
+    'cd web && pnpm build'
+else
+  cat /tmp/build-output.txt
 fi
 
 # 2. TypeScript check
 echo "=== TypeScript check ===" >&2
-if ! (cd web && pnpm exec tsc --noEmit --skipLibCheck 2>&1); then
-  FAILURES+=("TYPECHECK_FAILED: tsc --noEmit reported errors")
+if ! (cd web && pnpm exec tsc --noEmit --skipLibCheck) > /tmp/tsc-output.txt 2>&1; then
+  cat /tmp/tsc-output.txt
+  add_failure 'TYPECHECK_FAILED' 'tsc --noEmit reported errors' \
+    'cd web && pnpm exec tsc --noEmit --skipLibCheck'
+else
+  cat /tmp/tsc-output.txt
 fi
 
 # 3. console.log check — changed non-test source files only
@@ -24,26 +42,49 @@ if [[ ${#CHANGED_SRC[@]} -gt 0 ]]; then
   CONSOLE_HITS=$(printf '%s\0' "${CHANGED_SRC[@]}" |
     xargs -0 grep -n 'console\.log' 2>/dev/null || true)
   if [[ -n "$CONSOLE_HITS" ]]; then
-    FAILURES+=("CONSOLE_LOG: $(echo "$CONSOLE_HITS" | head -5)")
+    CONSOLE_SUMMARY=$(printf '%s' "$CONSOLE_HITS" | head -3 | tr '\n' '; ')
+    add_failure 'CONSOLE_LOG' \
+      "console.log found in changed source files: ${CONSOLE_SUMMARY}" \
+      "! grep -rn 'console\\.log' web/src --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' | grep -v -E '\\.(test|spec)\\.|/__tests__/'"
   fi
 fi
 
-# 4. Secret pattern scan — new diff lines only
+# 4. Shellcheck — all scripts/
+echo "=== Shellcheck ===" >&2
+if command -v shellcheck >/dev/null 2>&1; then
+  if ! find scripts/ -type f \( -name '*.sh' -o -executable \) -print0 | \
+      xargs -0 shellcheck --severity=warning > /tmp/shellcheck-output.txt 2>&1; then
+    cat /tmp/shellcheck-output.txt
+    SHELLCHECK_SUMMARY=$(head -5 /tmp/shellcheck-output.txt | tr '\n' '; ')
+    add_failure 'SHELLCHECK_FAILED' \
+      "shellcheck found warnings/errors: ${SHELLCHECK_SUMMARY}" \
+      "find scripts/ -type f \( -name '*.sh' -o -executable \) -print0 | xargs -0 shellcheck --severity=warning"
+  else
+    cat /tmp/shellcheck-output.txt
+  fi
+else
+  echo "shellcheck not installed — skipping" >&2
+fi
+
+# 5. Secret pattern scan — new diff lines only
 echo "=== Secret pattern scan ===" >&2
 NEW_LINES=$(git diff HEAD~1 2>/dev/null | grep '^+' | grep -v '^+++' || true)
-if echo "$NEW_LINES" | grep -qE 'ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY'; then
-  MATCH_COUNT=$(echo "$NEW_LINES" | grep -cE 'ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY' || true)
-  FAILURES+=("SECRET_PATTERN: ${MATCH_COUNT} match(es) detected in new diff lines — run 'git diff HEAD~1' locally to inspect, then remove secrets before pushing")
+SECRET_RE='ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY'
+if printf '%s' "$NEW_LINES" | grep -qE "$SECRET_RE"; then
+  MATCH_COUNT=$(printf '%s' "$NEW_LINES" | grep -cE "$SECRET_RE" || true)
+  add_failure 'SECRET_PATTERN' \
+    "${MATCH_COUNT} secret pattern match(es) in new diff lines — remove secrets before pushing" \
+    "! git diff HEAD~1 | grep '^+' | grep -v '^+++' | grep -qE 'ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY'"
 fi
 
 # Report
-if [[ ${#FAILURES[@]} -eq 0 ]]; then
+FAILURE_COUNT=$(printf '%s' "$FAILURES_JSON" | jq 'length')
+if [[ "$FAILURE_COUNT" -eq 0 ]]; then
   echo "All criteria passed."
   exit 0
 else
-  echo "Criteria check FAILED:"
-  for f in "${FAILURES[@]}"; do
-    echo "  - $f"
-  done
+  echo "Criteria check FAILED (${FAILURE_COUNT} failure(s)):"
+  printf '%s' "$FAILURES_JSON" | jq -r '.[] | "  - \(.type): \(.message)"'
+  printf '%s' "$FAILURES_JSON" > /tmp/checks-failures.json
   exit 1
 fi

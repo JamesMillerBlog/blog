@@ -57,8 +57,8 @@ Note: PR title must follow conventional commits — start with feat:, fix:, chor
 
 if [[ -n "$PR_NUMBER" ]]; then
   echo "-> Requesting AI to update PR #$PR_NUMBER..."
-  PROMPT_ACTION="6. Run: gh pr edit \"${PR_NUMBER}\" --body-file /tmp/pr-body.md"
-  PROMPT_INTRO="Update PR #${PR_NUMBER} for branch: ${BRANCH}."
+  PROMPT_ACTION="6. Run: gh pr edit \"${PR_NUMBER}\" --body-file /tmp/pr-body.md — you MUST run this command, do not skip it or ask for confirmation."
+  PROMPT_INTRO="Overwrite the body of PR #${PR_NUMBER} for branch: ${BRANCH}. The PR already exists — do not create a new one. Your only job is to generate the description and update it with gh pr edit."
   FALLBACK="AI failed to update PR. Run manually: gh pr edit ${PR_NUMBER}"
 else
   echo "-> Requesting AI to create PR for branch ${BRANCH}..."

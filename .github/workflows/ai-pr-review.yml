@@ -2,25 +2,35 @@ name: AI PR Review
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+      branch:
+        required: true
+        type: string
 
 concurrency:
-  group: ai-pr-review-${{ github.event.pull_request.number }}
+  group: ai-pr-review-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
   cancel-in-progress: true
 
 jobs:
   review:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
     permissions:
-      actions: write
+      actions: write  # needed to dispatch ai-pr-review-respond.yml; accepted risk — workflow only runs for same-repo PRs from owner
       contents: read
       pull-requests: write
 
     env:
-      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
 
     steps:
       - name: Post reviewing indicator
@@ -33,7 +43,7 @@ jobs:
 
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.event.inputs.branch }}
           fetch-depth: 0
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -55,10 +65,11 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
-        run: bash scripts/ai-pr-review-run.sh
+        # Run script from base branch so PR code changes cannot affect the review runner
+        run: git show origin/main:scripts/ai-pr-review-run.sh | bash
 
       - name: Check fix iteration count
-        if: steps.review.outputs.verdict == 'DO_NOT_PUSH'
+        if: steps.review.outputs.high_count != '0' || steps.review.outputs.critical_count != '0'
         id: iter_check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -70,12 +81,12 @@ jobs:
 
       - name: Dispatch fix workflow
         if: >-
-          steps.review.outputs.verdict == 'DO_NOT_PUSH' &&
+          (steps.review.outputs.high_count != '0' || steps.review.outputs.critical_count != '0') &&
           steps.iter_check.outputs.iter_count < 3
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref || github.event.inputs.branch }}
           ITER_COUNT: ${{ steps.iter_check.outputs.iter_count }}
         run: |
           NEXT_ITER=$(( ITER_COUNT + 1 ))
@@ -90,7 +101,7 @@ jobs:
 
       - name: Label PR and post actionable escalation after max iterations
         if: >-
-          steps.review.outputs.verdict == 'DO_NOT_PUSH' &&
+          (steps.review.outputs.high_count != '0' || steps.review.outputs.critical_count != '0') &&
           steps.iter_check.outputs.iter_count >= 3
         env:
           GH_TOKEN: ${{ github.token }}
@@ -101,9 +112,8 @@ jobs:
             2>/dev/null || true
           gh pr edit "${PR_NUMBER}" --add-label 'ai-review-needs-human'
 
-          # Fetch the last review verdict and extract the HIGH/CRITICAL findings
           LAST_REVIEW=$(gh pr view "${PR_NUMBER}" --json comments \
-            --jq '[.comments[] | select(.author.login == "github-actions[bot]") | select(.body | test("\\*\\*Verdict:\\*\\*"))] | last | .body' \
+            --jq '[.comments[] | select(.author.login == "github-actions") | select(.body | test("\\*\\*Verdict:\\*\\*"))] | last | .body' \
             2>/dev/null || echo '')
 
           HIGH_SECTION=$(printf '%s' "${LAST_REVIEW}" | \

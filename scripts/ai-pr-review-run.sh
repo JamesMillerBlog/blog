@@ -32,13 +32,15 @@ Your response MUST end with a JSON block in this exact format — nothing after 
       \"severity\": \"HIGH\",
       \"location\": \"path/file.tsx:42\",
       \"description\": \"concise description of the issue\",
-      \"suggestion\": \"concise fix recommendation\"
+      \"suggestion\": \"concise fix recommendation\",
+      \"verification_steps\": [\"bash -n scripts/example.sh\", \"actionlint .github/workflows/example.yml\"]
     }
   ]
 }
 \`\`\`
 Valid verdict values: \"SAFE_TO_PUSH\", \"PUSH_WITH_CAUTION\", \"DO_NOT_PUSH\"
-Include ALL CRITICAL and HIGH findings in the findings array. MEDIUM/LOW may be omitted."
+Include ALL CRITICAL and HIGH findings in the findings array. MEDIUM/LOW may be omitted.
+For verification_steps: provide shell commands that exit 0 when the finding is correctly fixed. Use only safe read-only commands: bash -n (shell syntax check), actionlint (workflow lint), yamllint, grep assertions, python3 -m py_compile. Use [] if no mechanical check applies."
 
 printf '%s' "$REVIEW_PROMPT" | \
   PI_CACHE_RETENTION=long timeout 45m $PI --model "opencode/claude-sonnet-4-6" 2>&1 | \
@@ -64,12 +66,7 @@ EMOJI="✅"
 [[ "$VERDICT" == "PUSH_WITH_CAUTION" ]] && EMOJI="⚠️"
 [[ "$VERDICT" == "DO_NOT_PUSH" ]] && EMOJI="❌"
 
-gh pr comment "$PR_NUMBER" --body "${EMOJI} **AI Code Review**
-
-$(cat /tmp/pr-review-output.txt)
-
----
-**Verdict:** \`${VERDICT}\` · Critical: ${CRITICAL_COUNT} · High: ${HIGH_COUNT}"
+VERDICT_LINE="${EMOJI} **AI Code Review** — \`${VERDICT}\` · Critical: ${CRITICAL_COUNT} · High: ${HIGH_COUNT}"
 
 # Post each HIGH/CRITICAL finding as a separate comment for independent resolution
 FINDINGS_JSON=$(echo "$VERDICT_JSON" | jq -c '.findings // [] | map(select(.severity == "CRITICAL" or .severity == "HIGH"))' 2>/dev/null || echo '[]')
@@ -151,6 +148,9 @@ if [[ "$FINDING_COUNT" -gt 0 ]]; then
     fi
   done
 fi
+
+[[ "$FINDING_COUNT" -gt 0 ]] && VERDICT_LINE="${VERDICT_LINE} — findings posted as inline comments"
+gh pr comment "$PR_NUMBER" --body "${VERDICT_LINE}" || true
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   echo "verdict=${VERDICT}" >> "$GITHUB_OUTPUT"

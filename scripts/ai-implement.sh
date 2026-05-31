@@ -193,14 +193,13 @@ echo "pr_number=${PR_NUMBER}" >>"$GITHUB_OUTPUT"
 echo "branch=${BRANCH}" >>"$GITHUB_OUTPUT"
 
 # Write state file for review loop
-echo "PR_NUMBER=${PR_NUMBER}" >/tmp/ai-pr-state.env
-echo "BRANCH=${BRANCH}" >>/tmp/ai-pr-state.env
-echo "ISSUE_NUMBER=${ISSUE_NUMBER}" >>/tmp/ai-pr-state.env
-echo "SAFE_TITLE=${SAFE_TITLE}" >>/tmp/ai-pr-state.env
-echo "LEARNINGS_GIST_ID=${LEARNINGS_GIST_ID:-}" >>/tmp/ai-pr-state.env
-echo "BUILD_FAILED=${BUILD_FAILED}" >>/tmp/ai-pr-state.env
-echo "START_TIME=${START_TIME}" >>/tmp/ai-pr-state.env
-echo "TODAY=${TODAY}" >>/tmp/ai-pr-state.env
+printf 'PR_NUMBER=%q\n' "${PR_NUMBER}" >/tmp/ai-pr-state.env
+printf 'BRANCH=%q\n' "${BRANCH}" >>/tmp/ai-pr-state.env
+printf 'ISSUE_NUMBER=%q\n' "${ISSUE_NUMBER}" >>/tmp/ai-pr-state.env
+printf 'LEARNINGS_GIST_ID=%q\n' "${LEARNINGS_GIST_ID:-}" >>/tmp/ai-pr-state.env
+printf 'BUILD_FAILED=%q\n' "${BUILD_FAILED}" >>/tmp/ai-pr-state.env
+printf 'START_TIME=%q\n' "${START_TIME}" >>/tmp/ai-pr-state.env
+printf 'TODAY=%q\n' "${TODAY}" >>/tmp/ai-pr-state.env
 
 # Post implementation summary to PR
 pr_comment() {

@@ -44,6 +44,7 @@ install_binary() {
   local tmp
   tmp=$(mktemp -d)
   local archive="$tmp/archive.tar.gz"
+  echo "  Installing $name..."
   local checksums="$tmp/checksums.txt"
   curl -sL "$url" -o "$archive"
   curl -sL "$checksums_url" -o "$checksums"

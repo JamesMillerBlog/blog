@@ -17,9 +17,6 @@ concurrency:
   group: pr-checks-${{ github.head_ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -60,6 +57,12 @@ jobs:
 
       - name: Type check
         run: pnpm typecheck
+
+      - name: Create placeholder post for build
+        run: |
+          mkdir -p _posts
+          printf -- '---\ntitle: CI Placeholder\ndate: "2024-01-01"\ncoverImage: /placeholder.jpg\nauthor:\n  name: CI\n  picture: /placeholder.jpg\nexcerpt: Placeholder post for CI builds.\nogImage:\n  url: /placeholder.jpg\n---\nPlaceholder.\n' \
+            > _posts/ci-placeholder.mdx
 
       - name: Build
         run: pnpm build

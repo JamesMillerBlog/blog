@@ -804,8 +804,6 @@ if [ "$CI_MODE" = true ] || [ "${GITHUB_ACTIONS:-}" = "true" ]; then
   stage "12. CI — Posting Report"
 
   if command -v gh &>/dev/null && [ -n "${GH_TOKEN:-}" ]; then
-    REPORT_URL=""
-
     # Try to find existing code-health issue
     HEALTH_ISSUE=$(gh issue list --label code-health --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
 

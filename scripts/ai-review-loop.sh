@@ -1,10 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
-# Load state from implement step
+# Load state from implement step (safe grep-based parsing — never source untrusted env files)
 if [[ -f /tmp/ai-pr-state.env ]]; then
-  # shellcheck source=/dev/null
-  source /tmp/ai-pr-state.env
+  _get() { grep "^$1=" /tmp/ai-pr-state.env | cut -d= -f2- | tr -d "'" | head -1; }
+  PR_NUMBER=$(_get PR_NUMBER)
+  BRANCH=$(_get BRANCH)
+  ISSUE_NUMBER=$(_get ISSUE_NUMBER)
+  LEARNINGS_GIST_ID=$(_get LEARNINGS_GIST_ID)
+  START_TIME=$(_get START_TIME)
+  TODAY=$(_get TODAY)
+  unset -f _get
 fi
 
 : "${PR_NUMBER:?PR_NUMBER not set — implement step must run first}"

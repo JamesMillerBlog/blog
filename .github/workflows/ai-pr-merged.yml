@@ -86,7 +86,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
-            -f environment="preview-pr-${PR_NUMBER}" \
+            --method GET \
+            -F environment="preview-pr-${PR_NUMBER}" \
             --jq '.[0].id' 2>/dev/null || echo "")
           if [[ -n "$DEPLOY_ID" && "$DEPLOY_ID" != "null" ]]; then
             gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \

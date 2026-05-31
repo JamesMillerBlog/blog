@@ -65,8 +65,6 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   git commit -m "fix: action PR comment feedback" || true
 fi
 
-# Write review stamp to satisfy pre-push hook (Kimi review runs after push)
-git rev-parse HEAD >.review-stamp
 
 cat >/tmp/ai-respond-result.md <<EOFRESULT
 ## ✅ Fix Applied

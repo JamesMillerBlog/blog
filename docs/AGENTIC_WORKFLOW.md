@@ -45,9 +45,9 @@ Specialist agents focus Claude on a specific domain. Switch agents with `/agent 
 | `security-auditor` | Security vulnerability review | Auditing code or dependencies |
 | `parallel-executor` | Multiple independent tasks in parallel | When you have work that doesn't depend on itself |
 
-#### Reviewer agents — adversarial, read-only (Claude Code only)
+#### Reviewer agents — adversarial, read-only
 
-Dispatched automatically by `/pre-push-review`. Never write code — they review diffs adversarially.
+Dispatched automatically by `ai-pr-review.yml` workflow when a PR is created or updated. Never write code — they review diffs adversarially.
 
 | Agent | What it checks |
 |-------|---------------|
@@ -162,7 +162,7 @@ In pi with the `pi-multiagent` extension installed, the `agent_team` tool can sp
 
 ## GitHub Workflows — Automated AI Issue Implementation, Review & Blog Radar
 
-Six GitHub workflows automate AI-driven development:
+Eight GitHub workflows automate AI-driven development:
 
 ### AI Issue Implementation (`ai-implement` label)
 
@@ -170,19 +170,17 @@ Six GitHub workflows automate AI-driven development:
 
 **What happens:**
 1. Creates a branch: `ai/issue-{number}-{slug}`
-2. Phase 0 — **Council pre-implementation review** (`deepseek-v4-pro` + `kimi-k2.6`) — analyst + critic perspectives on architecture
-3. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title and body
-4. Phase 2 — **Pre-push review loop** (local, iterative) — validates changes before any push. Issues found → fixes locally → re-reviews → passes
-5. Phase 3 — **Pre-build check** — runs `pnpm build`; if broken, PR is marked for manual fix and push continues
-6. Phase 4 — **Push and create draft PR** — writes review stamp, pushes branch, creates draft PR on GitHub. If CRITICAL findings remain, creates PR with `ai-review-unresolved` label instead of blocking push
-7. Phase 5 — **Preview deployment** — if PR created successfully:
+2. Phase 0 — **Council pre-implementation review** — multi-model council (analysts + critic + synthesizer) reviews the issue architecture and produces an implementation plan with checklist
+3. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title, body, and council plan
+4. Phase 2 — **Criteria check loop** (up to 3 iterations) — runs deterministic checks: build, TypeScript typecheck, console.log scan, secret pattern scan. Failures trigger deepseek-v4-pro auto-fix before re-checking
+5. Phase 3 — **Push and create draft PR** — pushes branch, creates draft PR on GitHub
+6. Phase 4 — **Preview deployment** — if PR created successfully:
    - Deploys site to ephemeral Cloudflare R2 bucket: `https://pr-{number}.staging.jamesmiller.blog`
    - Generates AI E2E tests from issue acceptance criteria
    - Runs Playwright tests against preview
    - Registers GitHub deployment and posts Playwright report link
-8. Phase 6 — **PR summary comment** — posts comprehensive implementation + review log to PR
-9. Phase 7 — **Independent code review** — Kimi K2.6 reviews the PR and posts findings as a comment
-10. Phase 8 — **Eval recording** — appends run metrics to internal telemetry
+7. Phase 5 — **PR summary comment** — posts implementation log to PR
+8. Phase 6 — **AI PR review** — `ai-pr-review.yml` triggers automatically on PR creation and runs multi-agent review
 
 **To trigger:** Label an issue with `ai-implement` (repo owner only). Use the template at `.github/ISSUE_TEMPLATE/ai-implement.yml`.
 
@@ -199,13 +197,12 @@ Issue: "Add dark mode toggle to homepage"
 ↓ (label ai-implement)
 Branch: ai/issue-123-add-dark-mode-toggle
 ↓ (Phase 1: deepseek implements)
-↓ (Phase 2: review loop locally — fixes issues, passes)
-↓ (Phase 3: pre-build check)
-↓ (Phase 4: push + create draft PR #456)
-↓ (Phase 5: deploy to pr-456.staging.jamesmiller.blog, run generated E2E tests)
-↓ (Phase 6: post implementation + review summary to PR)
-↓ (Phase 7: Kimi K2.6 independent review)
-↓ (Phase 8: eval recording)
+↓ (Phase 2: criteria check loop — build/typecheck/lint passes)
+↓ (Phase 3: push + create draft PR #456)
+↓ (Phase 4: deploy to pr-456.staging.jamesmiller.blog, run generated E2E tests)
+↓ (Phase 5: post implementation summary to PR)
+↓ (Phase 6: ai-pr-review.yml triggers → claude-sonnet-4-6 reviews diff)
+↓ (if DO_NOT_PUSH: ai-pr-review-respond.yml applies fixes, re-triggers review)
 Preview live + tests pass/fail visible in Actions
 ```
 
@@ -217,7 +214,7 @@ Preview live + tests pass/fail visible in Actions
 1. If `/council <question>` → runs council of agents on the question and posts answer
 2. Otherwise: detects existing branch+PR for this issue number
 3. If no branch exists → re-implements from scratch (same as `ai-issue.yml` but runs in the comment workflow)
-4. If branch exists and `/ai <instruction>` → applies fix via `ai-respond.sh`, pushes, runs Kimi K2.6 review, re-deploys preview
+4. If branch exists and `/ai <instruction>` → applies fix via `ai-respond.sh`, pushes, re-deploys preview (AI review triggers automatically via PR update)
 5. If branch exists and `/resume` → re-deploys preview environment without code changes
 6. If `/retry` → force-re-runs full implementation from scratch on the existing branch (clean checkout, re-run ai-implement.sh)
 
@@ -229,10 +226,36 @@ Preview live + tests pass/fail visible in Actions
 
 **What happens:**
 1. If `/council <question>` → runs council of agents on the question and posts answer
-2. If `/ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary, runs Kimi K2.6 review, then re-deploys preview environment
+2. If `/ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary (AI review triggers automatically via PR update)
 3. If `/resume` → re-deploys preview environment without code changes
 
-**Why:** Enables rapid iteration on PRs — comment `/ai fix the heading colour` and the AI implements, reviews, and re-deploys automatically. Use `/council` to get architectural guidance.
+**Why:** Enables rapid iteration on PRs — comment `/ai fix the heading colour` and the AI implements and re-deploys automatically. Use `/council` to get architectural guidance.
+
+### AI PR Review (`ai-pr-review` workflow)
+
+**When:** A PR is opened, reopened, or updated (same-repo PRs only).
+
+**What happens:**
+1. Posts 👀 to indicate review is running
+2. Checks out PR at head SHA, runs manifest to generate scoped diffs per reviewer type
+3. Runs multi-agent review via `ai-pr-review-run.sh` (`opencode/claude-sonnet-4-6`) — security, code quality, frontend, design, infrastructure reviewers in parallel
+4. Posts verdict comment (✅ / ⚠️ / ❌) with findings
+5. If `DO_NOT_PUSH` and fix iterations < 3 → dispatches `repository_dispatch: pr-review-needs-fix`
+6. If `DO_NOT_PUSH` and 3 iterations already attempted → labels PR `ai-review-needs-human`
+
+**Concurrency:** Cancels any in-progress review for the same PR number when a new push arrives.
+
+### AI PR Review — Auto Fix (`ai-pr-review-respond` workflow)
+
+**When:** `repository_dispatch: pr-review-needs-fix` event (dispatched by `ai-pr-review.yml`).
+
+**What happens:**
+1. Validates `client_payload` inputs (PR number numeric, branch name safe)
+2. Posts 🔨 working indicator
+3. Adds `ai-fix-iter-N` label to track iteration count
+4. Runs `ai-pr-review-fix.sh` (`deepseek-v4-pro`) — fetches latest review comment, fixes CRITICAL/HIGH issues, commits
+5. Pushes to branch (this triggers `pull_request:synchronize`, re-running `ai-pr-review.yml`)
+6. Posts ✅ on success, ❌ on failure, ⚠️ if no changes produced
 
 ### AI PR Merged — Auto-cleanup (`ai-pr-merged` workflow)
 
@@ -280,7 +303,7 @@ Preview live + tests pass/fail visible in Actions
 - **`.pi/prompts/`** — Workflow prompt templates:
   - `ai-issue-implement.md` — issue implementation instructions
   - `ai-pr-respond.md` — PR comment response instructions
-  - `ai-pr-review.md` — independent PR review (Kimi K2.6)
+  - `pre-push-review.md` — multi-agent code review (security, code-quality, frontend, design, infra)
   - `blog-improvement-radar.md` — blog strategy analysis & suggestion generation
 - **`infrastructure/stacks/site/ephemeral/`** — Terraform for ephemeral preview environments:
   - `main.tf` — Cloudflare R2 bucket, custom domain, Workers Basic Auth
@@ -290,14 +313,15 @@ Preview live + tests pass/fail visible in Actions
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/ai-implement.sh` | Issue implementation + pre-push review loop + PR creation + summary. Includes pre-build check, `ai-review-unresolved` labeling, and eval recording. |
-| `scripts/ai-pr-review.sh` | Kimi K2.6 independent code review |
-| `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>`. Writes review stamp before push to satisfy pre-push hook gate. |
+| `scripts/ai-implement.sh` | Issue implementation + criteria check loop + PR creation + summary |
+| `scripts/ai-criteria-check.sh` | Deterministic gate: build, typecheck, console.log scan, secret pattern scan |
+| `scripts/ai-pr-review-run.sh` | Runs manifest + multi-agent review (`claude-sonnet-4-6`), posts verdict to PR |
+| `scripts/ai-pr-review-fix.sh` | Fetches latest review comment, runs deepseek-v4-pro to fix CRITICAL/HIGH findings |
+| `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>` |
 | `scripts/ai-generate-tests.sh` | Generates Playwright E2E tests from issue description using `deepseek-v4-pro` |
 | `scripts/ai-eval-trends.sh` | Computes aggregated eval trends and writes trend summary |
 | `scripts/ai-blog-suggestions.sh` | Monthly blog improvement radar — research, generate, and issue creation |
 | `scripts/generate-pr.sh` | Supports `--draft` flag and CI mode |
-| `scripts/pre-push-review-manifest.sh` | Generates file list and diff files for each reviewer category (security, code-quality, frontend, design, infrastructure) |
 
 ### Infrastructure — Ephemeral Preview Environments
 
@@ -338,41 +362,27 @@ SKIP_DOCS_UPDATE=1 git commit -m "wip"
 
 ### Pushing
 
-Before pushing to a public branch, run a multi-agent review inside Claude Code:
-
-```
-/pre-push-review
-```
-
-Then push:
+Push to your branch:
 
 ```bash
 git push
 ```
 
-The pre-push hook runs a local `gitleaks` scan when available, then tests, then checks that the review stamp matches `HEAD`. If you push without running `/pre-push-review` first, the push is blocked.
+The pre-push hook runs a local `gitleaks` scan when available, then tests. For public PRs, create a pull request on GitHub — the `ai-pr-review.yml` workflow will automatically run a multi-agent review on your diff.
 
-**When using pi:** You can still run the review scripts manually (`bash scripts/pre-push-review-manifest.sh`, `bash scripts/pre-push-static-checks.sh`) and ask pi to review the output, but pi has no equivalent of the full multi-agent `/pre-push-review` command. Use `git push --no-verify` or run the review in Claude before switching.
+### Automated PR Review
 
-### What `/pre-push-review` produces
+When you open or update a PR, `ai-pr-review.yml` triggers automatically:
 
-1. **Architecture / Flow Diagram** — ASCII diagram if changes affect structure, data flow, or CI
-2. **Findings by severity** — aggregated across the reviewers selected for the current diff (CRITICAL / HIGH / MEDIUM / LOW)
-3. **Structured verdict** — JSON format with `verdict` (SAFE_TO_PUSH, PUSH_WITH_CAUTION, or DO_NOT_PUSH), `critical_count`, `high_count`, and summary
-
-### Reviewers
-
-| Reviewer | Focus |
-|----------|-------|
-| `reviewer-security` | Secrets, injection, CVEs, exploitable logic |
-| `reviewer-frontend` | React/Next.js patterns, TypeScript, accessibility |
-| `reviewer-design` | Byte Mark compliance — tokens, typography, borders |
-| `reviewer-infrastructure` | GitHub Actions injection, IAM, Terraform misconfigs |
-| `reviewer-code-quality` | Syntax, smells, complexity, naming, best practices |
+1. **Posts 👀** to indicate review is running
+2. **Generates scoped diffs** per reviewer category
+3. **Runs multi-agent review** — security, code-quality, frontend, design, infrastructure reviewers in parallel via `claude-sonnet-4-6`
+4. **Posts verdict** (✅ / ⚠️ / ❌) with findings
+5. **Auto-fix loop** — if findings are fixable and iterations < 3, dispatches `ai-pr-review-respond.yml` to auto-fix and re-review
 
 ### Critical vulnerability handling
 
-If a critical issue is found, the reviewer states the severity label only — it does not publish exploit details. It will advise resolving it before pushing and direct you to open a private advisory via `.github/SECURITY.md`.
+If a critical issue is found, the reviewer states the severity label only — it does not publish exploit details. It will advise resolving it before merging and direct you to open a private advisory via `.github/SECURITY.md`.
 
 ### Prompt injection defence
 
@@ -401,7 +411,7 @@ Switching tools doesn't mean starting over. Both harnesses read the same project
 | Normal development | Claude Code |
 | Claude usage exhausted | `pnpm pi` |
 | Want a different model | pi → `/model` to switch provider |
-| Need multi-agent review | Claude Code → `/pre-push-review` |
+| Need multi-agent review | Open a PR — `ai-pr-review.yml` runs automatically |
 | Quick lookup | `pnpm pi -p "find..."` |
 
 ---

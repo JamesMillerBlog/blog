@@ -62,7 +62,6 @@ if has_structural_changes; then
       echo "✓ Documentation changes staged and included in this commit."
     else
       git commit -m "docs: surgical update of agents and documentation"
-      git rev-parse HEAD >.review-stamp
       echo "──────────────────────────────────────────────────────"
       echo " ! Documentation updated and committed."
       echo " ! Please run 'git push' again to include the update."

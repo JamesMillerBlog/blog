@@ -1,0 +1,143 @@
+name: AI PR Checks — Auto Fix
+
+on:
+  repository_dispatch:
+    types: [pr-checks-failed]
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    concurrency:
+      group: ai-pr-checks-fix-${{ github.event.client_payload.pr_number }}
+      cancel-in-progress: false
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Validate client_payload inputs
+        id: validate
+        env:
+          RAW_PR: ${{ github.event.client_payload.pr_number }}
+          RAW_BRANCH: ${{ github.event.client_payload.branch }}
+          RAW_ITER: ${{ github.event.client_payload.fix_iter }}
+          RAW_FAILURES: ${{ github.event.client_payload.failures }}
+        run: |
+          if [[ ! "${RAW_PR}" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: ${RAW_PR}" >&2
+            exit 1
+          fi
+          if [[ ! "${RAW_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "Unsafe branch name: ${RAW_BRANCH}" >&2
+            exit 1
+          fi
+          if [[ ! "${RAW_ITER}" =~ ^[0-9]+$ ]]; then
+            echo "Invalid fix_iter: ${RAW_ITER}" >&2
+            exit 1
+          fi
+          echo "pr_number=${RAW_PR}" >> "$GITHUB_OUTPUT"
+          echo "branch=${RAW_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "fix_iter=${RAW_ITER}" >> "$GITHUB_OUTPUT"
+          TRUNCATED_FAILURES=$(printf '%s' "${RAW_FAILURES}" | head -c 4000)
+          EOF_DELIM="FAILURES_EOF_$(openssl rand -hex 8)"
+          echo "failures<<${EOF_DELIM}" >> "$GITHUB_OUTPUT"
+          echo "${TRUNCATED_FAILURES}" >> "$GITHUB_OUTPUT"
+          echo "${EOF_DELIM}" >> "$GITHUB_OUTPUT"
+
+      - name: Post working indicator
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+        run: |
+          gh pr comment "${PR_NUMBER}" \
+            --body "🔨 Fixing CI check failures (iteration ${FIX_ITER})..." || true
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ steps.validate.outputs.branch }}
+          fetch-depth: 2
+          token: ${{ secrets.PR_CREATE_TOKEN }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+        with:
+          version: 9
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Install OpenCode
+        run: npm install -g @earendil-works/pi-coding-agent@0.75.5 pi-multiagent@0.9.4 pi-gh-cli@0.2.4 pi-lens@3.8.45
+
+      - name: Configure git
+        run: |
+          git config --global user.name 'pi[bot]'
+          git config --global user.email 'pi[bot]@users.noreply.github.com'
+
+      - name: Setup OpenCode permissions
+        run: |
+          mkdir -p .pi/extensions/pi-permission-system
+          echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
+
+      - name: Add iteration label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+        run: |
+          LABEL="ai-checks-iter-${FIX_ITER}"
+          gh label create "${LABEL}" \
+            --color '0075ca' \
+            --description "CI checks fix iteration ${FIX_ITER}" \
+            2>/dev/null || true
+          gh pr edit "${PR_NUMBER}" --add-label "${LABEL}"
+
+      - name: Run fix agent
+        id: fix
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          BRANCH: ${{ steps.validate.outputs.branch }}
+          FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+          FAILURES: ${{ steps.validate.outputs.failures }}
+        run: bash scripts/ai-pr-checks-fix.sh
+
+      - name: Push fixes
+        id: push
+        env:
+          BRANCH: ${{ steps.validate.outputs.branch }}
+        run: |
+          if git diff --quiet HEAD; then
+            echo 'pushed=false' >> "$GITHUB_OUTPUT"
+          else
+            git push origin "${BRANCH}"
+            echo 'pushed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post result
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+          PUSHED: ${{ steps.push.outputs.pushed }}
+          FIX_OUTCOME: ${{ steps.fix.outcome }}
+        run: |
+          if [[ "${PUSHED}" == 'true' ]]; then
+            gh pr comment "${PR_NUMBER}" \
+              --body "✅ **CI fix applied (iteration ${FIX_ITER}).** Re-running checks on updated code..." || true
+          elif [[ "${FIX_OUTCOME}" == 'failure' ]]; then
+            gh pr comment "${PR_NUMBER}" \
+              --body "❌ **Fix agent failed (iteration ${FIX_ITER}).** Manual intervention required." || true
+          else
+            gh pr comment "${PR_NUMBER}" \
+              --body "⚠️ **Fix agent produced no changes (iteration ${FIX_ITER}).** Fix the failing checks manually." || true
+          fi

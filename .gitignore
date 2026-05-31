@@ -55,10 +55,6 @@ build
 # pi runtime cache
 .pi-lens/
 
-# AI review stamp (local only — written by /pre-push-review command)
-.review-stamp
-.claude/pre-push-review/
-
 # debug
 npm-debug.log*
 

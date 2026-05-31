@@ -1,5 +1,7 @@
 # AI Implementation Loop — Improvement Plan
 
+**Status:** Superseded — architecture shifted to PR-based review (`ai-pr-review.yml` workflow)
+
 Branch: `ai-best-practices-monitoring-and-improvement` (already merged)
 
 ## What the branch already does (keep all)
@@ -58,8 +60,7 @@ $(git diff --stat HEAD~1 2>/dev/null || echo "No prior commits")
 \`\`\`
 
 ## Review Diffs (what the reviewer examined)
-If these diff files exist, read them for code context on the flagged issues:
-$(ls .claude/pre-push-review/*-diff.txt 2>/dev/null && echo "(see files above)" || echo "(no diff files)")
+Note: Architecture changed to PR-based review. Diff generation now happens in `ai-pr-review.yml` via manifest.sh
 
 ## Review Findings (iteration ${ITER})
 ..."

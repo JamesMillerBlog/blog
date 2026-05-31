@@ -133,21 +133,58 @@ $(cat /tmp/impl-output.txt)
 
 </details>
 
-Creating draft PR — review loop starts next.
+Creating draft PR — AI review runs automatically on PR.
 
 [View Actions run](https://github.com/${GITHUB_REPOSITORY:-}/actions/runs/${GITHUB_RUN_ID:-})"
 
-# --- Pre-build check ---
-echo "=== Pre-build check ===" >&2
+# --- Criteria check loop ---
+echo "=== Criteria check loop ===" >&2
+CRITERIA_ITER=0
+CRITERIA_MAX=3
 BUILD_FAILED=false
-if ! (cd web && pnpm build 2>&1 | tail -30); then
-  BUILD_FAILED=true
-  issue_comment "## ⚠️ Build failed — branch will be pushed but PR marked for manual fix"
+
+# Extract council checklist for fix context (if available)
+COUNCIL_CHECKLIST=""
+if [[ -n "$COUNCIL_PLAN" ]]; then
+  COUNCIL_CHECKLIST=$(printf '%s' "$COUNCIL_PLAN" | \
+    sed -n '/^## Implementation Checklist/,$ p' | head -c 3000)
 fi
 
+while [[ $CRITERIA_ITER -lt $CRITERIA_MAX ]]; do
+  CRITERIA_ITER=$((CRITERIA_ITER + 1))
+  echo "=== Criteria iteration ${CRITERIA_ITER}/${CRITERIA_MAX} ===" >&2
+  CRITERIA_OUT=$(bash scripts/ai-criteria-check.sh 2>/dev/null) && CRITERIA_EXIT=0 || CRITERIA_EXIT=$?
+  if [[ $CRITERIA_EXIT -eq 0 ]]; then
+    break
+  fi
+  echo "Criteria check failed (iteration ${CRITERIA_ITER}):" >&2
+  echo "$CRITERIA_OUT" >&2
+  if [[ $CRITERIA_ITER -ge $CRITERIA_MAX ]]; then
+    BUILD_FAILED=true
+    issue_comment "## ⚠️ Criteria checks failed after ${CRITERIA_MAX} fix attempts — branch will be pushed but PR needs manual fix
+
+\`\`\`
+${CRITERIA_OUT}
+\`\`\`"
+    break
+  fi
+  FIX_PROMPT="The following automated criteria checks failed after implementation. Fix all issues.
+
+## Failed checks
+\`\`\`
+${CRITERIA_OUT}
+\`\`\`
+
+${COUNCIL_CHECKLIST:+## Implementation Checklist (from council pre-review)
+${COUNCIL_CHECKLIST}
+
+}After fixing, commit with: git add -A && git commit -m 'fix: criteria check (iteration ${CRITERIA_ITER})'"
+
+  pi_run "opencode-go/deepseek-v4-pro" "$FIX_PROMPT" "/tmp/criteria-fix-${CRITERIA_ITER}.txt"
+done
+
 # --- Push branch ---
-echo "=== Writing review stamp and pushing branch ===" >&2
-git rev-parse HEAD >.review-stamp
+echo "=== Pushing branch ===" >&2
 git push origin "${BRANCH}"
 
 # --- Create draft PR ---

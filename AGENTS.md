@@ -30,38 +30,58 @@ Read extra skill files only when relevant:
 
 ## AI Tools
 
-| Tool                            | Config     | When to Use                                         |
-| ------------------------------- | ---------- | --------------------------------------------------- |
-| **Claude Code** (`pnpm claude`) | `.claude/` | Primary — uses Claude Pro subscription              |
-| **pi** (`pnpm pi`)              | `.pi/`     | Fallback — OpenCode, Gemini, Codex, DeepSeek models |
+| Tool                            | Config     | When to Use                                                     |
+| ------------------------------- | ---------- | --------------------------------------------------------------- |
+| **Claude Code** (`pnpm claude`) | `.claude/` | Interactive dev — uses Claude Pro subscription                  |
+| **pi** (`pnpm pi`)              | `.pi/`     | CI automation + interactive fallback — multi-model via OpenCode |
 
 ### Claude Code
 
-Primary AI harness. Uses your Claude Pro subscription via OAuth. Run in Docker:
+Interactive AI harness. Uses your Claude Pro subscription via OAuth. Run in Docker:
 
 ```bash
 pnpm claude                          # interactive
 pnpm claude:fresh                    # rebuild image then interactive
 ```
 
+**Models (`.claude/agents/`):**
+
+| Agent type           | Model                    |
+| -------------------- | ------------------------ |
+| `reviewer-security`  | `claude-sonnet-4-6`      |
+| All other agents     | `claude-haiku-4-5-20251001` |
+
 ### pi
 
-Fallback AI harness for when Claude usage runs out. Supports multiple model providers:
+Multi-model harness used for both CI automation workflows and interactive fallback. Routes to models via two provider prefixes:
 
-- **OpenCode Go** (DeepSeek V4 Flash/Pro, Kimi, MiniMax, GLM) — default
-- **Google Gemini** — set `GEMINI_API_KEY` in `.envrc`
-- **OpenAI Codex** — requires ChatGPT Plus/Pro subscription (`/login openai`)
-- **DeepSeek** — set `DEEPSEEK_API_KEY` in `.envrc`
-- **OpenRouter** — set `OPENROUTER_API_KEY` in `.envrc`
+- **`opencode-go/*`** — OpenCode Go binary (DeepSeek V4 Flash/Pro, Kimi K2.6) — default for implementation and review
+- **`opencode/*`** — OpenCode service routing (Claude Sonnet, GPT-5.5, Gemini Flash) — used for council agents
 
 ```bash
-pnpm pi                              # interactive (default: opencode-go/deepseek-v4-flash)
+pnpm pi                              # interactive (default: opencode-go/deepseek-v4-pro)
 pnpm pi:fresh                        # rebuild image then interactive
-pi --model google                    # switch to Gemini from CLI
-pi --model opencode-go/deepseek-v4-pro  # switch model inline
+pi --model opencode-go/kimi-k2.6     # switch to Kimi inline
+pi --model opencode/claude-sonnet-4-6  # switch to Claude via opencode
 ```
 
 Inside pi, use `/model` or Ctrl+L to switch providers at any time.
+
+**Models in use (CI scripts and agents):**
+
+| Task                             | Model                            |
+| -------------------------------- | -------------------------------- |
+| Implementation (`ai-implement`)  | `opencode-go/deepseek-v4-pro`    |
+| PR review (`ai-pr-review-run.sh`) | `opencode/claude-sonnet-4-6`     |
+| Fix/respond (`ai-respond.sh`)    | `opencode-go/deepseek-v4-pro`    |
+| E2E test generation              | `opencode-go/deepseek-v4-pro`    |
+| Blog suggestions                 | `opencode-go/deepseek-v4-pro`    |
+| Doc updates                      | `opencode-go/deepseek-v4-flash`  |
+| PR generation                    | `opencode-go/deepseek-v4-flash`  |
+| Council scouts (×2)              | `opencode-go/deepseek-v4-flash`  |
+| Council analyst                  | `opencode/claude-sonnet-4-6`     |
+| Council critic                   | `opencode/gpt-5.5`               |
+| Council synthesizer              | `opencode/gemini-3.5-flash`      |
 
 ## Code Formatting — All AI Tools
 
@@ -94,17 +114,15 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | `security-auditor`  | Vulnerability scanning        |
 | `parallel-executor` | Independent parallel tasks    |
 
-**Reviewer agents** — read-only, dispatched by `/pre-push-review` based on review mode and changed file types:
+**Reviewer agents** — read-only, dispatched by PR review workflow based on changed file types:
 
-| Agent                        | Dispatched when                         | Checks                                      |
-| ---------------------------- | --------------------------------------- | ------------------------------------------- |
-| `reviewer-security`          | always                                  | Secrets, injection, CVEs, exploitable logic |
-| `reviewer-code-quality`      | app / infra changes                     | Smells, complexity, best practices          |
-| `reviewer-frontend`          | `*.tsx/ts/jsx/js/css`                   | React, TypeScript, a11y                     |
-| `reviewer-design`            | `*.tsx/jsx/css`                         | Byte Mark tokens, typography                |
-| `reviewer-infrastructure`    | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform              |
-
-(Security reviewer uses a more capable model for deeper adversarial coverage.)
+| Agent                        | Model                    | Dispatched when                         | Checks                                      |
+| ---------------------------- | ------------------------ | --------------------------------------- | ------------------------------------------- |
+| `reviewer-security`          | `claude-sonnet-4-6`      | always                                  | Secrets, injection, CVEs, exploitable logic |
+| `reviewer-code-quality`      | `claude-haiku-4-5-20251001` | app / infra changes                  | Smells, complexity, best practices          |
+| `reviewer-frontend`          | `claude-haiku-4-5-20251001` | `*.tsx/ts/jsx/js/css`                | React, TypeScript, a11y                     |
+| `reviewer-design`            | `claude-haiku-4-5-20251001` | `*.tsx/jsx/css`                      | Byte Mark tokens, typography                |
+| `reviewer-infrastructure`    | `claude-haiku-4-5-20251001` | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform          |
 
 ## Docker
 
@@ -114,16 +132,18 @@ Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (
 
 ### AI Development (OpenCode/pi)
 
-Six workflows automate issue implementation, PR management, and blog improvement using OpenCode:
+Eight workflows automate issue implementation, PR review, and blog improvement using OpenCode:
 
-| Workflow                     | Trigger                                                              | What it does                                                                                                                                              |
-| ---------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ai-issue.yml`               | Issue labeled `ai-implement` (repo owner only)                              | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs pre-push review loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
-| `ai-issue-comment.yml`       | Issue comment `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; finds existing branch/PR for `/ai`/`/resume`/`/retry`; if no branch → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
-| `ai-pr-comment.yml`          | PR comment `/ai <instruction>`, `/resume`, or `/council <question>` (repo owner only)        | Runs council for `/council <question>`; `/ai` applies fix via ai-respond.sh, runs Kimi review, re-deploys preview; `/resume` re-deploys preview without code change                               |
-| `ai-pr-merged.yml`           | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
-| `ai-blog-suggestions.yml`    | Monthly schedule (1st of month) or manual trigger (repo owner)       | Runs blog improvement radar: researches competitor blogs & trends, generates 8-15 prioritized suggestions, creates GitHub issue with `blog-radar` label  |
-| `destroy-preview-manual.yml` | Manual workflow trigger (repo owner)                                 | Destroys a specific PR's ephemeral preview environment                                                                                                    |
+| Workflow                       | Trigger                                                              | What it does                                                                                                                                              |
+| ------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ai-issue.yml`                 | Issue labeled `ai-implement` (repo owner only)                       | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs deterministic criteria check loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
+| `ai-issue-comment.yml`         | Issue comment `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; finds existing branch/PR for `/ai`/`/resume`/`/retry`; if no branch → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
+| `ai-pr-comment.yml`            | PR comment `/ai <instruction>`, `/resume`, or `/council <question>` (repo owner only)        | Runs council for `/council <question>`; `/ai` applies fix via ai-respond.sh, re-deploys preview; `/resume` re-deploys preview without code change        |
+| `ai-pr-review.yml`             | PR opened, reopened, or updated (same-repo only)                     | Runs multi-agent AI review (claude-sonnet-4-6) on the PR diff, posts verdict, dispatches auto-fix if DO_NOT_PUSH and iterations < 3, labels PR needs-human after max iterations |
+| `ai-pr-review-respond.yml`     | `repository_dispatch: pr-review-needs-fix`                           | Validates inputs, applies deepseek-v4-pro fixes for CRITICAL/HIGH findings, pushes (triggering re-review), tracks iterations via PR labels, posts emoji status |
+| `ai-pr-merged.yml`             | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
+| `ai-blog-suggestions.yml`      | Monthly schedule (1st of month) or manual trigger (repo owner)       | Runs blog improvement radar: researches competitor blogs & trends, generates 8-15 prioritized suggestions, creates GitHub issue with `blog-radar` label  |
+| `destroy-preview-manual.yml`   | Manual workflow trigger (repo owner)                                 | Destroys a specific PR's ephemeral preview environment                                                                                                    |
 
 See `docs/AGENTIC_WORKFLOW.md` for full details including preview deployment architecture, issue template, and E2E test generation.
 

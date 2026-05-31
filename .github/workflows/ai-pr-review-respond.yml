@@ -12,6 +12,10 @@ on:
       fix_iter:
         required: true
         type: string
+      prior_context:
+        required: false
+        type: string
+        default: '[]'
   repository_dispatch:
     types: [pr-review-needs-fix]
 
@@ -25,6 +29,7 @@ jobs:
       cancel-in-progress: false
 
     permissions:
+      actions: write
       contents: write
       pull-requests: write
 
@@ -35,6 +40,7 @@ jobs:
           RAW_PR: ${{ github.event.inputs.pr_number || github.event.client_payload.pr_number }}
           RAW_BRANCH: ${{ github.event.inputs.branch || github.event.client_payload.branch }}
           RAW_ITER: ${{ github.event.inputs.fix_iter || github.event.client_payload.fix_iter }}
+          RAW_PRIOR_CONTEXT: ${{ github.event.inputs.prior_context || github.event.client_payload.prior_context }}
         run: |
           if [[ ! "${RAW_PR}" =~ ^[0-9]+$ ]]; then
             echo "Invalid PR number: ${RAW_PR}" >&2
@@ -51,6 +57,16 @@ jobs:
           echo "pr_number=${RAW_PR}" >> "$GITHUB_OUTPUT"
           echo "branch=${RAW_BRANCH}" >> "$GITHUB_OUTPUT"
           echo "fix_iter=${RAW_ITER}" >> "$GITHUB_OUTPUT"
+          # Validate prior_context is a JSON array; fall back to empty array
+          SAFE_PRIOR='[]'
+          if printf '%s' "${RAW_PRIOR_CONTEXT}" | jq -e '. | arrays' >/dev/null 2>&1; then
+            SAFE_PRIOR="${RAW_PRIOR_CONTEXT}"
+          fi
+          EOF_DELIM="PRIOR_EOF_$(openssl rand -hex 8)"
+          echo "prior_context<<${EOF_DELIM}" >> "$GITHUB_OUTPUT"
+          printf '%s' "${SAFE_PRIOR}" >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+          echo "${EOF_DELIM}" >> "$GITHUB_OUTPUT"
 
       - name: Post working indicator
         env:
@@ -131,6 +147,7 @@ jobs:
           PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
           BRANCH: ${{ steps.validate.outputs.branch }}
           FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+          PRIOR_CONTEXT: ${{ steps.validate.outputs.prior_context }}
         run: bash scripts/ai-pr-review-fix.sh
 
       - name: Push fixes
@@ -145,6 +162,18 @@ jobs:
             echo 'pushed=true' >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Run delta review
+        if: steps.push.outputs.pushed == 'true'
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          BRANCH: ${{ steps.validate.outputs.branch }}
+          FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+          PRIOR_CONTEXT: ${{ steps.validate.outputs.prior_context }}
+          REPO: ${{ github.repository }}
+        run: bash scripts/ai-pr-delta-review.sh
+
       - name: Post result
         if: always()
         env:
@@ -157,7 +186,7 @@ jobs:
           RETRY_CMD='`/ai Fix the remaining HIGH and CRITICAL findings from the AI code review`'
           if [[ "${PUSHED}" == 'true' ]]; then
             gh pr comment "${PR_NUMBER}" \
-              --body "✅ **Fix applied (iteration ${FIX_ITER}).** Re-running AI review on updated code..." || true
+              --body "🔍 **Fix pushed (iteration ${FIX_ITER}) — delta review running.** Results will be posted to each finding thread." || true
           elif [[ "${FIX_OUTCOME}" == 'failure' ]]; then
             gh pr comment "${PR_NUMBER}" \
               --body "❌ **Fix agent failed (iteration ${FIX_ITER}).** To retry, post ${RETRY_CMD} as a PR comment." || true
@@ -167,7 +196,7 @@ jobs:
           fi
 
       - name: Update finding comment status
-        if: always()
+        if: always() && steps.push.outputs.pushed != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.validate.outputs.pr_number }}

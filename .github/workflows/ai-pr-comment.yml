@@ -10,7 +10,7 @@ jobs:
     if: |
       github.event.issue.pull_request != null &&
       github.event.comment.user.login == github.repository_owner &&
-      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '/council '))
+      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '/council ') || github.event.comment.body == '/review')
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -141,6 +141,10 @@ jobs:
             gh pr comment "${PR_NUMBER}" --body "**Resuming preview deployment...**
 
           [View Actions run](${RUN_URL})"
+          elif [[ "$COMMENT_BODY" == '/review' ]]; then
+            gh pr comment "${PR_NUMBER}" --body "**AI review triggered...**
+
+          [View Actions run](${RUN_URL})"
           elif [[ "$COMMENT_BODY" == /council\ * ]]; then
             QUESTION="${COMMENT_BODY#/council }"
             gh pr comment "${PR_NUMBER}" --body "**Running council on question...**
@@ -156,6 +160,20 @@ jobs:
 
           [View Actions run](${RUN_URL})"
           fi
+
+      - name: Dispatch PR review
+        if: env.COMMENT_BODY == '/review'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ needs.gate.outputs.branch }}
+          PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
+        run: |
+          gh workflow run ai-pr-review.yml \
+            --repo "${REPO}" \
+            --ref main \
+            --field pr_number="${PR_NUMBER}" \
+            --field branch="${BRANCH}"
 
       - name: Run council
         if: startsWith(env.COMMENT_BODY, '/council ')

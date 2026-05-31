@@ -32,13 +32,15 @@ Your response MUST end with a JSON block in this exact format — nothing after 
       \"severity\": \"HIGH\",
       \"location\": \"path/file.tsx:42\",
       \"description\": \"concise description of the issue\",
-      \"suggestion\": \"concise fix recommendation\"
+      \"suggestion\": \"concise fix recommendation\",
+      \"verification_steps\": [\"bash -n scripts/example.sh\", \"actionlint .github/workflows/example.yml\"]
     }
   ]
 }
 \`\`\`
 Valid verdict values: \"SAFE_TO_PUSH\", \"PUSH_WITH_CAUTION\", \"DO_NOT_PUSH\"
-Include ALL CRITICAL and HIGH findings in the findings array. MEDIUM/LOW may be omitted."
+Include ALL CRITICAL and HIGH findings in the findings array. MEDIUM/LOW may be omitted.
+For verification_steps: provide shell commands that exit 0 when the finding is correctly fixed. Use only safe read-only commands: bash -n (shell syntax check), actionlint (workflow lint), yamllint, grep assertions, python3 -m py_compile. Use [] if no mechanical check applies."
 
 printf '%s' "$REVIEW_PROMPT" | \
   PI_CACHE_RETENTION=long timeout 45m $PI --model "opencode/claude-sonnet-4-6" 2>&1 | \

@@ -150,35 +150,98 @@ if [[ -n "$COUNCIL_PLAN" ]]; then
     sed -n '/^## Implementation Checklist/,$ p' | head -c 3000)
 fi
 
+PRIOR_CRITERIA_CONTEXT='[]'
+
 while [[ $CRITERIA_ITER -lt $CRITERIA_MAX ]]; do
   CRITERIA_ITER=$((CRITERIA_ITER + 1))
   echo "=== Criteria iteration ${CRITERIA_ITER}/${CRITERIA_MAX} ===" >&2
-  CRITERIA_OUT=$(bash scripts/ai-criteria-check.sh 2>/dev/null) && CRITERIA_EXIT=0 || CRITERIA_EXIT=$?
+  bash scripts/ai-criteria-check.sh 2>/dev/null && CRITERIA_EXIT=0 || CRITERIA_EXIT=$?
   if [[ $CRITERIA_EXIT -eq 0 ]]; then
     break
   fi
-  echo "Criteria check failed (iteration ${CRITERIA_ITER}):" >&2
-  echo "$CRITERIA_OUT" >&2
+  FAILURES_JSON=$(cat /tmp/checks-failures.json 2>/dev/null || echo '[]')
+  FAILURES_TEXT=$(printf '%s' "$FAILURES_JSON" | \
+    jq -r '.[] | "- \(.type): \(.message)"' 2>/dev/null || echo '(unavailable)')
+  CHECK_TYPES=$(printf '%s' "$FAILURES_JSON" | \
+    jq -r '[.[].type] | join(", ")' 2>/dev/null || true)
+  VERIFY_SECTION=$(printf '%s' "$FAILURES_JSON" | \
+    jq -r '.[] | "- \(.type): run `\(.verification_steps[0] // "n/a")`"' 2>/dev/null || true)
+  echo "Criteria check failed (iteration ${CRITERIA_ITER}): ${CHECK_TYPES}" >&2
   if [[ $CRITERIA_ITER -ge $CRITERIA_MAX ]]; then
     BUILD_FAILED=true
     issue_comment "## ⚠️ Criteria checks failed after ${CRITERIA_MAX} fix attempts — branch will be pushed but PR needs manual fix
 
+Failing checks: ${CHECK_TYPES}
+
 \`\`\`
-${CRITERIA_OUT}
+${FAILURES_TEXT}
 \`\`\`"
     break
   fi
-  FIX_PROMPT="The following automated criteria checks failed after implementation. Fix all issues.
 
-## Failed checks
-\`\`\`
-${CRITERIA_OUT}
-\`\`\`
+  # Build prior-attempt context so next fix knows what was tried and why it failed
+  PREV_DIFF=$(git diff HEAD~1 HEAD 2>/dev/null | head -50 | head -c 2000 || echo '')
+  CONTEXT_ENTRY=$(jq -n \
+    --argjson iter "${CRITERIA_ITER}" \
+    --arg diff "$PREV_DIFF" \
+    --arg failures "$FAILURES_TEXT" \
+    '{"iter": $iter, "fix_diff": $diff, "failures": $failures}')
+  PRIOR_CRITERIA_CONTEXT=$(printf '%s' "$PRIOR_CRITERIA_CONTEXT" | \
+    jq -c --argjson e "$CONTEXT_ENTRY" '. + [$e]' 2>/dev/null || echo "$PRIOR_CRITERIA_CONTEXT")
 
-${COUNCIL_CHECKLIST:+## Implementation Checklist (from council pre-review)
-${COUNCIL_CHECKLIST}
+  PRIOR_SECTION=""
+  PRIOR_COUNT=$(printf '%s' "$PRIOR_CRITERIA_CONTEXT" | jq 'length' 2>/dev/null || echo '0')
+  if [[ "$PRIOR_COUNT" -gt 0 ]]; then
+    PRIOR_SECTION=$(printf '%s' "$PRIOR_CRITERIA_CONTEXT" | jq -r \
+      '.[] | "### Attempt \(.iter)\nDiff summary:\n```diff\n\(.fix_diff)\n```\nStill failing: \(.failures)"' \
+      2>/dev/null || true)
+  fi
 
-}After fixing, commit with: git add -A && git commit -m 'fix: criteria check (iteration ${CRITERIA_ITER})'"
+  COMMIT_MSG="fix: criteria check (iteration ${CRITERIA_ITER})"
+  if [[ -n "$CHECK_TYPES" ]]; then
+    COMMIT_MSG="${COMMIT_MSG}
+
+Checks fixed: ${CHECK_TYPES}"
+  fi
+
+  FIX_PROMPT="The following automated criteria checks failed. Fix all issues so the checks pass.
+
+Each check includes \`verification_steps\` — shell commands that exit 0 when resolved. After making changes, run each verification step. If any fail, adjust and retry. Maximum 3 attempts per check.
+
+Do NOT modify scripts/ai-implement.sh — this script is currently executing.
+
+After fixing, commit with: git add -A && git commit -m \"${COMMIT_MSG}\"
+
+## Failed Checks
+
+${FAILURES_TEXT}
+
+## Verification Steps
+
+${VERIFY_SECTION}
+
+## Check Definitions
+
+- BUILD_FAILED: \`cd web && pnpm build\` exited non-zero. Fix compilation/build errors.
+- TYPECHECK_FAILED: \`tsc --noEmit --skipLibCheck\` reported errors. Fix TypeScript type errors.
+- CONSOLE_LOG: \`console.log\` found in changed non-test source files. Remove or replace with proper logging.
+- SECRET_PATTERN: A secret pattern was detected in new diff lines. Remove the secret immediately."
+
+  if [[ -n "$PRIOR_SECTION" ]]; then
+    FIX_PROMPT="${FIX_PROMPT}
+
+## Prior Fix Attempts (all failed — do not repeat these approaches)
+
+${PRIOR_SECTION}"
+  fi
+
+  if [[ -n "${COUNCIL_CHECKLIST:-}" ]]; then
+    FIX_PROMPT="${FIX_PROMPT}
+
+## Implementation Checklist (from council pre-review)
+
+${COUNCIL_CHECKLIST}"
+  fi
 
   pi_run "opencode-go/deepseek-v4-pro" "$FIX_PROMPT" "/tmp/criteria-fix-${CRITERIA_ITER}.txt"
 done

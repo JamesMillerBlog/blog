@@ -159,6 +159,23 @@ jobs:
             echo 'pushed=true' >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Run delta check
+        id: delta
+        if: steps.push.outputs.pushed == 'true'
+        run: |
+          mkdir -p web/_posts
+          printf -- '---\ntitle: CI Placeholder\ndate: "2024-01-01"\ncoverImage: /placeholder.jpg\nauthor:\n  name: CI\n  picture: /placeholder.jpg\nexcerpt: Placeholder post for CI builds.\nogImage:\n  url: /placeholder.jpg\n---\nPlaceholder.\n' \
+            > web/_posts/ci-placeholder.mdx
+          set +e
+          bash scripts/ai-criteria-check.sh 2>&1
+          DELTA_EXIT=$?
+          set -e
+          if [[ $DELTA_EXIT -eq 0 ]]; then
+            echo 'passed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'passed=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Post result
         if: always()
         env:
@@ -167,12 +184,15 @@ jobs:
           FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
           PUSHED: ${{ steps.push.outputs.pushed }}
           FIX_OUTCOME: ${{ steps.fix.outcome }}
+          DELTA_PASSED: ${{ steps.delta.outputs.passed }}
           FAILURE_COMMENT_ID: ${{ steps.validate.outputs.failure_comment_id }}
           REPO: ${{ github.repository }}
         run: |
           RETRY_CMD='`/ai Fix the failing CI checks — run pnpm build, resolve all errors, then commit`'
-          if [[ "${PUSHED}" == 'true' ]]; then
-            SUMMARY="✅ **CI fix applied (iteration ${FIX_ITER}).** Re-running checks on updated code..."
+          if [[ "${PUSHED}" == 'true' && "${DELTA_PASSED}" == 'true' ]]; then
+            SUMMARY="✅ **CI fix verified (iteration ${FIX_ITER}).** All checks passing."
+          elif [[ "${PUSHED}" == 'true' ]]; then
+            SUMMARY="⚠️ **CI fix applied (iteration ${FIX_ITER}) — delta check still failing.** CI will re-trigger fix."
           elif [[ "${FIX_OUTCOME}" == 'failure' ]]; then
             SUMMARY="❌ **Fix agent failed (iteration ${FIX_ITER}).** To retry, post ${RETRY_CMD} as a PR comment."
           else

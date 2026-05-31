@@ -93,6 +93,25 @@ jobs:
             2>/dev/null || true
           gh pr edit "${PR_NUMBER}" --add-label "${LABEL}"
 
+      - name: Mark findings in-progress
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+          REPO: ${{ github.repository }}
+        run: |
+          FINDING_IDS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+            --jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | test("[*][*](CRITICAL|HIGH) finding")) | .id]' \
+            2>/dev/null || echo '[]')
+          printf '%s' "$FINDING_IDS" | jq -r '.[]' 2>/dev/null | while read -r CID; do
+            gh api "repos/${REPO}/pulls/comments/${CID}/reactions" \
+              --method POST --field content='rocket' 2>/dev/null || true
+            gh api "repos/${REPO}/pulls/comments/${CID}/replies" \
+              --method POST \
+              --field body="🔨 **Working on this** (fix iteration ${FIX_ITER})..." \
+              2>/dev/null || true
+          done
+
       - name: Run fix agent
         id: fix
         env:
@@ -134,3 +153,31 @@ jobs:
             gh pr comment "${PR_NUMBER}" \
               --body "⚠️ **Fix agent produced no changes (iteration ${FIX_ITER}).** Review the findings manually." || true
           fi
+
+      - name: Update finding comment status
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          FIX_ITER: ${{ steps.validate.outputs.fix_iter }}
+          PUSHED: ${{ steps.push.outputs.pushed }}
+          FIX_OUTCOME: ${{ steps.fix.outcome }}
+          REPO: ${{ github.repository }}
+        run: |
+          FINDING_IDS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+            --jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | test("[*][*](CRITICAL|HIGH) finding")) | .id]' \
+            2>/dev/null || echo '[]')
+          COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo '')
+          printf '%s' "$FINDING_IDS" | jq -r '.[]' 2>/dev/null | while read -r CID; do
+            if [[ "${PUSHED}" == 'true' ]]; then
+              MSG="✅ **Fixed** in commit \`${COMMIT}\` (iteration ${FIX_ITER}) — re-review running"
+            elif [[ "${FIX_OUTCOME}" == 'failure' ]]; then
+              MSG="❌ **Fix agent failed** (iteration ${FIX_ITER}) — manual intervention required"
+            else
+              MSG="⚠️ **No changes produced** (iteration ${FIX_ITER}) — will retry or escalate"
+            fi
+            gh api "repos/${REPO}/pulls/comments/${CID}/replies" \
+              --method POST \
+              --field body="$MSG" \
+              2>/dev/null || true
+          done

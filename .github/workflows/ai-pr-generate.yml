@@ -1,0 +1,45 @@
+name: AI PR Generate
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  generate:
+    # Skip PRs opened by bots — they already have AI-generated descriptions
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !contains(github.event.pull_request.user.login, '[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+        with:
+          version: 9
+
+      - name: Install OpenCode
+        run: npm install -g @earendil-works/pi-coding-agent@0.75.5 pi-multiagent@0.9.4 pi-gh-cli@0.2.4 pi-lens@3.8.45
+
+      - name: Generate PR description
+        env:
+          CI: 'true'
+          GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN || github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: ./scripts/generate-pr.sh

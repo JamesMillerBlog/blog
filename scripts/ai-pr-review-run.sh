@@ -97,24 +97,57 @@ if [[ "$FINDING_COUNT" -gt 0 ]]; then
       "$LOCATION" "$DESCRIPTION" "$SUGGESTION" \
       "$SEVERITY" "$LOCATION" "$SUGGESTION")
 
-    # Try to post as inline diff comment; fall back to timeline comment
-    FILE_PATH=$(echo "$LOCATION" | cut -d: -f1)
-    LINE_NUM=$(echo "$LOCATION" | cut -d: -f2)
-    POSTED_INLINE=false
+    FILE_PATH=$(printf '%s' "$LOCATION" | cut -d: -f1)
+    LINE_NUM=$(printf '%s' "$LOCATION" | cut -d: -f2)
+    COMMENT_ID=""
+    COMMENT_TYPE=""
 
+    # 1. Try line-specific inline diff comment
     if [[ -n "$HEAD_SHA" && -n "$REPO" && "$LINE_NUM" =~ ^[0-9]+$ && -n "$FILE_PATH" ]]; then
-      gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+      RESP=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
         --method POST \
         --field body="$COMMENT_BODY" \
         --field commit_id="$HEAD_SHA" \
         --field path="$FILE_PATH" \
         --field line="$LINE_NUM" \
         --field side='RIGHT' \
-        2>/dev/null && POSTED_INLINE=true || true
+        2>/dev/null || true)
+      COMMENT_ID=$(printf '%s' "$RESP" | jq -r '.id // empty' 2>/dev/null || true)
+      [[ -n "$COMMENT_ID" ]] && COMMENT_TYPE='inline'
     fi
 
-    if [[ "$POSTED_INLINE" != 'true' ]]; then
-      printf '%s' "$COMMENT_BODY" | gh pr comment "$PR_NUMBER" --body-file - || true
+    # 2. Fall back to file-level inline comment (no line required)
+    if [[ -z "$COMMENT_ID" && -n "$HEAD_SHA" && -n "$REPO" && -n "$FILE_PATH" ]]; then
+      RESP=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+        --method POST \
+        --field body="$COMMENT_BODY" \
+        --field commit_id="$HEAD_SHA" \
+        --field path="$FILE_PATH" \
+        --field subject_type='file' \
+        2>/dev/null || true)
+      COMMENT_ID=$(printf '%s' "$RESP" | jq -r '.id // empty' 2>/dev/null || true)
+      [[ -n "$COMMENT_ID" ]] && COMMENT_TYPE='inline'
+    fi
+
+    # 3. Fall back to PR timeline comment
+    if [[ -z "$COMMENT_ID" && -n "$REPO" ]]; then
+      RESP=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+        --method POST \
+        --field body="$COMMENT_BODY" \
+        2>/dev/null || true)
+      COMMENT_ID=$(printf '%s' "$RESP" | jq -r '.id // empty' 2>/dev/null || true)
+      [[ -n "$COMMENT_ID" ]] && COMMENT_TYPE='timeline'
+    fi
+
+    # Add 👀 reaction — signals the finding has been seen and queued
+    if [[ -n "$COMMENT_ID" && "$COMMENT_ID" =~ ^[0-9]+$ ]]; then
+      if [[ "$COMMENT_TYPE" == 'inline' ]]; then
+        gh api "repos/${REPO}/pulls/comments/${COMMENT_ID}/reactions" \
+          --method POST --field content='eyes' 2>/dev/null || true
+      else
+        gh api "repos/${REPO}/issues/comments/${COMMENT_ID}/reactions" \
+          --method POST --field content='eyes' 2>/dev/null || true
+      fi
     fi
   done
 fi

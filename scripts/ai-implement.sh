@@ -196,7 +196,7 @@ if [[ -n "${GH_PR_CREATE_TOKEN:-}" ]]; then
     --draft \
     --head "${BRANCH}" || true
 else
-  CI=true pnpm pr:generate --draft 2>/dev/null ||
+  CI=true ./scripts/generate-pr.sh --draft 2>/dev/null ||
     gh pr create \
       --title "feat: ${SAFE_TITLE}" \
       --body "Closes #${ISSUE_NUMBER}" \

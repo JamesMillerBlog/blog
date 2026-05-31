@@ -14,6 +14,4 @@ fi
 echo ""
 echo "──────────────────────────────────────────────────────"
 echo " 🚀 Push in progress..."
-echo " To auto-generate your PR description after push, run:"
-echo "    pnpm pr:generate"
 echo "──────────────────────────────────────────────────────"

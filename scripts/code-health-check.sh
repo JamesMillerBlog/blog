@@ -451,9 +451,7 @@ check_duplicate_configs() {
   shift
   local found=()
   for pattern in "$@"; do
-    # shellcheck disable=SC2086
-    matches=$(ls $pattern 2>/dev/null | head -1)
-    [ -n "$matches" ] && found+=("$matches")
+    [ -f "$pattern" ] && found+=("$pattern")
   done
   if [ "${#found[@]}" -gt 1 ]; then
     DUPLICATE_FOUND=$((DUPLICATE_FOUND + 1))

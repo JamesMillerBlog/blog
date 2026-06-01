@@ -31,6 +31,15 @@ fi
 
 SUGGESTION_COUNT=$(grep -c '^## Suggestion:' "$OUTFILE" || true)
 if [[ "$SUGGESTION_COUNT" -eq 0 ]]; then
+  # Agent may have written output to a file instead of stdout — check for it
+  RADAR_FILE=$(ls blog-radar-*.md 2>/dev/null | tail -1 || true)
+  if [[ -n "$RADAR_FILE" ]]; then
+    echo "Suggestions not found in stdout; reading from ${RADAR_FILE} instead." >&2
+    cp "$RADAR_FILE" "$OUTFILE"
+    SUGGESTION_COUNT=$(grep -c '^## Suggestion:' "$OUTFILE" || true)
+  fi
+fi
+if [[ "$SUGGESTION_COUNT" -eq 0 ]]; then
   echo 'ERROR: No suggestions found in output. Expected format: ## Suggestion: [title]' >&2
   exit 1
 fi

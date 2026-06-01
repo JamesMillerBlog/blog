@@ -4,11 +4,6 @@ import { resolve } from 'path'
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    server: {
-      deps: {
-        external: [/@aws-sdk/],
-      },
-    },
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],

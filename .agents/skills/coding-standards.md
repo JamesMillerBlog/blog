@@ -9,7 +9,7 @@ Write tests before or alongside implementation. Every new source file must have 
 - Use `vitest` + `@testing-library/react`
 - Use factory functions (e.g. `makePost()`) for test data, not inline literals
 - Mock at the boundary — mock external modules (`next/image`, `framer-motion`), not internal helpers
-- Coverage thresholds (enforced in CI): 60% lines/functions/statements, 50% branches
+- Coverage thresholds (enforced in CI): 46% lines/statements, 53% functions, 30% branches
 
 ## Functional Style
 

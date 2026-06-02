@@ -49,7 +49,18 @@ if [[ ${#CHANGED_SRC[@]} -gt 0 ]]; then
   fi
 fi
 
-# 4. Shellcheck — all scripts/
+# 4. Test coverage thresholds
+echo "=== Test coverage ===" >&2
+if ! (cd web && pnpm test:coverage) > /tmp/coverage-output.txt 2>&1; then
+  COVERAGE_SUMMARY=$(grep -E 'Lines|Functions|Branches|Statements|ERROR' /tmp/coverage-output.txt | head -8 | tr '\n' '; ')
+  add_failure 'COVERAGE_BELOW_THRESHOLD' \
+    "Test coverage below thresholds: ${COVERAGE_SUMMARY}" \
+    'cd web && pnpm test:coverage'
+else
+  grep -E 'Lines|Functions|Branches|Statements' /tmp/coverage-output.txt || true
+fi
+
+# 5. Shellcheck — all scripts/
 echo "=== Shellcheck ===" >&2
 if command -v shellcheck >/dev/null 2>&1; then
   if ! find scripts/ -type f \( -name '*.sh' -o -executable \) -print0 | \
@@ -66,7 +77,7 @@ else
   echo "shellcheck not installed — skipping" >&2
 fi
 
-# 5. Secret pattern scan — new diff lines only
+# 6. Secret pattern scan — new diff lines only
 echo "=== Secret pattern scan ===" >&2
 NEW_LINES=$(git diff HEAD~1 2>/dev/null | grep '^+' | grep -v '^+++' || true)
 SECRET_RE='ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY'

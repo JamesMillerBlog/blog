@@ -197,7 +197,7 @@ Issue: "Add dark mode toggle to homepage"
 ↓ (label ai-implement)
 Branch: ai/issue-123-add-dark-mode-toggle
 ↓ (Phase 1: deepseek implements)
-↓ (Phase 2: criteria check loop — build/typecheck/lint passes)
+↓ (Phase 2: criteria check loop — build/typecheck/coverage/lint passes)
 ↓ (Phase 3: push + create draft PR #456)
 ↓ (Phase 4: deploy to pr-456.staging.jamesmiller.blog, run generated E2E tests)
 ↓ (Phase 5: post implementation summary to PR)
@@ -317,7 +317,7 @@ Preview live + tests pass/fail visible in Actions
 | Script | Purpose |
 |--------|---------|
 | `scripts/ai-implement.sh` | Issue implementation + criteria check loop + PR creation + summary |
-| `scripts/ai-criteria-check.sh` | Deterministic gate: build, typecheck, console.log scan, secret pattern scan |
+| `scripts/ai-criteria-check.sh` | Deterministic gate: build, typecheck, test coverage, console.log scan, secret pattern scan |
 | `scripts/ai-pr-review-run.sh` | Runs manifest + multi-agent review (`claude-sonnet-4-6`), posts verdict to PR |
 | `scripts/ai-pr-review-fix.sh` | Fetches latest review comment, runs deepseek-v4-pro to fix CRITICAL/HIGH findings |
 | `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>` |

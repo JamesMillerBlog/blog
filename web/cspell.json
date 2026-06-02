@@ -65,7 +65,8 @@
     "*.test.*",
     "*.spec.*",
     "e2e",
-    ".code-health"
+    ".code-health",
+    "src/app/projects/data.ts"
   ],
   "flagWords": [],
   "dictionaries": ["typescript", "node", "npm", "html", "css", "fullstack"]

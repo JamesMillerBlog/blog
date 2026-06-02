@@ -4,6 +4,10 @@
     "onlyBuiltDependencies": ["@sentry/cli", "esbuild", "sharp", "unrs-resolver"],
     "overrides": {
       "vitest": "^4.1.0"
+    },
+    "supportedArchitectures": {
+      "os": ["darwin", "linux"],
+      "cpu": ["arm64", "x64"]
     }
   },
   "scripts": {
@@ -45,6 +49,8 @@
     "claude:fresh": "sh scripts/claude.sh --fresh",
     "pi": "sh scripts/pi.sh",
     "pi:fresh": "sh scripts/pi.sh --fresh",
+    "audit:standards": "./scripts/code-health-check.sh --quick",
+    "audit:standards:full": "./scripts/code-health-check.sh",
     "audit:security": "pnpm --dir web audit:security",
     "push": "git push -u origin HEAD",
     "push:force": "git push --force-with-lease -u origin HEAD"

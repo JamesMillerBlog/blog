@@ -1,4 +1,4 @@
-name: Weekly Code Health Check
+name: Weekly Coding Standards Audit
 
 on:
   schedule:

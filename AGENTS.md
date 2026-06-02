@@ -4,6 +4,7 @@ Next.js 16+ blog, MDX content, migrated from WordPress. This repo: app code only
 
 Read extra skill files only when relevant:
 
+- `.agents/skills/coding-standards.md` for TDD, functional style, and code quality rules — **read this when writing any TypeScript/React code**
 - `.agents/skills/design.md` for UI/design work
 - `.agents/skills/frontend.md` for Next.js/frontend implementation
 - `.agents/skills/infrastructure.md` for Terraform, AWS, CI/CD
@@ -164,6 +165,8 @@ Four workflows provide continuous security monitoring:
 cd web && pnpm dev                  # dev server
 cd web && pnpm build                # production build
 cd web && pnpm test                 # unit tests (vitest)
+pnpm audit:standards                # coding standards audit (quick)
+pnpm audit:standards:full           # coding standards audit (with AI review)
 cd web && pnpm audit:security       # run local security audit
 pnpm claude                         # Claude Code (Docker)
 pnpm claude:fresh                   # rebuild Claude image then interactive

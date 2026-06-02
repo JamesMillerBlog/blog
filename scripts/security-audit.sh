@@ -118,7 +118,24 @@ if pnpm audit --json 2>/dev/null >"$AUDIT_JSON" || true; then
                     shasum package.json "$REPO_ROOT/package.json" 2>/dev/null || echo '')
 
         if [ "$PKG_BEFORE" != "$PKG_AFTER" ]; then
-          # Detect major version bumps introduced by --fix
+          # If root package.json changed, pnpm --fix wrote pnpm.overrides entries.
+          # Overrides apply workspace-wide and can silently force major version bumps
+          # (e.g. vitest@<4.1.0 → >=4.1.0 breaks vite peer deps). Always revert and warn.
+          ROOT_BEFORE=$(echo "$PKG_BEFORE" | awk '{print $2}' | grep -F "$REPO_ROOT/package.json" || true)
+          ROOT_AFTER_HASH=$(md5sum "$REPO_ROOT/package.json" 2>/dev/null | awk '{print $1}' || \
+                            shasum "$REPO_ROOT/package.json" 2>/dev/null | awk '{print $1}' || echo '')
+          ROOT_BEFORE_HASH=$(echo "$PKG_BEFORE" | grep -F "$REPO_ROOT/package.json" | awk '{print $1}' || echo '')
+
+          if [ "$ROOT_BEFORE_HASH" != "$ROOT_AFTER_HASH" ]; then
+            OVERRIDES_ADDED=$(git -C "$REPO_ROOT" diff package.json 2>/dev/null | grep '^+.*"[^"]*@' | grep -v '^+++' || true)
+            log_warn "pnpm audit --fix wrote root pnpm.overrides — REVERTING (overrides are workspace-global and may force major bumps):"
+            echo "$OVERRIDES_ADDED" | while IFS= read -r line; do log_warn "  $line"; done
+            git -C "$REPO_ROOT" checkout package.json 2>/dev/null || true
+            add_warning "CVE fix requires pnpm.overrides" \
+              "pnpm audit --fix wanted to add root overrides. Apply manually after reviewing: $OVERRIDES_ADDED"
+          fi
+
+          # Detect major version bumps in web/package.json
           MAJOR_FIXED=$(git diff package.json 2>/dev/null | \
             grep '^[+-].*"[0-9]\+\.' | \
             awk -F'"' '{print $2, $4}' | \
@@ -126,16 +143,15 @@ if pnpm audit --json 2>/dev/null >"$AUDIT_JSON" || true; then
               split(prev,a," "); split($0,b," ");
               n=split(a[2],va,"."); m=split(b[2],vb,".");
               gsub(/[^0-9]/,"",va[1]); gsub(/[^0-9]/,"",vb[1]);
-              if(vb[1]+0 > va[1]+0) print a[1], a[2], "→", b[2]
+              if(vb[1]+0 > va[1]+0) print a[1], a[2], "->", b[2]
             }' 2>/dev/null || true)
 
           if [ -n "$MAJOR_FIXED" ]; then
-            log_warn "pnpm audit --fix bumped major versions — REVERTING to prevent breakage:"
+            log_warn "pnpm audit --fix bumped major versions in web/package.json — REVERTING:"
             echo "$MAJOR_FIXED" | while IFS= read -r line; do log_warn "  $line"; done
-            git checkout package.json "$REPO_ROOT/package.json" 2>/dev/null || true
+            git checkout package.json 2>/dev/null || true
             add_warning "CVE fix requires major version bump" \
-              "pnpm audit --fix wanted to bump major versions: $MAJOR_FIXED. \
-Apply manually after reviewing breaking changes: https://docs.npmjs.com/auditing-package-dependencies-for-security-vulnerabilities"
+              "pnpm audit --fix wanted to bump major versions: $MAJOR_FIXED. Apply manually after reviewing breaking changes."
           else
             log_ok "Audit fixes applied (no major bumps)"
             HAS_FIXES=true

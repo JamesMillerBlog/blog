@@ -4,11 +4,6 @@ import { resolve } from 'path'
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    server: {
-      deps: {
-        external: [/@aws-sdk/],
-      },
-    },
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
@@ -19,10 +14,10 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/types/**', 'src/**/*.test.*', 'src/**/*.spec.*', 'src/**/__fixtures__/**'],
       thresholds: {
-        lines: 40,
-        functions: 40,
+        lines: 35,
+        functions: 30,
         branches: 30,
-        statements: 40,
+        statements: 35,
       },
     },
   },

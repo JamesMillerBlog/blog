@@ -1,5 +1,7 @@
-import '@testing-library/jest-dom/vitest'
-import { vi } from 'vitest'
+import * as matchers from '@testing-library/jest-dom/matchers'
+import { expect, vi } from 'vitest'
+
+expect.extend(matchers)
 
 // jsdom doesn't implement window.matchMedia — stub it
 Object.defineProperty(window, 'matchMedia', {

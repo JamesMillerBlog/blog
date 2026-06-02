@@ -25,8 +25,10 @@ if [[ "$PRIOR_COUNT" -gt 0 ]] && [[ ! -f /tmp/unresolved-findings.json ]]; then
 fi
 
 echo "=== Fetching latest review from PR #${PR_NUMBER} ===" >&2
+# Avoid emoji character-class regex — ⚠️ is U+26A0+U+FE0F; the variation selector
+# breaks jq's oniguruma character class matching. Match on text only instead.
 REVIEW_BODY=$(gh pr view "$PR_NUMBER" --json comments \
-  --jq '[.comments[] | select(.author.login == "github-actions") | select(.body | test("^[✅⚠️❌] \\*\\*AI Code Review"))] | last | .body' \
+  --jq '[.comments[] | select(.author.login == "github-actions") | select(.body | test("\\*\\*AI Code Review"))] | last | .body' \
   2>/dev/null || true)
 
 if [[ -z "$REVIEW_BODY" ]] && [[ -f /tmp/latest-review.txt ]]; then
@@ -40,6 +42,23 @@ fi
 
 # Extract verification steps from review JSON findings
 REVIEW_JSON=$(printf '%s' "$REVIEW_BODY" | awk '/```json/{p=1;next} p && /```/{p=0} p' | head -200)
+
+# Findings are now posted as inline diff comments, not embedded in the summary comment.
+# When no JSON block is present, reconstruct context from inline finding comments.
+if [[ -z "$REVIEW_JSON" ]]; then
+  REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || echo "${GITHUB_REPOSITORY:-}")
+  INLINE_FINDINGS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+    --jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | test("(CRITICAL|HIGH) finding")) | .body] | join("\n---\n")' \
+    2>/dev/null || true)
+  if [[ -n "$INLINE_FINDINGS" ]]; then
+    echo "=== No JSON block in summary — using inline finding comments ===" >&2
+    REVIEW_BODY="${REVIEW_BODY}
+
+## Inline Finding Comments
+
+${INLINE_FINDINGS}"
+  fi
+fi
 
 # If a prior delta review left unresolved findings, scope this iteration to those only
 if [[ -f /tmp/unresolved-findings.json ]]; then

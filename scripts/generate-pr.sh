@@ -51,7 +51,7 @@ PROMPT_STEPS="Steps:
 1. Read .github/pull_request_template.md
 2. Run: git log main...HEAD --oneline
 3. Run: git diff main...HEAD --stat
-4. Generate: concise summary of changes, and a mermaid diagram of affected components/files
+4. Generate: concise summary of changes, and a mermaid diagram of affected components/files. For mermaid: use only alphanumeric node IDs (no @, /, #, dots); wrap display labels containing special characters in double quotes e.g. Checkout[\"actions/checkout@v6\"]; never put special characters in bare node IDs
 5. Write the filled template to /tmp/pr-body.md (do NOT inline the body in the gh command — write to the file first)
 Note: PR title must follow conventional commits — start with feat:, fix:, chore:, docs:, refactor:, perf:, or test:"
 

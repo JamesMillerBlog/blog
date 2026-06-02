@@ -21,13 +21,17 @@ fi
 
 echo "=== Responding to PR comment on #${PR_NUMBER} ===" >&2
 
-gh pr comment "$PR_NUMBER" --body "## 🔄 Working on it...
+# When triggered from an inline review comment the workflow already posted
+# an acknowledgement reply in the thread — skip the duplicate PR-level comment.
+if [[ -z "${INLINE_COMMENT_ID:-}" ]]; then
+  gh pr comment "$PR_NUMBER" --body "## 🔄 Working on it...
 
 **Instruction:** ${INSTRUCTION}
 **Model:** deepseek-v4-pro
 **ETA:** ~3-8 minutes
 
 [View Actions run](https://github.com/${GITHUB_REPOSITORY:-}/actions/runs/${GITHUB_RUN_ID:-})" || true
+fi
 
 PR_CONTEXT_RAW=$(gh pr view "$PR_NUMBER" --json title,body | jq -r '"Title: \(.title)\n\nBody: \(.body)"')
 SAFE_PR_CONTEXT="$(sanitize_external "$PR_CONTEXT_RAW")"

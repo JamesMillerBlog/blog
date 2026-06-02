@@ -28,6 +28,9 @@ pi_run() {
   printf '%s' "$prompt" | env $cache_env timeout 45m $PI --model "$model" 2>&1 | strip_ansi | tee "$outfile"
 }
 
+. scripts/langfuse.sh
+LF_TRACE_ID=''
+
 issue_comment() {
   gh issue comment "$ISSUE_NUMBER" --body "$1" || true
 }
@@ -44,6 +47,14 @@ ETA: ~8-12 minutes
 
 SAFE_TITLE="$(sanitize_external "${ISSUE_TITLE}")"
 SAFE_BODY="$(sanitize_external "${ISSUE_BODY}")"
+
+# Pre-flight: scan issue body for secret patterns before sending to AI
+_PREFLIGHT_SECRET_RE='ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY'
+if printf '%s' "${SAFE_BODY}" | grep -qE "$_PREFLIGHT_SECRET_RE"; then
+  echo "::error::Secret pattern detected in issue body — aborting to prevent credential exposure" >&2
+  exit 1
+fi
+unset _PREFLIGHT_SECRET_RE
 
 # Fetch past security learnings from private Gist to inform implementation
 PAST_LEARNINGS=""
@@ -76,7 +87,19 @@ else
   echo "No council output available — proceeding without pre-implementation plan" >&2
 fi
 
-IMPLEMENT_PROMPT="$(cat .pi/prompts/ai-issue-implement.md)
+# --- Langfuse trace ---
+PROMPT_VERSION=$(grep -m1 'version:' .pi/prompts/ai-issue-implement.md 2>/dev/null | \
+  grep -o '[0-9]\+\.[0-9]\+' | head -1 || printf 'unknown')
+LF_TRACE_ID=$(lf_trace_create \
+  "ai-implement-issue-${ISSUE_NUMBER}" \
+  "issue-${ISSUE_NUMBER}" \
+  '["ai-implement","ci"]' \
+  "$(jq -n --arg issue "$ISSUE_NUMBER" --arg branch "$BRANCH" \
+    --arg pv "$PROMPT_VERSION" \
+    '{issue_number: $issue, branch: $branch, prompt_version: $pv}')") || true
+echo "Langfuse trace: ${LF_TRACE_ID}" >&2
+
+IMPLEMENT_PROMPT="$(lf_prompt_get 'ai-issue-implement' '.pi/prompts/ai-issue-implement.md')
 
 ---
 
@@ -117,7 +140,13 @@ Description:
 ${SAFE_BODY}
 </issue-data>"
 
+_LF_IMPL_START=$(_lf_now || true)
 pi_run "opencode-go/deepseek-v4-pro" "$IMPLEMENT_PROMPT" /tmp/impl-output.txt
+_LF_IMPL_END=$(_lf_now || true)
+lf_generation_log "$LF_TRACE_ID" "implement" "deepseek-v4-pro" \
+  "$_LF_IMPL_START" "$_LF_IMPL_END" \
+  "${#IMPLEMENT_PROMPT}" "$(wc -c < /tmp/impl-output.txt)" \
+  "$(jq -n --arg issue "$ISSUE_NUMBER" '{issue_number: $issue}')" || true
 
 issue_comment "## ✅ Implementation Complete
 
@@ -243,7 +272,14 @@ ${PRIOR_SECTION}"
 ${COUNCIL_CHECKLIST}"
   fi
 
+  _LF_FIX_START=$(_lf_now || true)
   pi_run "opencode-go/deepseek-v4-pro" "$FIX_PROMPT" "/tmp/criteria-fix-${CRITERIA_ITER}.txt"
+  _LF_FIX_END=$(_lf_now || true)
+  lf_generation_log "$LF_TRACE_ID" "criteria-fix-${CRITERIA_ITER}" "deepseek-v4-pro" \
+    "$_LF_FIX_START" "$_LF_FIX_END" \
+    "${#FIX_PROMPT}" "$(wc -c < "/tmp/criteria-fix-${CRITERIA_ITER}.txt")" \
+    "$(jq -n --argjson iter "$CRITERIA_ITER" --arg types "$CHECK_TYPES" \
+      '{iteration: $iter, check_types: $types}')" || true
 done
 
 # --- Push branch ---
@@ -278,6 +314,13 @@ if [[ -z "$PR_NUMBER" ]]; then
   exit 1
 fi
 echo "PR #${PR_NUMBER} created" >&2
+
+lf_event_log "$LF_TRACE_ID" "pr-created" \
+  "$(jq -n --arg pr "$PR_NUMBER" --arg branch "$BRANCH" \
+    --arg build_failed "$BUILD_FAILED" --argjson iters "$CRITERIA_ITER" \
+    '{pr_number: $pr, branch: $branch, build_failed: $build_failed, criteria_iterations: $iters}')" || true
+lf_trace_index_store "pr-${PR_NUMBER}" "$LF_TRACE_ID" || true
+lf_trace_index_store "issue-${ISSUE_NUMBER}" "$LF_TRACE_ID" || true
 
 # Ensure PR body references the issue for GitHub cross-linking and auto-close on merge
 CURRENT_BODY=$(gh pr view "$PR_NUMBER" --json body --jq '.body' 2>/dev/null || echo "")

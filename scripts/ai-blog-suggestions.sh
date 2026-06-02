@@ -3,6 +3,7 @@ set -euo pipefail
 
 PI='pi --agent-team-subagent-skills disabled --no-session'
 export PI_SKIP_VERSION_CHECK=1
+. scripts/langfuse.sh
 
 strip_ansi() {
   sed 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\x1B\[[<>][0-9;]*[a-zA-Z]//g; s/\x1B[()][0-9A-Za-z]//g'
@@ -15,7 +16,7 @@ echo 'Running research and analysis phase...' >&2
 RADAR_DATE="$(date +'%B %Y')"
 OUTFILE="/tmp/radar-output.md"
 
-printf '%s' "$(cat .pi/prompts/blog-improvement-radar.md)" |
+printf '%s' "$(lf_prompt_get 'blog-improvement-radar' '.pi/prompts/blog-improvement-radar.md')" |
   env PI_CACHE_RETENTION=long timeout 55m $PI --model opencode-go/deepseek-v4-pro 2>&1 |
   strip_ansi |
   tee "$OUTFILE"

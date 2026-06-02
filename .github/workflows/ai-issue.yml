@@ -122,6 +122,9 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           BRANCH: ${{ steps.branch.outputs.name }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
         run: bash scripts/ai-implement.sh
 
       - name: Get PR number
@@ -217,6 +220,10 @@ jobs:
           POSTS_BUCKET: ${{ vars.POSTS_S3_BUCKET }}
           POSTS_BUCKET_REGION: eu-west-2
           NEXT_PUBLIC_ENVIRONMENT: staging
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
         run: cd web && pnpm build
 
       - name: Deploy to preview R2 bucket

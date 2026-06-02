@@ -13,14 +13,19 @@ fi
 
 QUESTION="$*"
 
+. scripts/langfuse.sh
+_COUNCIL_TEMPLATE_FILE=$(mktemp)
+trap 'rm -f "$_COUNCIL_TEMPLATE_FILE"' EXIT
+lf_prompt_get 'council' '.pi/prompts/council.md' > "$_COUNCIL_TEMPLATE_FILE"
+
 COUNCIL_PROMPT="$(python3 -c "
 import sys, re
 q = sys.argv[1]
 q = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', q)
 q = q.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-template = open('.pi/prompts/council.md').read()
+template = open(sys.argv[2]).read()
 print(template.replace('<QUESTION>', q))
-" "$QUESTION")"
+" "$QUESTION" "$_COUNCIL_TEMPLATE_FILE")"
 
 fmt_time() {
   local s=$1

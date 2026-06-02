@@ -300,11 +300,12 @@ Preview live + tests pass/fail visible in Actions
 ### Configuration
 
 - **`.pi/settings.ci.json`** — CI-specific pi settings: uses `deepseek-v4-pro` by default, enables `pi-lens` and `pi-multiagent` extensions
-- **`.pi/prompts/`** — Workflow prompt templates:
+- **`.pi/prompts/`** — Workflow prompt templates (versioned in Langfuse):
   - `ai-issue-implement.md` — issue implementation instructions
   - `ai-pr-respond.md` — PR comment response instructions
   - `pre-push-review.md` — multi-agent code review (security, code-quality, frontend, design, infra)
   - `blog-improvement-radar.md` — blog strategy analysis & suggestion generation
+  - **After editing prompts:** Run `pnpm prompts:push` to sync to Langfuse for tracing and version management
 - **`infrastructure/stacks/site/ephemeral/`** — Terraform for ephemeral preview environments:
   - `main.tf` — Cloudflare R2 bucket, custom domain, Workers Basic Auth
   - `variables.tf` — PR number, Cloudflare credentials, Basic Auth credentials

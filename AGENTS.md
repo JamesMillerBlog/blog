@@ -170,4 +170,5 @@ pnpm claude:fresh                   # rebuild Claude image then interactive
 pnpm pi                             # pi (Docker)
 pnpm pi:fresh                       # rebuild pi image then interactive
 pnpm council                        # Council of agents (pi-based)
+pnpm prompts:push                   # Sync .pi/prompts/*.md → Langfuse (run after editing prompt files)
 ```

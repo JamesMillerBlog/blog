@@ -11,6 +11,7 @@ BRANCH="${BRANCH:?BRANCH not set}"
 
 PI="pi --agent-team-subagent-skills disabled --no-session"
 export PI_SKIP_VERSION_CHECK=1
+. scripts/langfuse.sh
 
 strip_ansi() {
   sed 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\x1B\[[<>][0-9;]*[a-zA-Z]//g; s/\x1B[()][0-9A-Za-z]//g'
@@ -33,7 +34,7 @@ SAFE_COMMENT="$(sanitize_external "${COMMENT_BODY}")"
 SAFE_FILE_PATH="$(sanitize_external "${FILE_PATH}")"
 SAFE_DIFF_HUNK="$(sanitize_external "${DIFF_HUNK}")"
 
-ASSESS_PROMPT="$(cat .pi/prompts/ai-pr-review-comment-assess.md)
+ASSESS_PROMPT="$(lf_prompt_get 'ai-pr-review-comment-assess' '.pi/prompts/ai-pr-review-comment-assess.md')
 
 ---
 

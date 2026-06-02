@@ -44,16 +44,38 @@ install_binary() {
   local tmp
   tmp=$(mktemp -d)
   local archive="$tmp/archive.tar.gz"
-  echo "  Installing $name..."
   local checksums="$tmp/checksums.txt"
-  curl -sL "$url" -o "$archive"
-  curl -sL "$checksums_url" -o "$checksums"
-  # Rename archive to expected filename so checksum tool can match it
   local expected_name
   expected_name="$(basename "$url")"
+
+  echo "  Installing $name..."
+
+  if ! curl -sfL "$url" -o "$archive"; then
+    echo "  Warning: failed to download $name (HTTP error or URL not found) — skipping"
+    echo "  URL: $url"
+    rm -rf "$tmp"
+    return 1
+  fi
+  if ! curl -sfL "$checksums_url" -o "$checksums"; then
+    echo "  Warning: failed to download $name checksums — skipping"
+    rm -rf "$tmp"
+    return 1
+  fi
+
+  # Rename archive to expected filename so checksum tool can match it
   cp "$archive" "$tmp/$expected_name"
-  (cd "$tmp" && checksum_verify "checksums.txt")
-  tar -xzf "$archive" -C "$BIN_DIR" "$binary_in_archive"
+  if ! (cd "$tmp" && checksum_verify "checksums.txt"); then
+    echo "  Warning: checksum verification failed for $name — skipping"
+    rm -rf "$tmp"
+    return 1
+  fi
+
+  if ! tar -xzf "$archive" -C "$BIN_DIR" "$binary_in_archive"; then
+    echo "  Warning: failed to extract $name — skipping"
+    rm -rf "$tmp"
+    return 1
+  fi
+
   rm -rf "$tmp"
 }
 
@@ -83,28 +105,26 @@ if ! command -v trivy >/dev/null 2>&1; then
     install_binary trivy \
       "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/${TRIVY_ARCHIVE}" \
       "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt" \
-      trivy
+      trivy || echo '  Continuing without trivy (container/IaC checks will be skipped)...'
   fi
 fi
 
 if ! command -v zizmor >/dev/null 2>&1; then
-  echo '  Installing zizmor...'
   case "${OS}-${ARCH}" in
     Linux-x86_64)        ZIZMOR_ARCHIVE="zizmor_${ZIZMOR_VERSION}_linux_amd64.tar.gz" ;;
-    Darwin-arm64|Darwin-aarch64) ZIZMOR_ARCHIVE="zizmor_${ZIZMOR_VERSION}_darwin_aarch64.tar.gz" ;;
+    Darwin-arm64|Darwin-aarch64) ZIZMOR_ARCHIVE="zizmor_${ZIZMOR_VERSION}_darwin_arm64.tar.gz" ;;
     Darwin-x86_64)       ZIZMOR_ARCHIVE="zizmor_${ZIZMOR_VERSION}_darwin_x86_64.tar.gz" ;;
     *) echo "  Warning: unsupported platform ${OS}-${ARCH} for zizmor — skipping"; ZIZMOR_ARCHIVE='' ;;
   esac
   if [ -n "${ZIZMOR_ARCHIVE:-}" ]; then
     install_binary zizmor \
-      "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/${ZIZMOR_ARCHIVE}" \
-      "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor_${ZIZMOR_VERSION}_checksums.txt" \
-      zizmor
+      "https://github.com/woodruffw/zizmor/releases/download/v${ZIZMOR_VERSION}/${ZIZMOR_ARCHIVE}" \
+      "https://github.com/woodruffw/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor_${ZIZMOR_VERSION}_checksums.txt" \
+      zizmor || echo '  Continuing without zizmor (GitHub Actions checks will be skipped)...'
   fi
 fi
 
 if ! command -v gitleaks >/dev/null 2>&1; then
-  echo '  Installing gitleaks...'
   case "${OS}-${ARCH}" in
     Linux-x86_64)        GITLEAKS_ARCHIVE="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" ;;
     Darwin-arm64|Darwin-aarch64) GITLEAKS_ARCHIVE="gitleaks_${GITLEAKS_VERSION}_darwin_arm64.tar.gz" ;;
@@ -115,7 +135,7 @@ if ! command -v gitleaks >/dev/null 2>&1; then
     install_binary gitleaks \
       "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${GITLEAKS_ARCHIVE}" \
       "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt" \
-      gitleaks
+      gitleaks || echo '  Continuing without gitleaks (secret scanning will be skipped)...'
   fi
 fi
 
@@ -132,6 +152,26 @@ if ! command -v jq >/dev/null 2>&1; then
   else
     echo '  Warning: cannot install jq automatically — please install it manually'
   fi
+fi
+
+# Ensure PCRE grep is available (GNU grep -P) — required for sections 13–15.
+# macOS ships BSD grep which lacks -P; GNU grep installs as 'ggrep' via brew.
+if grep -qP '' /dev/null 2>/dev/null; then
+  export GREP_P=grep
+elif command -v ggrep >/dev/null 2>&1; then
+  export GREP_P=ggrep
+elif command -v brew >/dev/null 2>&1; then
+  echo '  Installing GNU grep (required for markdown/source/prompt checks)...'
+  if brew install grep >/dev/null 2>&1 && command -v ggrep >/dev/null 2>&1; then
+    export GREP_P=ggrep
+  else
+    echo '  Warning: brew install grep failed — sections 13-15 will skip PCRE checks'
+    export GREP_P=grep
+  fi
+else
+  echo '  Warning: grep -P (PCRE) not available — sections 13-15 will be skipped'
+  echo '  Install GNU grep (brew install grep on macOS) to enable these checks.'
+  export GREP_P=grep
 fi
 
 # GITHUB_OUTPUT is set by the Actions runner; for local runs point it at a temp

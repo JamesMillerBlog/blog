@@ -64,6 +64,7 @@ jobs:
           path: |
             audit-report.md
             audit-report.json
+            audit-warnings.md
 
       - name: Update security advisory
         if: always()

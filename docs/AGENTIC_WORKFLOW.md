@@ -222,14 +222,16 @@ Preview live + tests pass/fail visible in Actions
 
 ### AI PR Comment Response (`ai-pr-comment` workflow)
 
-**When:** A repo owner comments `/ai <instruction>`, `/resume`, or `/council <question>` on a pull request.
+**When:** A repo owner comments `/ai <instruction>`, `/resume`, `/review`, `/rate <good|bad> [reason]`, or `/council <question>` on a pull request.
 
 **What happens:**
 1. If `/council <question>` → runs council of agents on the question and posts answer
 2. If `/ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary (AI review triggers automatically via PR update)
 3. If `/resume` → re-deploys preview environment without code changes
+4. If `/review` → dispatches `ai-pr-review.yml` for multi-agent code review
+5. If `/rate good [reason]` or `/rate bad [reason]` → records human feedback to Langfuse trace for this PR (used for AI quality monitoring)
 
-**Why:** Enables rapid iteration on PRs — comment `/ai fix the heading colour` and the AI implements and re-deploys automatically. Use `/council` to get architectural guidance.
+**Why:** Enables rapid iteration on PRs — comment `/ai fix the heading colour` and the AI implements and re-deploys automatically. Use `/council` for architectural guidance, `/review` to trigger review anytime, and `/rate` to provide feedback for improving AI output quality.
 
 ### AI PR Review (`ai-pr-review` workflow)
 

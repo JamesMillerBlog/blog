@@ -91,7 +91,6 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
-      workflows: write
 
     env:
       COMMENT_BODY: ${{ github.event.comment.body }}

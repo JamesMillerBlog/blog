@@ -12,7 +12,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/types/**', 'src/**/*.test.*', 'src/**/*.spec.*', 'src/**/__fixtures__/**'],
+      exclude: [
+        'src/types/**',
+        'src/**/*.test.*',
+        'src/**/*.spec.*',
+        'src/**/__fixtures__/**',
+        'src/__mocks__/**',
+      ],
       thresholds: {
         lines: 46,
         functions: 53,
@@ -24,6 +30,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      'posthog-js/react': resolve(__dirname, './src/__mocks__/posthog-js/react.ts'),
+      'posthog-js': resolve(__dirname, './src/__mocks__/posthog-js/index.ts'),
     },
   },
 })

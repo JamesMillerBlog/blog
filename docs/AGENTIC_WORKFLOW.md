@@ -172,7 +172,7 @@ Eight GitHub workflows automate AI-driven development:
 1. Creates a branch: `ai/issue-{number}-{slug}`
 2. Phase 0 — **Council pre-implementation review** — multi-model council (analysts + critic + synthesizer) reviews the issue architecture and produces an implementation plan with checklist
 3. Phase 1 — **Implementation** (`deepseek-v4-pro`) — implements the issue based on title, body, and council plan
-4. Phase 2 — **Criteria check loop** (up to 3 iterations) — runs deterministic checks: build, TypeScript typecheck, console.log scan, secret pattern scan. Failures trigger deepseek-v4-pro auto-fix before re-checking
+4. Phase 2 — **Criteria check loop** (up to 3 iterations) — runs deterministic checks: build, TypeScript typecheck, test coverage, console.log scan, secret pattern scan. Failures trigger deepseek-v4-pro auto-fix before re-checking
 5. Phase 3 — **Push and create draft PR** — pushes branch, creates draft PR on GitHub
 6. Phase 4 — **Preview deployment** — if PR created successfully:
    - Deploys site to ephemeral Cloudflare R2 bucket: `https://pr-{number}.staging.jamesmiller.blog`

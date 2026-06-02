@@ -80,6 +80,10 @@ jobs:
           POSTS_BUCKET: ${{ vars.POSTS_S3_BUCKET }}
           POSTS_BUCKET_REGION: eu-west-2
           NEXT_PUBLIC_ENVIRONMENT: ${{ inputs.deployment_environment }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
         run: pnpm build
 
       - name: Sync static files to R2

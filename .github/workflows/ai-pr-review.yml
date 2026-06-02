@@ -65,6 +65,10 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
         # Run script from base branch so PR code changes cannot affect the review runner
         run: git show origin/main:scripts/ai-pr-review-run.sh | bash
 

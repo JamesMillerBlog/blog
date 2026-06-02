@@ -1,6 +1,7 @@
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, TWITTER_HANDLE } from '@/common/consts/constants'
 import type { Metadata } from 'next'
 import { ThemeProvider } from '@/providers/theme-provider'
+import { PostHogProvider } from '@/providers/posthog-provider'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { getAllPosts } from '@/common/utils/posts'
@@ -88,13 +89,15 @@ export default async function RootLayout({
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
       </head>
       <body className="font-label antialiased bg-surface text-on-surface">
-        <ThemeProvider>
-          <div className="min-h-screen">
-            <Navigation posts={postItems} />
-            {children}
-            <Footer />
-          </div>
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider>
+            <div className="min-h-screen">
+              <Navigation posts={postItems} />
+              {children}
+              <Footer />
+            </div>
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   )

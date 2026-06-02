@@ -12,7 +12,7 @@ jobs:
     if: |
       (github.event_name == 'pull_request_review_comment' || github.event.issue.pull_request != null) &&
       github.event.comment.user.login == github.repository_owner &&
-      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '/council ') || github.event.comment.body == '/review')
+      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '/council ') || github.event.comment.body == '/review' || startsWith(github.event.comment.body, '/rate '))
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -91,7 +91,6 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
-      workflows: write
 
     env:
       COMMENT_BODY: ${{ github.event.comment.body }}
@@ -100,6 +99,9 @@ jobs:
       INLINE_COMMENT_ID: ${{ needs.gate.outputs.comment_id }}
       EVENT_NAME: ${{ needs.gate.outputs.event_name }}
       REPO: ${{ github.repository }}
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
 
     steps:
       - name: Verify actor
@@ -253,6 +255,36 @@ jobs:
             fi
           fi
 
+      - name: Handle /rate feedback
+        if: startsWith(env.COMMENT_BODY, '/rate ')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
+        run: |
+          RATING_BODY="${COMMENT_BODY#/rate }"
+          RATING_WORD=$(printf '%s' "$RATING_BODY" | awk '{print tolower($1)}')
+          RATING_COMMENT=$(printf '%s' "$RATING_BODY" | sed 's/^[[:alnum:]]*[[:space:]]*//')
+
+          if [[ "$RATING_WORD" == 'good' ]]; then
+            SCORE_VALUE=1
+          elif [[ "$RATING_WORD" == 'bad' ]]; then
+            SCORE_VALUE=0
+          else
+            gh pr comment "${PR_NUMBER}" --body "**Invalid rating.** Use \`/rate good [reason]\` or \`/rate bad [reason]\`" || true
+            exit 0
+          fi
+
+          . scripts/langfuse.sh
+          TRACE_ID=$(lf_trace_index_get "pr-${PR_NUMBER}")
+          if [[ -z "$TRACE_ID" ]]; then
+            gh pr comment "${PR_NUMBER}" --body "**Rating noted** (${RATING_WORD}) — no Langfuse trace found for this PR yet." || true
+            exit 0
+          fi
+
+          lf_score_post "$TRACE_ID" "human-rating" "$SCORE_VALUE" "$RATING_COMMENT"
+          gh pr comment "${PR_NUMBER}" --body "**Feedback recorded** — rated \`${RATING_WORD}\`$([ -n "$RATING_COMMENT" ] && printf ': %s' "$RATING_COMMENT" || true)" || true
+
       - name: Set preview flag
         id: set_preview
         run: |
@@ -337,6 +369,10 @@ jobs:
           POSTS_BUCKET: ${{ vars.POSTS_S3_BUCKET }}
           POSTS_BUCKET_REGION: eu-west-2
           NEXT_PUBLIC_ENVIRONMENT: staging
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
         run: cd web && pnpm build
 
       - name: Deploy to preview R2 bucket

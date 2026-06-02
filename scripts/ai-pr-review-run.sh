@@ -5,6 +5,8 @@ PR_NUMBER="${PR_NUMBER:?PR_NUMBER not set}"
 
 PI="pi --agent-team-subagent-skills disabled --no-session"
 export PI_SKIP_VERSION_CHECK=1
+. scripts/langfuse.sh
+LF_TRACE_ID=''
 
 strip_ansi() {
   sed 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\x1B\[[<>][0-9;]*[a-zA-Z]//g; s/\x1B[()][0-9A-Za-z]//g'
@@ -13,7 +15,22 @@ strip_ansi() {
 echo "=== Generating review manifest ===" >&2
 bash scripts/pre-push-review-manifest.sh
 
-REVIEW_PROMPT="$(cat .pi/prompts/pre-push-review.md)
+# Pre-flight: scan diff for secret patterns before sending to AI
+_DIFF_SECRETS=$(git diff origin/main...HEAD 2>/dev/null | grep '^+' | grep -v '^+++' || true)
+_PREFLIGHT_SECRET_RE='ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY'
+if printf '%s' "$_DIFF_SECRETS" | grep -qE "$_PREFLIGHT_SECRET_RE" 2>/dev/null; then
+  echo "::warning::Secret pattern detected in diff — review will proceed but findings should be manually checked" >&2
+fi
+unset _DIFF_SECRETS _PREFLIGHT_SECRET_RE
+
+LF_TRACE_ID=$(lf_trace_create \
+  "ai-review-pr-${PR_NUMBER}" \
+  "pr-${PR_NUMBER}" \
+  '["ai-pr-review","ci"]' \
+  "$(jq -n --arg pr "$PR_NUMBER" '{pr_number: $pr}')")
+echo "Langfuse trace: ${LF_TRACE_ID}" >&2
+
+REVIEW_PROMPT="$(lf_prompt_get 'pre-push-review' '.pi/prompts/pre-push-review.md')
 
 ---
 
@@ -42,9 +59,15 @@ Valid verdict values: \"SAFE_TO_PUSH\", \"PUSH_WITH_CAUTION\", \"DO_NOT_PUSH\"
 Include ALL CRITICAL and HIGH findings in the findings array. MEDIUM/LOW may be omitted.
 For verification_steps: provide shell commands that exit 0 when the finding is correctly fixed. Use only safe read-only commands: bash -n (shell syntax check), actionlint (workflow lint), yamllint, grep assertions, python3 -m py_compile. Use [] if no mechanical check applies."
 
+_LF_REVIEW_START=$(_lf_now)
 printf '%s' "$REVIEW_PROMPT" | \
   PI_CACHE_RETENTION=long timeout 45m $PI --model "opencode/claude-sonnet-4-6" 2>&1 | \
   strip_ansi | tee /tmp/pr-review-output.txt
+_LF_REVIEW_END=$(_lf_now)
+lf_generation_log "$LF_TRACE_ID" "review" "claude-sonnet-4-6" \
+  "$_LF_REVIEW_START" "$_LF_REVIEW_END" \
+  "${#REVIEW_PROMPT}" "$(wc -c < /tmp/pr-review-output.txt)" \
+  "$(jq -n --arg pr "$PR_NUMBER" '{pr_number: $pr}')"
 
 VERDICT_JSON=$(awk '/```json/{p=1;next} p && /```/{p=0} p' /tmp/pr-review-output.txt | tail -100)
 VERDICT=$(echo "$VERDICT_JSON" | jq -r '.verdict // empty' 2>/dev/null || true)
@@ -59,6 +82,12 @@ if [[ -z "$VERDICT" ]]; then
   HIGH_COUNT=0
 fi
 [[ -z "$VERDICT" ]] && VERDICT="UNKNOWN"
+
+lf_event_log "$LF_TRACE_ID" "verdict" \
+  "$(jq -n --arg v "$VERDICT" --argjson crit "${CRITICAL_COUNT}" \
+    --argjson high "${HIGH_COUNT}" \
+    '{verdict: $v, critical_count: $crit, high_count: $high}')"
+lf_trace_index_store "pr-${PR_NUMBER}" "$LF_TRACE_ID"
 
 cp /tmp/pr-review-output.txt /tmp/latest-review.txt
 

@@ -84,9 +84,10 @@ fi
 [[ -z "$VERDICT" ]] && VERDICT="UNKNOWN"
 
 lf_event_log "$LF_TRACE_ID" "verdict" \
-  "$(jq -n --arg v "$VERDICT" --argjson crit "${CRITICAL_COUNT}" \
-    --argjson high "${HIGH_COUNT}" \
-    '{verdict: $v, critical_count: $crit, high_count: $high}')"
+  "$(jq -n --arg v "$VERDICT" --arg crit "${CRITICAL_COUNT:-0}" \
+    --arg high "${HIGH_COUNT:-0}" \
+    '{verdict: $v, critical_count: ($crit | tonumber? // 0), high_count: ($high | tonumber? // 0)}' \
+    2>/dev/null || echo '{}')"
 lf_trace_index_store "pr-${PR_NUMBER}" "$LF_TRACE_ID"
 
 cp /tmp/pr-review-output.txt /tmp/latest-review.txt

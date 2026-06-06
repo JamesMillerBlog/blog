@@ -330,12 +330,25 @@ stage_done
 stage "5. Build Check"
 cd "$PROJECT_ROOT/web"
 
+# Ensure _posts has at least one post — Next.js output:export rejects dynamic
+# routes with empty generateStaticParams(), even if that's a valid runtime state.
+PLACEHOLDER_POST="_posts/ci-placeholder.mdx"
+PLACEHOLDER_CREATED=false
+if [ ! -d "_posts" ] || [ -z "$(ls _posts/*.mdx 2>/dev/null)" ]; then
+  mkdir -p _posts
+  printf -- '---\ntitle: CI Placeholder\ndate: "2024-01-01"\ncoverImage: /placeholder.jpg\nauthor:\n  name: CI\n  picture: /placeholder.jpg\nexcerpt: Placeholder post for CI builds.\nogImage:\n  url: /placeholder.jpg\n---\nPlaceholder.\n' \
+    > "$PLACEHOLDER_POST"
+  PLACEHOLDER_CREATED=true
+fi
+
 echo "  → Running next build (this may take a minute)..."
 if pnpm build >/dev/null 2>&1; then
   pass "Next.js build succeeds"
 else
   fail "Next.js build failed"
 fi
+
+[ "$PLACEHOLDER_CREATED" = true ] && rm -f "$PLACEHOLDER_POST"
 
 stage_done
 cd "$PROJECT_ROOT"
@@ -420,9 +433,12 @@ cd "$PROJECT_ROOT/web"
 
 echo "  → Running cspell on source files..."
 if pnpm exec cspell "src/**/*.{ts,tsx}" --no-progress --unique \
-  >"$REPORT_DIR/spell.txt" 2>/dev/null; then
+  >"$REPORT_DIR/spell.txt" 2>"$REPORT_DIR/spell.err"; then
   pass "No spelling errors"
 else
+  # Filter out non-spelling output (e.g. Node.js version warnings from cspell stderr)
+  grep -v '^Unsupported' "$REPORT_DIR/spell.txt" >"$REPORT_DIR/spell-filtered.txt" 2>/dev/null || true
+  mv "$REPORT_DIR/spell-filtered.txt" "$REPORT_DIR/spell.txt"
   SPELL_COUNT=$(wc -l <"$REPORT_DIR/spell.txt" 2>/dev/null || echo "0")
   if [ "$SPELL_COUNT" -gt 0 ] 2>/dev/null; then
     warn "${SPELL_COUNT} potential spelling errors — see ${REPORT_DIR}/spell.txt"
@@ -451,7 +467,9 @@ check_duplicate_configs() {
   shift
   local found=()
   for pattern in "$@"; do
-    [ -f "$pattern" ] && found+=("$pattern")
+    # shellcheck disable=SC2086
+    matches=$(ls $pattern 2>/dev/null | head -1 || true)
+    [ -n "$matches" ] && found+=("$matches")
   done
   if [ "${#found[@]}" -gt 1 ]; then
     DUPLICATE_FOUND=$((DUPLICATE_FOUND + 1))

@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y python3 git curl ca-certificates tzdata
 
 ENV TZ=Europe/London
 
-RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent pnpm@9.15.9
+RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.78.0 pnpm@9.15.9
 
 RUN useradd -m -s /bin/bash pi
 
@@ -30,4 +30,4 @@ WORKDIR /workspace
 
 USER pi
 
-CMD ["pi", "--agent-team-subagent-skills", "disabled"]
+ENTRYPOINT ["pi"]

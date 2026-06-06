@@ -121,7 +121,6 @@ if pnpm audit --json 2>/dev/null >"$AUDIT_JSON" || true; then
           # If root package.json changed, pnpm --fix wrote pnpm.overrides entries.
           # Overrides apply workspace-wide and can silently force major version bumps
           # (e.g. vitest@<4.1.0 → >=4.1.0 breaks vite peer deps). Always revert and warn.
-          ROOT_BEFORE=$(echo "$PKG_BEFORE" | awk '{print $2}' | grep -F "$REPO_ROOT/package.json" || true)
           ROOT_AFTER_HASH=$(md5sum "$REPO_ROOT/package.json" 2>/dev/null | awk '{print $1}' || \
                             shasum "$REPO_ROOT/package.json" 2>/dev/null | awk '{print $1}' || echo '')
           ROOT_BEFORE_HASH=$(echo "$PKG_BEFORE" | grep -F "$REPO_ROOT/package.json" | awk '{print $1}' || echo '')

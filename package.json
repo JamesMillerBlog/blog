@@ -60,9 +60,7 @@
     "pi:fresh": "sh scripts/pi.sh --fresh",
     "audit:standards": "./scripts/code-health-check.sh --quick",
     "audit:standards:full": "./scripts/code-health-check.sh",
-    "audit:security": "pnpm --dir web audit:security",
-    "push": "git push -u origin HEAD",
-    "push:force": "git push --force-with-lease -u origin HEAD"
+    "audit:security": "pnpm --dir web audit:security"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

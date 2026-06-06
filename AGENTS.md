@@ -124,6 +124,13 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | `reviewer-design`            | `claude-haiku-4-5-20251001` | `*.tsx/jsx/css`                      | Byte Mark tokens, typography                |
 | `reviewer-infrastructure`    | `claude-haiku-4-5-20251001` | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform          |
 
+## Testing
+
+- **Framework:** vitest (`web/src/**/*.test.ts` / `.test.tsx`)
+- **Coverage:** 80% line coverage on changed files (enforced in CI)
+- **Before marking work done:** `cd web && pnpm test:coverage` must pass
+- **Tests are part of the feature** — write them alongside code, not after
+
 ## Docker
 
 Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (rebuild image first). Pi runs via `pnpm pi` or `pnpm pi:fresh`. See `docs/DOCKER.md` for security model.

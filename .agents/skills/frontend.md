@@ -51,5 +51,5 @@ All exported from `web/src/components/mdx/index.ts`.
 
 ## Verify
 ```bash
-cd web && pnpm tsc --noEmit
+cd web && pnpm tsc --noEmit && pnpm test:coverage
 ```

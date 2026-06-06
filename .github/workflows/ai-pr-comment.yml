@@ -113,6 +113,44 @@ jobs:
             echo "Unauthorized actor: $ACTOR" && exit 1
           fi
 
+      - name: Acknowledge comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          post_reply() {
+            local body="$1"
+            if [[ "$EVENT_NAME" == 'pull_request_review_comment' ]]; then
+              gh api --method POST "repos/${REPO}/pulls/comments/${INLINE_COMMENT_ID}/replies" \
+                --field body="$body" || true
+            else
+              gh pr comment "${PR_NUMBER}" --body "$body" || true
+            fi
+          }
+          add_reaction() {
+            local emoji="$1"
+            if [[ "$EVENT_NAME" == 'pull_request_review_comment' ]]; then
+              gh api --method POST "repos/${REPO}/pulls/comments/${INLINE_COMMENT_ID}/reactions" \
+                --field content="$emoji" || true
+            else
+              gh api --method POST "repos/${REPO}/issues/comments/${INLINE_COMMENT_ID}/reactions" \
+                --field content="$emoji" || true
+            fi
+          }
+
+          if [[ "$COMMENT_BODY" == '/resume' ]]; then
+            post_reply "🔄 **Resuming preview deployment...** [View run](${RUN_URL})"
+          elif [[ "$COMMENT_BODY" == '/review' ]]; then
+            post_reply "🔍 **AI review triggered...** [View run](${RUN_URL})"
+          elif [[ "$COMMENT_BODY" == /council\ * ]]; then
+            QUESTION="${COMMENT_BODY#/council }"
+            post_reply "🧠 **Running council on:** ${QUESTION} [View run](${RUN_URL})"
+          else
+            INSTRUCTION="${COMMENT_BODY#/ai }"
+            add_reaction rocket
+            post_reply "🔨 **Starting work:** ${INSTRUCTION} [View run](${RUN_URL})"
+          fi
+
       - name: Get PR branch
         id: pr
         env:
@@ -154,44 +192,6 @@ jobs:
         run: |
           mkdir -p .pi/extensions/pi-permission-system
           echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
-
-      - name: Acknowledge comment
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          post_reply() {
-            local body="$1"
-            if [[ "$EVENT_NAME" == 'pull_request_review_comment' ]]; then
-              gh api --method POST "repos/${REPO}/pulls/comments/${INLINE_COMMENT_ID}/replies" \
-                --field body="$body" || true
-            else
-              gh pr comment "${PR_NUMBER}" --body "$body" || true
-            fi
-          }
-          add_reaction() {
-            local emoji="$1"
-            if [[ "$EVENT_NAME" == 'pull_request_review_comment' ]]; then
-              gh api --method POST "repos/${REPO}/pulls/comments/${INLINE_COMMENT_ID}/reactions" \
-                --field content="$emoji" || true
-            else
-              gh api --method POST "repos/${REPO}/issues/comments/${INLINE_COMMENT_ID}/reactions" \
-                --field content="$emoji" || true
-            fi
-          }
-
-          if [[ "$COMMENT_BODY" == '/resume' ]]; then
-            post_reply "🔄 **Resuming preview deployment...** [View run](${RUN_URL})"
-          elif [[ "$COMMENT_BODY" == '/review' ]]; then
-            post_reply "🔍 **AI review triggered...** [View run](${RUN_URL})"
-          elif [[ "$COMMENT_BODY" == /council\ * ]]; then
-            QUESTION="${COMMENT_BODY#/council }"
-            post_reply "🧠 **Running council on:** ${QUESTION} [View run](${RUN_URL})"
-          else
-            INSTRUCTION="${COMMENT_BODY#/ai }"
-            add_reaction rocket
-            post_reply "🔨 **Starting work:** ${INSTRUCTION} [View run](${RUN_URL})"
-          fi
 
       - name: Dispatch PR review
         if: env.COMMENT_BODY == '/review'

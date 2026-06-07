@@ -26,15 +26,7 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.8
-
       - name: Log release
         env:
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: echo "Released $TAG_NAME"
-
-      # TODO: Add AWS deployment trigger here
-      # e.g. trigger the deploy workflow via workflow_dispatch
-      # When adding deployment steps, pin action SHAs to full commit hashes:
-      #   googleapis/release-please-action@<sha>
-      #   actions/checkout@<sha>

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.1](https://github.com/JamesMillerBlog/blog/compare/v0.2.0...v0.2.1) (2026-06-07)
+
+
+### Bug Fixes
+
+* changelog ([271b20e](https://github.com/JamesMillerBlog/blog/commit/271b20e7060c6ecbe334f048b7171228b66ebc69))
+* release please ([f5474ef](https://github.com/JamesMillerBlog/blog/commit/f5474ef1ff6a2d631e69c8c600a269cb3c7c7cda))
+* release please ([9963451](https://github.com/JamesMillerBlog/blog/commit/9963451736510fa9121d36e15afd19088c52c3df))
+* reset release-please version to 0.1.0 ([e8c4502](https://github.com/JamesMillerBlog/blog/commit/e8c4502a3c4689c4f480b988233926033a87447a))
+* reset relesae please ([549a4ff](https://github.com/JamesMillerBlog/blog/commit/549a4ff9046764d4b3371fbd5eebec204a2aea92))
+
 ## [0.2.0](https://github.com/JamesMillerBlog/blog/compare/v0.1.0...v0.2.0) (2026-06-07)
 
 

@@ -78,7 +78,7 @@ lf_generation_log "$LF_TRACE_ID" "respond" "deepseek-v4-pro" \
   "$_LF_RESPOND_START" "$_LF_RESPOND_END" \
   "${#RESPOND_PROMPT}" "$(wc -c < /tmp/respond-output.txt)" \
   "$(jq -n --arg pr "$PR_NUMBER" --arg instr "$SAFE_INSTRUCTION" \
-    '{pr_number: $pr, instruction_chars: ($instr | length | tostring)}')"
+    '{pr_number: $pr, instruction_chars: ($instr | length | tostring)}')" || true
 lf_trace_index_store "pr-${PR_NUMBER}" "$LF_TRACE_ID"
 
 if ! git diff --quiet || ! git diff --cached --quiet; then

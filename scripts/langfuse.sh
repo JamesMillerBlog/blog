@@ -62,8 +62,10 @@ lf_generation_log() {
   [[ -z "$trace_id" ]] && return 0
   local gen_id input_tokens output_tokens payload
   gen_id=$(_lf_uuid)
-  input_tokens=$(( input_chars / 4 + 1 ))
-  output_tokens=$(( output_chars / 4 + 1 ))
+  input_chars="${input_chars//[[:space:]]/}"
+  output_chars="${output_chars//[[:space:]]/}"
+  input_tokens=$(( ${input_chars:-0} / 4 + 1 ))
+  output_tokens=$(( ${output_chars:-0} / 4 + 1 ))
   payload=$(jq -n \
     --arg id "$gen_id" \
     --arg trace "$trace_id" \
@@ -71,9 +73,11 @@ lf_generation_log() {
     --arg model "$model" \
     --arg start "$start_ts" \
     --arg end "$end_ts" \
-    --argjson usage "{\"input\": $input_tokens, \"output\": $output_tokens, \"unit\": \"TOKENS\"}" \
+    --argjson input_tokens "$input_tokens" \
+    --argjson output_tokens "$output_tokens" \
     --argjson meta "$metadata_json" \
-    '{id: $id, traceId: $trace, name: $name, model: $model, startTime: $start, endTime: $end, usage: $usage, metadata: $meta}')
+    '{id: $id, traceId: $trace, name: $name, model: $model, startTime: $start, endTime: $end, usage: {input: $input_tokens, output: $output_tokens, unit: "TOKENS"}, metadata: $meta}' \
+    2>/dev/null || true)
   _lf_post "/api/public/generations" "$payload"
 }
 

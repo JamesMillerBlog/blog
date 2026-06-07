@@ -67,7 +67,7 @@ _LF_REVIEW_END=$(_lf_now)
 lf_generation_log "$LF_TRACE_ID" "review" "claude-sonnet-4-6" \
   "$_LF_REVIEW_START" "$_LF_REVIEW_END" \
   "${#REVIEW_PROMPT}" "$(wc -c < /tmp/pr-review-output.txt)" \
-  "$(jq -n --arg pr "$PR_NUMBER" '{pr_number: $pr}')"
+  "$(jq -n --arg pr "$PR_NUMBER" '{pr_number: $pr}')" || true
 
 VERDICT_JSON=$(awk '/```json/{p=1;next} p && /```/{p=0} p' /tmp/pr-review-output.txt | tail -100)
 VERDICT=$(echo "$VERDICT_JSON" | jq -r '.verdict // empty' 2>/dev/null || true)
@@ -87,7 +87,7 @@ lf_event_log "$LF_TRACE_ID" "verdict" \
   "$(jq -n --arg v "$VERDICT" --arg crit "${CRITICAL_COUNT:-0}" \
     --arg high "${HIGH_COUNT:-0}" \
     '{verdict: $v, critical_count: ($crit | tonumber? // 0), high_count: ($high | tonumber? // 0)}' \
-    2>/dev/null || echo '{}')"
+    2>/dev/null || echo '{}')" || true
 lf_trace_index_store "pr-${PR_NUMBER}" "$LF_TRACE_ID"
 
 cp /tmp/pr-review-output.txt /tmp/latest-review.txt

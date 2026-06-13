@@ -155,11 +155,15 @@ jobs:
         env:
           BRANCH: ${{ steps.validate.outputs.branch }}
         run: |
-          if git diff --quiet HEAD; then
-            echo 'pushed=false' >> "$GITHUB_OUTPUT"
-          else
+          if ! git diff --quiet HEAD; then
+            git add -A
+            git commit -m 'fix: apply AI review fixes'
+          fi
+          if git log "origin/${BRANCH}..HEAD" --oneline | grep -q .; then
             git push origin "${BRANCH}"
             echo 'pushed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'pushed=false' >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run delta review

@@ -99,8 +99,13 @@ jobs:
 
       - name: Install Terramate
         run: |
+          curl -fsSL "https://github.com/terramate-io/terramate/releases/download/v${TERRAMATE_VERSION}/checksums.txt" \
+            -o /tmp/terramate_checksums.txt
           curl -fsSL "https://github.com/terramate-io/terramate/releases/download/v${TERRAMATE_VERSION}/terramate_${TERRAMATE_VERSION}_linux_x86_64.tar.gz" \
-            | tar -xz -C /usr/local/bin terramate
+            -o /tmp/terramate.tar.gz
+          grep "terramate_${TERRAMATE_VERSION}_linux_x86_64.tar.gz" /tmp/terramate_checksums.txt | \
+            sha256sum --check --status
+          tar -xz -C /usr/local/bin -f /tmp/terramate.tar.gz terramate
 
       - name: Terramate Generate
         working-directory: ./infrastructure

@@ -58,7 +58,7 @@ jobs:
 
       - name: Upload audit report
         if: always()
-        uses: actions/upload-artifact@69d79ce213269bbf6b7fe2e6e55f02baa2396be4 # v4.7.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: security-audit-report
           path: |

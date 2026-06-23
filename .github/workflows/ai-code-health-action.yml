@@ -1,0 +1,103 @@
+name: AI Code Health Action
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Code-health report issue number to action'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  action:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Run when:
+    #   - issue opened with code-health label
+    #   - new label added to a code-health issue (initial label race)
+    #   - owner comments `/resume-health` on a code-health issue
+    #   - manual dispatch with issue number
+    if: |
+      (github.event_name == 'workflow_dispatch') ||
+      (
+        github.event_name == 'issues' &&
+        contains(github.event.issue.labels.*.name, 'code-health')
+      ) ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request == null &&
+        github.event.comment.user.login == github.repository_owner &&
+        github.event.comment.body == '/resume-health' &&
+        contains(github.event.issue.labels.*.name, 'code-health')
+      )
+
+    concurrency:
+      group: ai-code-health-${{ github.event.issue.number || github.event.inputs.issue_number }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Resolve issue number
+        id: resolve
+        env:
+          DISPATCH_NUM: ${{ github.event.inputs.issue_number }}
+          ISSUE_NUM: ${{ github.event.issue.number }}
+        run: |
+          NUM="${DISPATCH_NUM:-$ISSUE_NUM}"
+          if ! [[ "$NUM" =~ ^[0-9]+$ ]]; then
+            echo "Invalid issue number: $NUM" >&2
+            exit 1
+          fi
+          echo "number=$NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Acknowledge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            'repos/${{ github.repository }}/issues/${{ steps.resolve.outputs.number }}/reactions' \
+            -f content=eyes || true
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@d15e628ca66d93ee5f352c71671a7bc6a97af5c9 # v6.0.8
+        with:
+          version: 10
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Run interpreter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.resolve.outputs.number }}
+          REPO: ${{ github.repository }}
+        run: bash scripts/code-health-action.sh
+
+      - name: Report failure on issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_URL='https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          gh issue comment '${{ steps.resolve.outputs.number }}' --body "**Code-health action failed.** Re-run with \`/resume-health\` once the cause is fixed.
+
+          [View run]($RUN_URL)"

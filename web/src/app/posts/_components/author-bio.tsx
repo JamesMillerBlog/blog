@@ -100,9 +100,14 @@ export function AuthorBio({ author }: Props) {
       <div
         className="relative shrink-0 cursor-pointer"
         style={{ width: 80, height: 80, perspective: 400 }}
+        role="button"
+        tabIndex={0}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
+        onKeyDown={(e) =>
+          (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handleClick())
+        }
         aria-label={`Switch to ${nxt.heading(author.name)}`}
       >
         {/* Underlying image — frozen during animation to prevent flicker */}

@@ -56,13 +56,13 @@ resource "cloudflare_ruleset" "static_site_rewrite" {
       enabled = true
     },
     {
-      description = "Append .html to extensionless paths"
-      expression  = "http.host eq \"${var.domain_name}\" and not http.request.uri.path contains \".\" and not http.request.uri.path eq \"/\""
+      description = "Rewrite extensionless paths to /index.html (trailingSlash: true generates dir/index.html)"
+      expression  = "http.host eq \"${var.domain_name}\" and not http.request.uri.path contains \".\" and not http.request.uri.path eq \"/\" and not ends_with(http.request.uri.path, \"/\")"
       action      = "rewrite"
       action_parameters = {
         uri = {
           path = {
-            expression = "concat(http.request.uri.path, \".html\")"
+            expression = "concat(http.request.uri.path, \"/index.html\")"
           }
         }
       }

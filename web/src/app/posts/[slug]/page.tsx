@@ -94,7 +94,7 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
   const params = await props.params
   const post = await getPostBySlug(params.slug)
 
-  if (!post) {
+  if (!post || !isPostVisible(post)) {
     return notFound()
   }
 

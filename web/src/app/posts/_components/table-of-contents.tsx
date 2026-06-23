@@ -100,7 +100,8 @@ export function InlineTableOfContents() {
     <nav className="xl:hidden mb-10 rounded-2xl bg-surface-container-lowest overflow-hidden font-headline">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between px-5 py-4 text-sm font-bold text-on-surface"
+        aria-expanded={open}
+        className="flex w-full cursor-pointer items-center justify-between px-5 py-4 text-sm font-bold text-on-surface"
       >
         <span className="text-xs uppercase tracking-widest text-on-surface-variant/60">
           On this page

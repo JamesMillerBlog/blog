@@ -42,6 +42,9 @@ export function AuthorBio({ author }: Props) {
   // This naturally covers scrolling — when the image scrolls away from the cursor,
   // mouseleave fires and the lock clears ready for the next hover.
   const [hoverLocked, setHoverLocked] = useState(false)
+  // Remount key — used to reset the rotating layer to 0deg after the fold-away
+  // without triggering a CSS transition (which would look like a bounce-back).
+  const [flipKey, setFlipKey] = useState(0)
   const flipRef = useRef<HTMLDivElement>(null)
   const animating = useRef(false)
 
@@ -66,26 +69,26 @@ export function AuthorBio({ author }: Props) {
     if (el) {
       el.style.animation = 'none'
       void el.offsetHeight
-      el.style.animation = 'authorFlip 0.52s cubic-bezier(0.4,0.2,0.2,1)'
+      el.style.animation = 'authorFlip 0.28s cubic-bezier(0.4,0.2,0.2,1) forwards'
     }
 
     const nextI = (idx + 1) % ASPECTS.length
-    setTimeout(() => setIdx(nextI), 255)
     setTimeout(() => {
+      setIdx(nextI)
       setNxtIdx((nextI + 1) % ASPECTS.length)
-      if (flipRef.current) flipRef.current.style.animation = ''
+      setFlipKey((k) => k + 1)
       animating.current = false
-    }, 540)
+    }, 280)
   }
 
   return (
     <div className="mt-16 flex gap-6 rounded-2xl border border-outline-variant/10 bg-surface-container-low p-8 items-start">
       <style>{`
         @keyframes authorFlip {
-          0%   { transform: rotateY(0deg); }
-          48%  { transform: rotateY(-90deg); }
-          52%  { transform: rotateY(-90deg); }
-          100% { transform: rotateY(0deg); }
+          0%   { transform: rotateY(0deg); opacity: 1; }
+          30%  { opacity: 1; }
+          80%  { opacity: 0; }
+          100% { transform: rotateY(-90deg); opacity: 0; }
         }
         @keyframes authorTextIn {
           from { opacity: 0; transform: translateX(10px); }
@@ -97,9 +100,14 @@ export function AuthorBio({ author }: Props) {
       <div
         className="relative shrink-0 cursor-pointer"
         style={{ width: 80, height: 80, perspective: 400 }}
+        role="button"
+        tabIndex={0}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
+        onKeyDown={(e) =>
+          (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handleClick())
+        }
         aria-label={`Switch to ${nxt.heading(author.name)}`}
       >
         {/* Underlying image — frozen during animation to prevent flicker */}
@@ -113,8 +121,11 @@ export function AuthorBio({ author }: Props) {
           />
         </div>
 
-        {/* Rotating layer — overflow+borderRadius so corners round with the tilt */}
+        {/* Rotating layer — overflow+borderRadius so corners round with the tilt.
+            keyed by flipKey so it remounts at 0deg after each fold-away — avoids
+            the bounce-back that a CSS transition would produce. */}
         <div
+          key={flipKey}
           ref={flipRef}
           className="absolute inset-0 overflow-hidden"
           style={{

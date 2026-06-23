@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/JamesMillerBlog/blog/compare/v0.2.1...v0.2.2) (2026-06-23)
+
+
+### Bug Fixes
+
+* release please ([499e62f](https://github.com/JamesMillerBlog/blog/commit/499e62f935fc019b696d6d00d7883c69776c49a9))
+
 ## [0.2.1](https://github.com/JamesMillerBlog/blog/compare/v0.2.0...v0.2.1) (2026-06-07)
 
 

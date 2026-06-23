@@ -76,9 +76,9 @@ log "Found $SPELL_COUNT unique spell warning(s)"
 log "Extracting test-gap files"
 
 # Lines under "Files without tests:" look like:  src/foo.tsx (12 lines)
-python3 - <<'PY' < "$WORK/content.txt" > "$WORK/test-gaps.txt"
+python3 - "$WORK/content.txt" > "$WORK/test-gaps.txt" <<'PY'
 import re, sys
-text = sys.stdin.read()
+text = open(sys.argv[1]).read()
 # Take the LAST occurrence of the test-gap block (most recent report)
 blocks = re.findall(
     r'Files without tests:\s*\n((?:\s+src/.*\n)+)',

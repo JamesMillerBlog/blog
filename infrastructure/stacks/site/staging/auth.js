@@ -32,6 +32,8 @@ export default {
         const url = new URL(request.url);
         if (url.pathname === "/") {
           url.pathname = "/index.html";
+        } else if (url.pathname.endsWith("/")) {
+          url.pathname = url.pathname + "index.html";
         } else {
           const lastSegment = url.pathname.split("/").pop();
           if (!lastSegment || !lastSegment.includes(".")) {

@@ -55,7 +55,10 @@
     "personalised",
     "personalise",
     "behaviour",
-    "behavioural"
+    "behavioural",
+    "POSTHOG",
+    "crossfade",
+    "pageleave"
   ],
   "ignorePaths": [
     "node_modules",

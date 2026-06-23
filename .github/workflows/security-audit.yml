@@ -69,8 +69,9 @@ jobs:
 
       - name: Update security advisory
         if: always()
+        continue-on-error: true
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN || github.token }}
         run: |
           TODAY=$(date +%Y-%m-%d)
 
@@ -123,6 +124,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          gh label create 'security' --color 'e11d48' --description 'Security findings' --force 2>/dev/null || true
+
           TODAY=$(date +%Y-%m-%d)
 
           # Extract summary counts from the JSON report — no finding details in public issue

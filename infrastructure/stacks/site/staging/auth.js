@@ -37,7 +37,7 @@ export default {
         } else {
           const lastSegment = url.pathname.split("/").pop();
           if (!lastSegment || !lastSegment.includes(".")) {
-            url.pathname = url.pathname + ".html";
+            url.pathname = url.pathname + "/index.html";
           }
         }
         return fetch(new Request(url.toString(), request));

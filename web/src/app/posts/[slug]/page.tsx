@@ -136,7 +136,12 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
 export async function generateStaticParams() {
   const posts = await getAllPosts()
 
-  return posts.map((post) => ({
+  const slugs = posts.map((post) => ({
     slug: post.slug,
   }))
+
+  // Next.js 16+ requires non-empty generateStaticParams with output: 'export'.
+  // When no posts exist (empty content repo), return placeholder so build succeeds.
+  // The placeholder route will render notFound() via the page component's guard.
+  return slugs.length > 0 ? slugs : [{ slug: '_placeholder' }]
 }

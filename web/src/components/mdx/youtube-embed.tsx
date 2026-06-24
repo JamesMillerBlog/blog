@@ -9,7 +9,7 @@ type Props = {
   title?: string
 }
 
-export function YouTubeEmbed({ videoId, title }: Props) {
+export const YouTubeEmbed = ({ videoId, title }: Props): React.JSX.Element => {
   const [playing, setPlaying] = useState(false)
 
   return (

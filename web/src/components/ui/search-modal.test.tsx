@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
-function makeItems(): SearchItem[] {
+const makeItems = (): SearchItem[] => {
   return [
     {
       type: 'post',

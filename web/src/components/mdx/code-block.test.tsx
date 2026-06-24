@@ -47,7 +47,7 @@ describe('CodeBlock', () => {
     const CodeBlock = await importCodeBlock()
     render(<CodeBlock>code</CodeBlock>)
     expect(screen.queryByText('Copy')).toBeInTheDocument()
-    // No label text rendered — only icons and Copy button
+    // No label text rendered - only icons and Copy button
     const spans = screen.queryAllByText(/./)
     const labelTexts = spans.filter((el) => el.className?.includes?.('tracking-wide'))
     expect(labelTexts).toHaveLength(0)
@@ -154,7 +154,7 @@ describe('CodeBlock', () => {
       expect(screen.getByText('Copied!')).toBeInTheDocument()
     })
 
-    // Use real timers — advance 2100ms via a real async delay
+    // Use real timers - advance 2100ms via a real async delay
     await new Promise((r) => setTimeout(r, 2100))
 
     await waitFor(() => {

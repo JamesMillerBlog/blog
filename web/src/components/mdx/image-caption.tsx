@@ -6,7 +6,7 @@ type Props = {
   caption: string
 }
 
-export function ImageCaption({ src, alt, caption }: Props) {
+export const ImageCaption = ({ src, alt, caption }: Props): React.JSX.Element => {
   return (
     <figure className="my-12">
       <div className="relative w-full overflow-hidden rounded-xl shadow-md">

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-function charStyle(i: number, hovered: number | null): React.CSSProperties {
+const charStyle = (i: number, hovered: number | null): React.CSSProperties => {
   if (hovered === null) return {}
   const d = Math.abs(i - hovered)
   if (d === 0) return { transform: 'scale(1.15)', color: 'var(--color-secondary)' }
@@ -11,7 +11,7 @@ function charStyle(i: number, hovered: number | null): React.CSSProperties {
   return {}
 }
 
-export function TechIconText({
+export const TechIconText = ({
   children,
   className,
   onHeadingClick,
@@ -19,7 +19,7 @@ export function TechIconText({
   children: string
   className?: string
   onHeadingClick?: () => void
-}) {
+}): React.JSX.Element => {
   const [hoveredChar, setHoveredChar] = useState<number | null>(null)
   const [jumpingWord, setJumpingWord] = useState<number | null>(null)
 

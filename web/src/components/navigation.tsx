@@ -10,7 +10,7 @@ import type { SearchItem } from '@/types/search'
 import { projects } from '@/app/projects/data'
 import { ui } from '@/i18n/en'
 
-function buildProjectItems(): SearchItem[] {
+const buildProjectItems = (): SearchItem[] => {
   return projects.map((p) => ({
     type: 'project' as const,
     slug: p.slug,
@@ -22,7 +22,7 @@ function buildProjectItems(): SearchItem[] {
   }))
 }
 
-export function Navigation({ posts = [] }: { posts?: SearchItem[] }) {
+export const Navigation = ({ posts = [] }: { posts?: SearchItem[] }): React.JSX.Element => {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
@@ -33,7 +33,7 @@ export function Navigation({ posts = [] }: { posts?: SearchItem[] }) {
   const searchIconRef = useRef<HTMLDivElement>(null)
   const themeIconRef = useRef<HTMLDivElement>(null)
   const themeAnimating = useRef(false)
-  // Tracks which icon SVG to show — allows mid-animation swap ahead of theme state
+  // Tracks which icon SVG to show - allows mid-animation swap ahead of theme state
   const [iconDark, setIconDark] = useState(false)
 
   useEffect(() => {
@@ -211,7 +211,7 @@ export function Navigation({ posts = [] }: { posts?: SearchItem[] }) {
   )
 }
 
-function NavLink({
+const NavLink = ({
   href,
   active,
   children,
@@ -219,7 +219,7 @@ function NavLink({
   href: string
   active: boolean
   children: React.ReactNode
-}) {
+}): React.JSX.Element => {
   return (
     <Link
       href={href}
@@ -234,7 +234,7 @@ function NavLink({
   )
 }
 
-function SearchIcon() {
+const SearchIcon = (): React.JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -247,7 +247,7 @@ function SearchIcon() {
   )
 }
 
-function MoonIcon() {
+const MoonIcon = (): React.JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -260,7 +260,7 @@ function MoonIcon() {
   )
 }
 
-function SunIcon() {
+const SunIcon = (): React.JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -273,7 +273,7 @@ function SunIcon() {
   )
 }
 
-function MenuIcon() {
+const MenuIcon = (): React.JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path

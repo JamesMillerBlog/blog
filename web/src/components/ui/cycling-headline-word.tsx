@@ -5,13 +5,13 @@ import { BRAND_GRADIENT } from '@/common/consts/constants'
 
 const WORD_VARIANTS = ['Made', 'Built', 'Architected', 'Launched']
 
-export function CyclingHeadlineWord({
+export const CyclingHeadlineWord = ({
   onWordChange,
   word,
 }: {
   onWordChange?: (word: string) => void
   word?: string
-}) {
+}): React.JSX.Element => {
   const ref = useRef<HTMLSpanElement>(null)
   const mounted = useRef(false)
   const [index, setIndex] = useState(0)

@@ -110,7 +110,7 @@ describe('ProjectsTimeline', () => {
     const { ProjectsTimeline } = await importTimeline()
     render(<ProjectsTimeline projects={mockProjects} categories={mockCategories} />)
     mockCategories.forEach((cat) => {
-      // Category names like 'Web' also appear as project badges — use getAllByText
+      // Category names like 'Web' also appear as project badges - use getAllByText
       const elements = screen.getAllByText(cat)
       expect(elements.length).toBeGreaterThanOrEqual(1)
     })
@@ -172,7 +172,7 @@ describe('ProjectsTimeline', () => {
   it('renders project tags', async () => {
     const { ProjectsTimeline } = await importTimeline()
     render(<ProjectsTimeline projects={mockProjects} categories={mockCategories} />)
-    // Tags appear in both mobile and desktop DOM branches — use getAllByText
+    // Tags appear in both mobile and desktop DOM branches - use getAllByText
     const reactTags = screen.getAllByText('react')
     expect(reactTags.length).toBeGreaterThanOrEqual(1)
     const nextjsTags = screen.getAllByText('nextjs')
@@ -231,7 +231,7 @@ describe('ProjectsTimeline', () => {
         flashCategory="Web"
       />
     )
-    // 'Web' appears as both button and project badge — find the button element
+    // 'Web' appears as both button and project badge - find the button element
     const elements = screen.getAllByText('Web')
     const button = elements.find((el) => el.tagName === 'BUTTON')
     expect(button).not.toBeUndefined()

@@ -22,14 +22,18 @@ const SYNONYM_MAP: Record<string, string[]> = {
   iot: ['internet of things', 'connected devices', 'embedded'],
 }
 
-function expandQuery(query: string): string[] {
+const expandQuery = (query: string): string[] => {
   const lower = query.toLowerCase().trim()
   const synonyms = SYNONYM_MAP[lower]
   if (!synonyms || synonyms.length === 0) return [query]
   return [query, ...synonyms]
 }
 
-export function SearchModal({ isOpen, onClose, items }: SearchModalProps) {
+export const SearchModal = ({
+  isOpen,
+  onClose,
+  items,
+}: SearchModalProps): React.JSX.Element | null => {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchItem[]>([])
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -245,7 +249,7 @@ export function SearchModal({ isOpen, onClose, items }: SearchModalProps) {
   )
 }
 
-function SearchIcon({ className }: { className?: string }) {
+const SearchIcon = ({ className }: { className?: string }): React.JSX.Element => {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path

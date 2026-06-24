@@ -184,7 +184,7 @@ describe('HomeContent', () => {
     fireEvent.click(screen.getByTestId('hero-word-change'))
     expect(screen.getByTestId('hero-word').textContent).toBe('cloud')
 
-    // Then select a tag — hero word should reset to 'software'
+    // Then select a tag - hero word should reset to 'software'
     fireEvent.click(screen.getByTestId('tag-select-btn'))
     expect(screen.getByTestId('hero-word').textContent).toBe('software')
   })

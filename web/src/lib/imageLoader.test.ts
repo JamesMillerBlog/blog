@@ -16,7 +16,7 @@ afterEach(() => {
 describe('imageLoader', () => {
   describe('external URLs', () => {
     it('passes through https URLs with width param', () => {
-      // NODE_ENV is 'test' — not 'development', so it hits production path
+      // NODE_ENV is 'test' - not 'development', so it hits production path
       const result = imageLoader({
         src: 'https://example.com/img.jpg',
         width: 800,
@@ -45,7 +45,7 @@ describe('imageLoader', () => {
 
   describe('local paths in production', () => {
     it('returns ASSETS_BASE_URL with width and default quality', () => {
-      // NODE_ENV is 'test' — not 'development', so it hits production path
+      // NODE_ENV is 'test' - not 'development', so it hits production path
       const result = imageLoader({
         src: '/images/hero.jpg',
         width: 600,

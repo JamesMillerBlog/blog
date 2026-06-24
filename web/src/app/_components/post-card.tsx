@@ -4,13 +4,13 @@ import { format } from 'date-fns'
 import { Post } from '@/types/post'
 import { readingTime } from '@/common/utils/reading-time'
 
-export function PostCard({
+export const PostCard = ({
   post,
   variant = 'default',
 }: {
   post: Post
   variant?: 'default' | 'glow'
-}) {
+}): React.JSX.Element => {
   return (
     <Link href={`/posts/${post.slug}`} className="block h-full">
       <article

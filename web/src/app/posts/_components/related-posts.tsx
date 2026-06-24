@@ -8,7 +8,7 @@ type Props = {
   posts: Post[]
 }
 
-export function RelatedPosts({ posts }: Props) {
+export const RelatedPosts = ({ posts }: Props): React.JSX.Element | null => {
   if (posts.length === 0) return null
 
   return (

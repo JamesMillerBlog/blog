@@ -4,7 +4,7 @@ type GridProps = {
   children: ReactNode
 }
 
-export function ExampleGrid({ children }: GridProps) {
+export const ExampleGrid = ({ children }: GridProps): React.JSX.Element => {
   return <div className="not-prose my-10 grid grid-cols-1 sm:grid-cols-2 gap-5">{children}</div>
 }
 
@@ -16,7 +16,7 @@ type CardProps = {
   children: ReactNode
 }
 
-export function ExampleCard({ src, alt, title, href, children }: CardProps) {
+export const ExampleCard = ({ src, alt, title, href, children }: CardProps): React.JSX.Element => {
   return (
     <div
       className="flex flex-col rounded-lg overflow-hidden"

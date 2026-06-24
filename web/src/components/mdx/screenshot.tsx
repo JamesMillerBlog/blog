@@ -4,7 +4,7 @@ type Props = {
   caption?: string
 }
 
-export function Screenshot({ src, alt, caption }: Props) {
+export const Screenshot = ({ src, alt, caption }: Props): React.JSX.Element => {
   return (
     <figure className="not-prose my-8 mx-auto max-w-3xl">
       <div className="overflow-hidden rounded-xl border border-outline-variant/20 shadow-lg">

@@ -23,7 +23,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import type { Post } from '@/types/post'
 
-function makePost(overrides: Partial<Post> = {}): Post {
+const makePost = (overrides: Partial<Post> = {}): Post => {
   return {
     slug: 'test-post',
     title: 'Test Post',

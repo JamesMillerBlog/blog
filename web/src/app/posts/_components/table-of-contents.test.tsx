@@ -21,7 +21,7 @@ class MockIntersectionObserver {
 
 window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver
 
-function setupHeadings(headings: Array<{ tag: string; id?: string; text: string }>) {
+const setupHeadings = (headings: Array<{ tag: string; id?: string; text: string }>): void => {
   const container = document.createElement('div')
   container.className = 'markdown'
   headings.forEach(({ tag, id, text }) => {
@@ -34,7 +34,7 @@ function setupHeadings(headings: Array<{ tag: string; id?: string; text: string 
   Element.prototype.scrollIntoView = mockScrollIntoView
 }
 
-function cleanupHeadings() {
+const cleanupHeadings = (): void => {
   document.querySelector('.markdown')?.remove()
   observeCallback = null
   mockObserve.mockReset()
@@ -42,14 +42,14 @@ function cleanupHeadings() {
   mockScrollIntoView.mockReset()
 }
 
-async function renderAndFlush(component: React.ReactElement) {
+const renderAndFlush = async (component: React.ReactElement) => {
   const result = render(component)
   await act(() => vi.advanceTimersByTime(1))
   return result
 }
 
 // Helper: get button text when .markdown has duplicate heading elements
-function getTocButton(text: string): HTMLElement {
+const getTocButton = (text: string): HTMLElement => {
   const all = screen.getAllByText(text)
   return all.find((el) => el.tagName === 'BUTTON')!
 }

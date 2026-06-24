@@ -11,7 +11,7 @@ describe('PullQuote', () => {
   it('renders author attribution when provided', async () => {
     const { PullQuote } = await import('./pull-quote')
     render(<PullQuote author="Jane Doe">Wisdom shared</PullQuote>)
-    expect(screen.getByText('— Jane Doe')).toBeInTheDocument()
+    expect(screen.getByText('- Jane Doe')).toBeInTheDocument()
   })
 
   it('does not render author when not provided', async () => {
@@ -19,7 +19,7 @@ describe('PullQuote', () => {
     const { container } = render(<PullQuote>Just a quote</PullQuote>)
     const paragraphs = container.querySelectorAll('p')
     // Only the quote paragraph, no author paragraph
-    const authorParagraphs = Array.from(paragraphs).filter((p) => p.textContent?.startsWith('—'))
+    const authorParagraphs = Array.from(paragraphs).filter((p) => p.textContent?.startsWith('-'))
     expect(authorParagraphs.length).toBe(0)
   })
 

@@ -42,7 +42,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
   plaintext: 'Plain text',
 }
 
-function CodeIcon() {
+const CodeIcon = (): React.JSX.Element => {
   return (
     <svg
       className="w-3.5 h-3.5 shrink-0"
@@ -56,7 +56,7 @@ function CodeIcon() {
   )
 }
 
-function FileIcon() {
+const FileIcon = (): React.JSX.Element => {
   return (
     <svg
       className="w-3.5 h-3.5 shrink-0"
@@ -74,7 +74,10 @@ function FileIcon() {
   )
 }
 
-export function CodeBlock({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) {
+export const CodeBlock = ({
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLPreElement>): React.JSX.Element => {
   const ref = useRef<HTMLPreElement>(null)
   const [copied, setCopied] = useState(false)
 
@@ -112,7 +115,7 @@ export function CodeBlock({ children, ...props }: React.HTMLAttributes<HTMLPreEl
         </button>
       </div>
 
-      {/* Code — #abb2bf is one-dark-pro foreground for unstyled tokens */}
+      {/* Code - #abb2bf is one-dark-pro foreground for unstyled tokens */}
       <pre
         ref={ref}
         {...props}

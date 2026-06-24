@@ -7,7 +7,7 @@ type Props = {
   children: ReactNode
 }
 
-export function TechCard({ logo, title, href, children }: Props) {
+export const TechCard = ({ logo, title, href, children }: Props): React.JSX.Element => {
   return (
     <div className="not-prose my-6 flex gap-5 rounded-xl bg-surface-container p-5 items-start">
       <a

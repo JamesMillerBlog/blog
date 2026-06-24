@@ -10,7 +10,7 @@ import { PostCard } from '@/app/_components/post-card'
 
 const PAGE_SIZE = 9
 
-export function FilteredPostGrid({
+export const FilteredPostGrid = ({
   posts,
   selectedTag,
   onTagSelect: _onTagSelect,
@@ -18,7 +18,7 @@ export function FilteredPostGrid({
   posts: Post[]
   selectedTag: string
   onTagSelect: (tag: string) => void
-}) {
+}): React.JSX.Element => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const page = Number(searchParams.get('page') ?? '1')

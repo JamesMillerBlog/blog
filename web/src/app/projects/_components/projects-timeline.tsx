@@ -16,7 +16,13 @@ const CARD_VARIANTS = {
   }),
 }
 
-function ProjectCard({ project, priority }: { project: Project; priority?: boolean }) {
+const ProjectCard = ({
+  project,
+  priority,
+}: {
+  project: Project
+  priority?: boolean
+}): React.JSX.Element => {
   const [playing, setPlaying] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const thumbUrl =
@@ -123,7 +129,7 @@ function ProjectCard({ project, priority }: { project: Project; priority?: boole
   )
 }
 
-export function ProjectsTimeline({
+export const ProjectsTimeline = ({
   projects,
   categories,
   selectedCategory: externalCategory,
@@ -137,7 +143,7 @@ export function ProjectsTimeline({
   flashCategory?: string | null
   highlightsOverride?: Project[] | null
   onCategoryChange?: (category: string) => void
-}) {
+}): React.JSX.Element => {
   const [internalCategory, setInternalCategory] = useState<string>('Highlights')
   const selectedCategory = externalCategory ?? internalCategory
   const setSelectedCategory = onCategoryChange ?? setInternalCategory

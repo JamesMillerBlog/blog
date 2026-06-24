@@ -7,7 +7,7 @@ type TabProps = {
   children: ReactNode
 }
 
-export function Tab({ children }: TabProps) {
+export const Tab = ({ children }: TabProps): React.JSX.Element => {
   return <>{children}</>
 }
 
@@ -17,7 +17,7 @@ type TabsProps = {
   children: TabChild | TabChild[]
 }
 
-export function Tabs({ children }: TabsProps) {
+export const Tabs = ({ children }: TabsProps): React.JSX.Element => {
   const tabs = Array.isArray(children) ? children : [children]
   const [activeIndex, setActiveIndex] = useState(0)
 

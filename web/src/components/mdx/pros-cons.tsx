@@ -7,7 +7,12 @@ type Props = {
   consLabel?: string
 }
 
-export function ProsCons({ pros, cons, prosLabel = 'Pros', consLabel = 'Cons' }: Props) {
+export const ProsCons = ({
+  pros,
+  cons,
+  prosLabel = 'Pros',
+  consLabel = 'Cons',
+}: Props): React.JSX.Element => {
   return (
     <div className="not-prose my-8 grid grid-cols-1 gap-4 md:grid-cols-2">
       <div className="rounded-xl bg-primary/5 p-5">

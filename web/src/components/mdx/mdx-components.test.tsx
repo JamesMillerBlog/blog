@@ -16,7 +16,7 @@ vi.mock('lucide-react', () => ({
   PlayIcon: vi.fn((props: Record<string, unknown>) => <svg data-testid="icon-play" {...props} />),
 }))
 
-describe('MDX — Callout', () => {
+describe('MDX - Callout', () => {
   it('renders children content', async () => {
     const { Callout } = await import('@/components/mdx/callout')
     render(<Callout>This is a note</Callout>)
@@ -55,7 +55,7 @@ describe('MDX — Callout', () => {
   })
 })
 
-describe('MDX — Steps', () => {
+describe('MDX - Steps', () => {
   it('renders ordered list', async () => {
     const { Steps, Step } = await import('@/components/mdx/steps')
     const { container } = render(
@@ -106,7 +106,7 @@ describe('MDX — Steps', () => {
   })
 })
 
-describe('MDX — Tabs', () => {
+describe('MDX - Tabs', () => {
   it('renders first tab content by default', async () => {
     const { Tabs, Tab } = await import('@/components/mdx/tabs')
     render(
@@ -149,7 +149,7 @@ describe('MDX — Tabs', () => {
   })
 })
 
-describe('MDX — PullQuote', () => {
+describe('MDX - PullQuote', () => {
   it('renders quoted content', async () => {
     const { PullQuote } = await import('@/components/mdx/pull-quote')
     render(<PullQuote>A notable insight</PullQuote>)
@@ -157,16 +157,16 @@ describe('MDX — PullQuote', () => {
   })
 })
 
-describe('MDX — YouTubeEmbed', () => {
+describe('MDX - YouTubeEmbed', () => {
   it('renders iframe with correct src', async () => {
     const { YouTubeEmbed } = await import('@/components/mdx/youtube-embed')
     render(<YouTubeEmbed videoId="dQw4w9WgXcQ" title="Test Video" />)
-    // Initially not playing — shows thumbnail button, not iframe
+    // Initially not playing - shows thumbnail button, not iframe
     expect(screen.getByLabelText('Play: Test Video')).toBeInTheDocument()
   })
 })
 
-describe('MDX — ImageCaption', () => {
+describe('MDX - ImageCaption', () => {
   it('renders image with caption', async () => {
     const { ImageCaption } = await import('@/components/mdx/image-caption')
     render(<ImageCaption src="/img.jpg" alt="Alt text" caption="A caption" />)
@@ -174,7 +174,7 @@ describe('MDX — ImageCaption', () => {
   })
 })
 
-describe('MDX — Kbd', () => {
+describe('MDX - Kbd', () => {
   it('renders keyboard shortcut text', async () => {
     const { Kbd } = await import('@/components/mdx/kbd')
     render(<Kbd>Cmd + K</Kbd>)

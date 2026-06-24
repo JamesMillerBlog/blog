@@ -158,7 +158,7 @@ describe('ProjectsPageClient', () => {
     expect(screen.getByTestId('projects-timeline')).toHaveAttribute('data-flash', 'none')
     expect(screen.getByTestId('cycling-headline')).toHaveAttribute('data-word', 'Made')
 
-    // After 150ms, flashCategory gets set — wrap in act to flush React state
+    // After 150ms, flashCategory gets set - wrap in act to flush React state
     await act(() => {
       vi.advanceTimersByTime(150)
     })

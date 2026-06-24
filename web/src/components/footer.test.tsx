@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
-// Footer imports next/link and next/image — mock Next.js
+// Footer imports next/link and next/image - mock Next.js
 vi.mock('next/link', () => ({
   default: ({
     href,

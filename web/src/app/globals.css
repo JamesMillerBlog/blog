@@ -337,7 +337,7 @@ body {
   }
 }
 
-/* Theme toggle — sky sweep icon animation (sun sets west/right, moon rises east/left) */
+/* Theme toggle - sky sweep icon animation (sun sets west/right, moon rises east/left) */
 @keyframes themeSweepRight {
   0% {
     transform: translate(0, 0) scale(1) rotate(0deg);
@@ -389,7 +389,7 @@ body {
   }
 }
 
-/* Theme toggle — icon hover glow */
+/* Theme toggle - icon hover glow */
 [data-theme-icon] {
   transition:
     color 200ms ease,
@@ -407,7 +407,7 @@ body {
   transform: scale(1.3);
 }
 
-/* Theme toggle — crossfade transition (class applied only during the switch) */
+/* Theme toggle - crossfade transition (class applied only during the switch) */
 .theme-transitioning *,
 .theme-transitioning *::before,
 .theme-transitioning *::after {

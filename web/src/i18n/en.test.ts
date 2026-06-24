@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { ui } from './en'
 
-describe('i18n — en', () => {
+describe('i18n - en', () => {
   it('has expected top-level sections', () => {
     expect(ui).toHaveProperty('nav')
     expect(ui).toHaveProperty('footer')

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Test the metadata contract — verify static metadata shape
+// Test the metadata contract - verify static metadata shape
 vi.mock('@/common/consts/constants', () => ({
   SITE_NAME: 'James Miller',
   SITE_DESCRIPTION: 'Creative Technology Blog',

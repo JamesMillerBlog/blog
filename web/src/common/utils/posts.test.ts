@@ -2,7 +2,7 @@
  * Tests for src/common/utils/posts.ts
  *
  * Strategy: spy on `fs` methods and mock `gray-matter` so tests are fast
- * and hermetic — no real disk access, no dependency on the actual _posts dir.
+ * and hermetic - no real disk access, no dependency on the actual _posts dir.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -140,10 +140,10 @@ describe('getPostBySlug', () => {
 })
 
 // ---------------------------------------------------------------------------
-// getAllPosts — draft filtering
+// getAllPosts - draft filtering
 // ---------------------------------------------------------------------------
 
-describe('getAllPosts — draft filtering by NODE_ENV', () => {
+describe('getAllPosts - draft filtering by NODE_ENV', () => {
   beforeEach(() => vi.restoreAllMocks())
   afterEach(() => vi.unstubAllEnvs())
 
@@ -222,10 +222,10 @@ describe('getAllPosts — draft filtering by NODE_ENV', () => {
 })
 
 // ---------------------------------------------------------------------------
-// getAllPosts — date sorting
+// getAllPosts - date sorting
 // ---------------------------------------------------------------------------
 
-describe('getAllPosts — sorting by date (newest first)', () => {
+describe('getAllPosts - sorting by date (newest first)', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     vi.stubEnv('NODE_ENV', 'production')
@@ -270,10 +270,10 @@ describe('getAllPosts — sorting by date (newest first)', () => {
 })
 
 // ---------------------------------------------------------------------------
-// getPostBySlug — slug validation (path traversal defense)
+// getPostBySlug - slug validation (path traversal defense)
 // ---------------------------------------------------------------------------
 
-describe('getPostBySlug — slug validation', () => {
+describe('getPostBySlug - slug validation', () => {
   beforeEach(() => vi.restoreAllMocks())
 
   it('rejects path traversal via ../', async () => {
@@ -335,7 +335,7 @@ describe('getPostBySlug — slug validation', () => {
     // The valid slug passes the regex check; the FS read fails (no fixture)
     // but the null return is from the file read, not the slug validation
     const post = await getPostBySlug('hello-world')
-    // With exists: true, the file read happens — that's the right behavior
+    // With exists: true, the file read happens - that's the right behavior
     expect(post).not.toBeNull()
   })
 
@@ -365,7 +365,7 @@ describe('getPostBySlug — slug validation', () => {
 })
 
 // ---------------------------------------------------------------------------
-// isPostVisible — visibility logic
+// isPostVisible - visibility logic
 // ---------------------------------------------------------------------------
 
 describe('isPostVisible', () => {

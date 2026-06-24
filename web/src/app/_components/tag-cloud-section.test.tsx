@@ -165,7 +165,7 @@ describe('TagCloudSection', () => {
 
     await vi.waitFor(
       () => {
-        // After timeout, flashingTag is set — a button should have scale-110
+        // After timeout, flashingTag is set - a button should have scale-110
         const buttons = screen.getAllByRole('button')
         const flashingBtn = buttons.find((b) => b.className.includes('scale-110'))
         expect(flashingBtn).not.toBeUndefined()
@@ -190,7 +190,7 @@ describe('TagCloudSection', () => {
 
     fireEvent.click(screen.getByTestId('tech-icon-text'))
 
-    // Advance timers past the 150ms flash timeout — should not throw
+    // Advance timers past the 150ms flash timeout - should not throw
     await new Promise((r) => setTimeout(r, 200))
     // onTagSelect was called with undefined (randomTag), no crash
     expect(onTagSelect).toHaveBeenCalled()

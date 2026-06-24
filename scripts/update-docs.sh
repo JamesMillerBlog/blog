@@ -48,7 +48,7 @@ if has_structural_changes; then
     mkdir -p .pi/extensions/pi-permission-system
     echo '{"yoloMode": true}' >.pi/extensions/pi-permission-system/config.json
     printf '%s' "$DOCS_PROMPT" |
-      sh scripts/pi.sh -p --no-session \
+      bash scripts/pi.sh -p --no-session \
         --model opencode-go/deepseek-v4-flash 2>&1
   fi
 

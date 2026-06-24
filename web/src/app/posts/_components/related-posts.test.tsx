@@ -34,7 +34,7 @@ vi.mock('lucide-react', () => ({
   BookOpenIcon: (props: Record<string, unknown>) => <svg data-testid="book-open" {...props} />,
 }))
 
-function makePost(overrides: Partial<Post> = {}): Post {
+const makePost = (overrides: Partial<Post> = {}): Post => {
   return {
     slug: 'test-post',
     title: 'Test Blog Post',

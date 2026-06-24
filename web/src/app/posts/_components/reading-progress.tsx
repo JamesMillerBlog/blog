@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useSpring } from 'framer-motion'
 
-export function ReadingProgress() {
+export const ReadingProgress = (): React.JSX.Element => {
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,

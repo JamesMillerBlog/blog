@@ -11,7 +11,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export const ThemeProvider = ({ children }: { children: React.ReactNode }): React.JSX.Element => {
   const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
@@ -47,7 +47,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>
 }
 
-export function useTheme() {
+export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext)
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider')

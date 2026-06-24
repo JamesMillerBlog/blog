@@ -47,7 +47,7 @@ const configs: Record<CalloutType, CalloutConfig> = {
   },
 }
 
-export function Callout({ type = 'note', children }: Props) {
+export const Callout = ({ type = 'note', children }: Props): React.JSX.Element => {
   const { icon: Icon, borderColor, bgColor, iconColor, label } = configs[type]
 
   return (

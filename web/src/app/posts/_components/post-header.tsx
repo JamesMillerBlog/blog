@@ -14,7 +14,13 @@ type Props = {
   readingTime: number
 }
 
-export function PostHeader({ title, coverImage, date, author, readingTime }: Props) {
+export const PostHeader = ({
+  title,
+  coverImage,
+  date,
+  author,
+  readingTime,
+}: Props): React.JSX.Element => {
   return (
     <header className="max-w-[980px] mx-auto mb-16">
       <div className="mb-8">

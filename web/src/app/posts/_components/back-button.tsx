@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from 'lucide-react'
 
-export function BackButton({ label }: { label: string }) {
+export const BackButton = ({ label }: { label: string }): React.JSX.Element => {
   const router = useRouter()
 
   const handleBack = () => {

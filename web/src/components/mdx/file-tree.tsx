@@ -4,14 +4,14 @@ type Props = {
   children: string
 }
 
-function colorize(token: string): ReactNode {
+const colorize = (token: string): ReactNode => {
   if (token.endsWith('/')) return <span className="font-semibold text-primary">{token}</span>
   if (/\.(tsx?|jsx?)$/.test(token)) return <span className="text-secondary">{token}</span>
   if (/\.mdx?$/.test(token)) return <span className="text-tertiary">{token}</span>
   return token
 }
 
-export function FileTree({ children }: Props) {
+export const FileTree = ({ children }: Props): React.JSX.Element => {
   const lines = children.trim().split('\n')
 
   return (

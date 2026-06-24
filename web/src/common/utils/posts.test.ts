@@ -21,7 +21,7 @@ const mockedMatter = vi.mocked(matter)
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeFrontmatter(overrides: Record<string, unknown> = {}) {
+const makeFrontmatter = (overrides: Record<string, unknown> = {}) => {
   return {
     title: 'Test Post',
     date: '2024-01-01',
@@ -34,7 +34,7 @@ function makeFrontmatter(overrides: Record<string, unknown> = {}) {
   }
 }
 
-function setupFsMocks({ files = [] as string[], exists = true, fileContent = 'raw' }) {
+const setupFsMocks = ({ files = [] as string[], exists = true, fileContent = 'raw' }): void => {
   vi.spyOn(fs, 'readdirSync').mockReturnValue(files as unknown as ReturnType<typeof fs.readdirSync>)
   vi.spyOn(fs, 'existsSync').mockReturnValue(exists)
   vi.spyOn(fs, 'readFileSync').mockReturnValue(
@@ -42,7 +42,7 @@ function setupFsMocks({ files = [] as string[], exists = true, fileContent = 'ra
   )
 }
 
-function setupMatterMocks(posts: Array<{ fm: ReturnType<typeof makeFrontmatter> }>) {
+const setupMatterMocks = (posts: Array<{ fm: ReturnType<typeof makeFrontmatter> }>): void => {
   let callCount = 0
   mockedMatter.mockImplementation(() => {
     const post = posts[callCount++]

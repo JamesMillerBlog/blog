@@ -9,7 +9,14 @@ type Props = {
   children: ReactNode
 }
 
-export function SplitMedia({ src, alt, title, caption, reverse = false, children }: Props) {
+export const SplitMedia = ({
+  src,
+  alt,
+  title,
+  caption,
+  reverse = false,
+  children,
+}: Props): React.JSX.Element => {
   return (
     <div
       className={`my-10 flex flex-col gap-8 md:items-center md:gap-12 ${

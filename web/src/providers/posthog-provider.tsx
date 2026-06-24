@@ -5,7 +5,7 @@ import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, Suspense } from 'react'
 
-function PostHogPageView() {
+const PostHogPageView = (): null => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const ph = usePostHog()
@@ -19,7 +19,7 @@ function PostHogPageView() {
   return null
 }
 
-export function PostHogProvider({ children }: { children: React.ReactNode }) {
+export const PostHogProvider = ({ children }: { children: React.ReactNode }): React.JSX.Element => {
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
     const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com'

@@ -14,7 +14,7 @@ export interface Project {
   youtubeId?: string
 }
 
-function ytThumb(id: string, quality: 'hqdefault' | 'maxresdefault' = 'hqdefault') {
+const ytThumb = (id: string, quality: 'hqdefault' | 'maxresdefault' = 'hqdefault'): string => {
   return `https://img.youtube.com/vi/${id}/${quality}.jpg`
 }
 
@@ -200,7 +200,7 @@ export const projects: Project[] = [
     slug: 'hacky-xmas',
     title: 'Hacky Xmas',
     description:
-      'A festive internal hackathon project exploring playful interactions with connected Christmas decorations — lights, sounds, and sensors controlled via web.',
+      'A festive internal hackathon project exploring playful interactions with connected Christmas decorations - lights, sounds, and sensors controlled via web.',
     company: 'Kerve',
     year: 2015,
     category: 'Internet of Things',
@@ -276,7 +276,7 @@ export const projects: Project[] = [
     slug: 'what-if-you-were-in',
     title: 'What If You Were In',
     description:
-      'A community installation created at University of Lincoln exploring empathy through interactive storytelling — visitors stepped into the lives of others via an immersive web experience.',
+      'A community installation created at University of Lincoln exploring empathy through interactive storytelling - visitors stepped into the lives of others via an immersive web experience.',
     company: 'University of Lincoln',
     year: 2013,
     category: 'Web',
@@ -288,7 +288,7 @@ export const projects: Project[] = [
     slug: 'electric-edibles',
     title: 'Electric Edibles',
     description:
-      'A playful electronics project embedding conductivity into food — potatoes wired as musical instruments, turning the kitchen table into an interactive soundboard.',
+      'A playful electronics project embedding conductivity into food - potatoes wired as musical instruments, turning the kitchen table into an interactive soundboard.',
     company: 'University of Lincoln',
     year: 2013,
     category: 'Internet of Things',
@@ -311,7 +311,7 @@ export const projects: Project[] = [
   },
 ]
 
-export function getCategories(): string[] {
+export const getCategories = (): string[] => {
   return [
     'Highlights',
     'Internet of Things',

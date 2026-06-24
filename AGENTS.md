@@ -93,6 +93,7 @@ All AI tools (Claude Code and pi) must follow these formatting conventions. Matc
 - **Shell scripts:** 2-space indent with spaces. Line continuation with `\` (backslash). Pipe chains use `|` at end of continued line, next line indented with 4 spaces for visual alignment.
 - **JSON/TS/JS/TSX/CSS:** per `.prettierrc` in `web/`: single quotes, no semicolons, trailing commas (ES5), 100 print width.
 - **Markdown:** 2-space indent in code blocks. No trailing whitespace.
+- **Em dashes:** never use `—` in any output (code, comments, strings, markdown). Use `-` instead.
 - **When editing:** preserve surrounding formatting. Only change lines that need functional changes.
 
 ## Design System — Byte Mark

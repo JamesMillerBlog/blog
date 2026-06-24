@@ -8,14 +8,14 @@ type Heading = {
   level: 2 | 3 | 4
 }
 
-function slugify(text: string): string {
+const slugify = (text: string): string => {
   return text
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
 }
 
-function useHeadings() {
+const useHeadings = () => {
   const [headings, setHeadings] = useState<Heading[]>([])
   const [activeId, setActiveId] = useState('')
 
@@ -53,12 +53,12 @@ function useHeadings() {
   return { headings, activeId }
 }
 
-function scrollTo(id: string) {
+const scrollTo = (id: string): void => {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 }
 
 // ── Sidebar TOC (desktop, xl+) ────────────────────────────────────────────
-export function TableOfContents() {
+export const TableOfContents = (): React.JSX.Element | null => {
   const { headings, activeId } = useHeadings()
   if (headings.length === 0) return null
 
@@ -90,7 +90,7 @@ export function TableOfContents() {
 }
 
 // ── Inline TOC (mobile, below xl) ────────────────────────────────────────
-export function InlineTableOfContents() {
+export const InlineTableOfContents = (): React.JSX.Element | null => {
   const { headings, activeId } = useHeadings()
   const [open, setOpen] = useState(false)
 

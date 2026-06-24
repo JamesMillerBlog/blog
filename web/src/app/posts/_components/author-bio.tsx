@@ -34,15 +34,15 @@ const ASPECTS = [
   },
 ]
 
-export function AuthorBio({ author }: Props) {
+export const AuthorBio = ({ author }: Props): React.JSX.Element => {
   const [idx, setIdx] = useState(0)
   const [nxtIdx, setNxtIdx] = useState(1)
   const [hovered, setHovered] = useState(false)
   // After clicking, hover is locked out until the cursor leaves and re-enters.
-  // This naturally covers scrolling — when the image scrolls away from the cursor,
+  // This naturally covers scrolling - when the image scrolls away from the cursor,
   // mouseleave fires and the lock clears ready for the next hover.
   const [hoverLocked, setHoverLocked] = useState(false)
-  // Remount key — used to reset the rotating layer to 0deg after the fold-away
+  // Remount key - used to reset the rotating layer to 0deg after the fold-away
   // without triggering a CSS transition (which would look like a bounce-back).
   const [flipKey, setFlipKey] = useState(0)
   const flipRef = useRef<HTMLDivElement>(null)
@@ -56,7 +56,7 @@ export function AuthorBio({ author }: Props) {
 
   const handleMouseLeave = () => {
     setHovered(false)
-    // Clear the lock on any leave — cursor has moved away so next enter is fresh
+    // Clear the lock on any leave - cursor has moved away so next enter is fresh
     setHoverLocked(false)
   }
 
@@ -110,7 +110,7 @@ export function AuthorBio({ author }: Props) {
         }
         aria-label={`Switch to ${nxt.heading(author.name)}`}
       >
-        {/* Underlying image — frozen during animation to prevent flicker */}
+        {/* Underlying image - frozen during animation to prevent flicker */}
         <div className="absolute inset-0 overflow-hidden" style={{ borderRadius: 16 }}>
           <Image
             src={nxt.getImage(author.picture)}
@@ -121,8 +121,8 @@ export function AuthorBio({ author }: Props) {
           />
         </div>
 
-        {/* Rotating layer — overflow+borderRadius so corners round with the tilt.
-            keyed by flipKey so it remounts at 0deg after each fold-away — avoids
+        {/* Rotating layer - overflow+borderRadius so corners round with the tilt.
+            keyed by flipKey so it remounts at 0deg after each fold-away - avoids
             the bounce-back that a CSS transition would produce. */}
         <div
           key={flipKey}
@@ -154,7 +154,7 @@ export function AuthorBio({ author }: Props) {
         </div>
       </div>
 
-      {/* Text — social links always rendered (invisible when not on work) to prevent height jumps */}
+      {/* Text - social links always rendered (invisible when not on work) to prevent height jumps */}
       <div key={idx} style={{ animation: 'authorTextIn 0.3s ease forwards' }} className="flex-1">
         <p className="font-headline text-xl font-bold text-on-surface">
           {cur.heading(author.name)}

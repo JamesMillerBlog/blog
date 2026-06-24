@@ -21,13 +21,13 @@ const WORD_HIGHLIGHTS: Record<string, string[]> = {
   Launched: ['epic-mind-drive', 'champions-rally', 'cognitive-bar'],
 }
 
-export function ProjectsPageClient({
+export const ProjectsPageClient = ({
   projects,
   categories,
 }: {
   projects: Project[]
   categories: string[]
-}) {
+}): React.JSX.Element => {
   const [selectedCategory, setSelectedCategory] = useState('Highlights')
   const [flashCategory, setFlashCategory] = useState<string | null>(null)
   const [highlightsOverride, setHighlightsOverride] = useState<Project[] | null>(null)

@@ -7,7 +7,7 @@ import { ASSETS_BASE_URL } from '@/common/consts/constants'
 import { mdxComponents } from '@/components/mdx'
 import { CodeBlock } from '@/components/mdx/code-block'
 
-export function rewriteAssetImageSources() {
+export const rewriteAssetImageSources = () => {
   return (tree: Root) => {
     visit(tree, 'element', (node: Element) => {
       if (
@@ -31,7 +31,7 @@ const prettyCodeOptions = {
   defaultLang: 'plaintext',
 }
 
-export async function compileMDXContent(source: string): Promise<ReactElement> {
+export const compileMDXContent = async (source: string): Promise<ReactElement> => {
   const { content } = await compileMDX({
     source,
     components: { ...mdxComponents, pre: CodeBlock },

@@ -4,11 +4,11 @@ type Props = {
   children: ReactNode
 }
 
-export function Steps({ children }: Props) {
+export const Steps = ({ children }: Props): React.JSX.Element => {
   return <ol className="my-8 list-none pl-0 [counter-reset:steps]">{children}</ol>
 }
 
-export function Step({ children }: Props) {
+export const Step = ({ children }: Props): React.JSX.Element => {
   return (
     <li className="group/step relative mb-8 flex gap-5 [counter-increment:steps] last:mb-0">
       <div className="flex shrink-0 flex-col items-center" aria-hidden="true">

@@ -54,7 +54,13 @@ const WORD_TO_TAGS: Record<string, string[]> = {
 
 const MAX_POSTS = 6
 
-export function WordFilteredPosts({ posts, word }: { posts: Post[]; word: string }) {
+export const WordFilteredPosts = ({
+  posts,
+  word,
+}: {
+  posts: Post[]
+  word: string
+}): React.JSX.Element | null => {
   const filtered = useMemo(() => {
     const tags = WORD_TO_TAGS[word] ?? []
     if (tags.length === 0) return []

@@ -10,7 +10,7 @@ const POSTS_BUCKET_REGION = process.env.POSTS_BUCKET_REGION ?? 'us-east-1'
 const POSTS_PREFIX = process.env.POSTS_PREFIX ?? ''
 
 if (process.env.NEXT_PUBLIC_ENVIRONMENT === PRODUCTION_ENVIRONMENT && !POSTS_BUCKET) {
-  console.warn('POSTS_BUCKET is not set in production — falling back to local _posts directory')
+  console.warn('POSTS_BUCKET is not set in production - falling back to local _posts directory')
 }
 
 // Allowlist: lowercase/uppercase letters, digits, hyphens. Blocks ../ traversal.
@@ -20,19 +20,19 @@ const VALID_SLUG = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/
 const postsDirectory = join(process.cwd(), '_posts')
 
 let s3: S3Client | null = null
-function getS3Client() {
+const getS3Client = (): S3Client => {
   if (!s3) s3 = new S3Client({ region: POSTS_BUCKET_REGION })
   return s3
 }
 
-async function fetchS3Object(key: string): Promise<string> {
+const fetchS3Object = async (key: string): Promise<string> => {
   const response = await getS3Client().send(
     new GetObjectCommand({ Bucket: POSTS_BUCKET!, Key: key })
   )
   return response.Body!.transformToString()
 }
 
-export async function getPostSlugs(): Promise<string[]> {
+export const getPostSlugs = async (): Promise<string[]> => {
   if (!POSTS_BUCKET) {
     if (!fs.existsSync(postsDirectory)) return []
     return fs.readdirSync(postsDirectory)
@@ -48,7 +48,7 @@ export async function getPostSlugs(): Promise<string[]> {
     .map((key) => key.slice(POSTS_PREFIX.length))
 }
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
+export const getPostBySlug = async (slug: string): Promise<Post | null> => {
   const realSlug = slug.replace(/\.(md|mdx)$/, '')
   if (!VALID_SLUG.test(realSlug)) return null
 
@@ -80,7 +80,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   return { ...data, slug: realSlug, content } as Post
 }
 
-export function isPostVisible(post: Post): boolean {
+export const isPostVisible = (post: Post): boolean => {
   return (
     process.env.NODE_ENV === 'development' ||
     process.env.NEXT_PUBLIC_ENVIRONMENT === STAGING_ENVIRONMENT ||
@@ -88,7 +88,7 @@ export function isPostVisible(post: Post): boolean {
   )
 }
 
-export async function getAllPosts(): Promise<Post[]> {
+export const getAllPosts = async (): Promise<Post[]> => {
   const slugs = await getPostSlugs()
   const posts = await Promise.all(slugs.map((slug) => getPostBySlug(slug)))
   return (posts.filter(Boolean) as Post[])

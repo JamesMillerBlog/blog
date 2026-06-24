@@ -51,12 +51,12 @@ const WORD_TO_CATEGORY: Record<string, string> = {
 }
 
 // Advance to next index that has a category, avoids a specific word, and avoids the given categories
-function nextIndex(
+const nextIndex = (
   words: string[],
   current: number,
   avoidWord: string,
   avoidCategories: string[]
-): number {
+): number => {
   const len = words.length
   // Ideal: has a category, different from avoided ones
   for (let i = 1; i <= len; i++) {
@@ -74,7 +74,7 @@ function nextIndex(
   return (current + 1) % len
 }
 
-function CyclingWord({
+const CyclingWord = ({
   words,
   index,
   onCycle,
@@ -82,7 +82,7 @@ function CyclingWord({
   words: string[]
   index: number
   onCycle: () => void
-}) {
+}): React.JSX.Element => {
   const ref = useRef<HTMLSpanElement>(null)
   const [animating, setAnimating] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -146,11 +146,11 @@ function CyclingWord({
   )
 }
 
-export function CyclingDescription({
+export const CyclingDescription = ({
   onCategorySelect,
 }: {
   onCategorySelect?: (category: string) => void
-}) {
+}): React.JSX.Element => {
   const [fromIdx, setFromIdx] = useState(0)
   const [toIdx, setToIdx] = useState(0)
 

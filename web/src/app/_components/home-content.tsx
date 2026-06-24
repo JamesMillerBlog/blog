@@ -13,7 +13,7 @@ type Props = {
   featuredTags: string[]
 }
 
-export function HomeContent({ allPosts, featuredTags }: Props) {
+export const HomeContent = ({ allPosts, featuredTags }: Props): React.JSX.Element => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [heroWord, setHeroWord] = useState('software')

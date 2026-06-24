@@ -12,7 +12,7 @@ type Props = {
   posts: SeriesPost[]
 }
 
-export function SeriesNav({ series, current, posts }: Props) {
+export const SeriesNav = ({ series, current, posts }: Props): React.JSX.Element => {
   return (
     <div className="not-prose my-10 rounded-xl border border-primary/20 bg-primary/5 p-6">
       <div className="mb-4 flex items-center gap-2">

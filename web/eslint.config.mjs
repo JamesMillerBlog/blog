@@ -16,7 +16,14 @@ const eslintConfig = [
       complexity: ['warn', 10],
       'max-lines': ['warn', { max: 200, skipBlankLines: true, skipComments: true }],
       'prefer-arrow-callback': 'warn',
-      'func-style': ['warn', 'expression', { allowArrowFunctions: true }],
+      'func-style': ['error', 'expression', { allowArrowFunctions: true }],
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=/\u2014/]',
+          message: 'Use a hyphen (-) instead of an em dash (—).',
+        },
+      ],
     },
   },
   {

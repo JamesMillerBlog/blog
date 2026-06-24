@@ -5,7 +5,7 @@ import React from 'react'
 import { ThemeProvider, useTheme } from './theme-provider'
 
 // Helper to access theme values
-function TestConsumer() {
+const TestConsumer = (): React.JSX.Element => {
   const { theme, toggleTheme } = useTheme()
   return (
     <div>

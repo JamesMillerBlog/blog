@@ -23,15 +23,17 @@ const formatDate = (date: Date): string => date.toISOString().slice(0, 10)
 function formatDate(date: Date): string { ... }
 ```
 
-**Named function declarations are acceptable** for exported React components — both forms pass linting:
+**Use `const` arrow functions for all exported React components** (ESLint enforces this as an error):
 
 ```tsx
-// acceptable for components
+// required
+export const PostCard = ({ post }: Props): JSX.Element => { ... }
+
+// will error — do not use
 export function PostCard({ post }: Props) { ... }
-export const PostCard = ({ post }: Props) => { ... }
 ```
 
-**Next.js App Router pages/layouts must use function declarations** (Next.js requirement):
+**Next.js App Router pages/layouts are the only exception** (Next.js requires default function exports):
 
 ```tsx
 // required by Next.js

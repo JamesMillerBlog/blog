@@ -34,7 +34,7 @@ type Props = {
   onTagSelect: (tag: string) => void
 }
 
-export function TagCloudSection({ tags, selectedTag, onTagSelect }: Props) {
+export const TagCloudSection = ({ tags, selectedTag, onTagSelect }: Props): React.JSX.Element => {
   const allTags = ['Everything', ...tags]
   const containerRef = useRef<HTMLDivElement>(null)
   const tagRefs = useRef<Record<string, HTMLButtonElement | null>>({})

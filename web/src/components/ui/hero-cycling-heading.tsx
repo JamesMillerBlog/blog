@@ -8,13 +8,13 @@ const WORDS = ['software', 'websites', 'APIs', 'agents', 'infrastructure', 'expe
 const BEFORE = ['I', 'build']
 const AFTER = ['and', 'share', 'what', 'I', 'learn.']
 
-export function HeroCyclingHeading({
+export const HeroCyclingHeading = ({
   onWordChange,
   word,
 }: {
   onWordChange?: (word: string) => void
   word?: string
-}) {
+}): React.JSX.Element => {
   const ref = useRef<HTMLSpanElement>(null)
   const mounted = useRef(false)
   const [wordIdx, setWordIdx] = useState(0)

@@ -127,6 +127,17 @@ else
   fail "TypeScript type check — run 'pnpm typecheck' for details"
 fi
 
+echo "  → Em dash check..."
+EM_DASH_FILES=$(grep -rl $'\xe2\x80\x94' "$PROJECT_ROOT/web/src" \
+    --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
+    --include="*.css" --include="*.md" --include="*.mdx" 2>/dev/null || true)
+if [ -z "$EM_DASH_FILES" ]; then
+  pass "No em dashes in source files"
+else
+  EM_DASH_COUNT=$(echo "$EM_DASH_FILES" | wc -l | tr -d ' ')
+  fail "Em dashes found in $EM_DASH_COUNT file(s) - replace em dashes with hyphens: $(echo "$EM_DASH_FILES" | tr '\n' ' ')"
+fi
+
 stage_done
 cd "$PROJECT_ROOT"
 

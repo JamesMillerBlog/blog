@@ -95,7 +95,7 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
   const post = await getPostBySlug(params.slug)
 
   if (!post || !isPostVisible(post)) {
-    return notFound()
+    return {}
   }
 
   const url = `${SITE_URL}/posts/${post.slug}`
@@ -143,5 +143,5 @@ export async function generateStaticParams() {
   // Next.js 16+ requires non-empty generateStaticParams with output: 'export'.
   // When no posts exist (empty content repo), return placeholder so build succeeds.
   // The placeholder route will render notFound() via the page component's guard.
-  return slugs.length > 0 ? slugs : [{ slug: '_placeholder' }]
+  return slugs.length > 0 ? slugs : [{ slug: 'no_posts' }]
 }

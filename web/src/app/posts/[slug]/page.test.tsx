@@ -146,18 +146,16 @@ describe('Post page', () => {
       }
     })
 
-    it('calls notFound() when post is null (not found)', async () => {
+    it('returns empty metadata when post is null (not found)', async () => {
       const { generateMetadata } = await import('./page')
-      await expect(generateMetadata(makeParams('nonexistent'))).rejects.toThrow('NEXT_NOT_FOUND')
-      const { notFound } = await import('next/navigation')
-      expect(notFound).toHaveBeenCalled()
+      const result = await generateMetadata(makeParams('nonexistent'))
+      expect(result).toEqual({})
     })
 
-    it('calls notFound() when post is not visible (draft in production)', async () => {
+    it('returns empty metadata when post is not visible (draft in production)', async () => {
       const { generateMetadata } = await import('./page')
-      await expect(generateMetadata(makeParams('draft-post'))).rejects.toThrow('NEXT_NOT_FOUND')
-      const { notFound } = await import('next/navigation')
-      expect(notFound).toHaveBeenCalled()
+      const result = await generateMetadata(makeParams('draft-post'))
+      expect(result).toEqual({})
     })
 
     it('includes openGraph metadata with publishedTime', async () => {

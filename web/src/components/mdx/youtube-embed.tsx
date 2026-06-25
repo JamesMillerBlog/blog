@@ -14,7 +14,7 @@ export const YouTubeEmbed = ({ videoId, title }: Props): React.JSX.Element => {
 
   return (
     <figure className="not-prose my-10">
-      <div className="relative aspect-video overflow-hidden rounded-xl shadow-md">
+      <div className="relative aspect-video overflow-hidden rounded-lg shadow-md">
         {playing ? (
           <iframe
             src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}

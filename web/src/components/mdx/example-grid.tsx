@@ -18,12 +18,7 @@ type CardProps = {
 
 export const ExampleCard = ({ src, alt, title, href, children }: CardProps): React.JSX.Element => {
   return (
-    <div
-      className="flex flex-col rounded-lg overflow-hidden"
-      style={{
-        backgroundColor: 'var(--color-surface-container)',
-      }}
-    >
+    <div className="ds-card flex flex-col overflow-hidden bg-surface-container">
       <figure className="h-[32rem] overflow-hidden m-0 p-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} className="w-full h-full object-cover" />
@@ -39,12 +34,7 @@ export const ExampleCard = ({ src, alt, title, href, children }: CardProps): Rea
             {title}
           </a>
         ) : (
-          <p
-            className="font-headline font-bold text-lg leading-snug"
-            style={{ color: 'var(--color-on-surface)' }}
-          >
-            {title}
-          </p>
+          <p className="font-headline font-bold text-lg leading-snug text-on-surface">{title}</p>
         )}
         <div
           className="text-base leading-relaxed"

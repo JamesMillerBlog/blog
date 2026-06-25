@@ -19,9 +19,9 @@ export const RelatedPosts = ({ posts }: Props): React.JSX.Element | null => {
           <Link
             key={post.slug}
             href={`/posts/${post.slug}`}
-            className="group overflow-hidden rounded-xl bg-surface-container-lowest transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+            className="ds-card group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
           >
-            <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
+            <div className="relative flex h-40 items-center justify-center overflow-hidden bg-surface-container-low">
               {post.coverImage ? (
                 <Image
                   src={post.coverImage}
@@ -31,28 +31,23 @@ export const RelatedPosts = ({ posts }: Props): React.JSX.Element | null => {
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
-                <BookOpenIcon className="h-12 w-12 text-primary/30" />
+                <BookOpenIcon className="h-12 w-12 text-on-surface/20" />
               )}
             </div>
             <div className="p-5">
               {post.tags && post.tags.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-2">
                   {post.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[10px] font-bold uppercase tracking-wider text-primary"
-                    >
+                    <span key={tag} className="ds-post-tag">
                       {tag}
                     </span>
                   ))}
                 </div>
               )}
-              <h3 className="font-headline text-lg font-bold leading-snug text-on-surface line-clamp-2 group-hover:text-primary transition-colors">
+              <h3 className="ds-card-title leading-snug line-clamp-2 group-hover:font-extrabold transition-all">
                 {post.title}
               </h3>
-              <p className="mt-3 font-headline text-xs text-on-surface-variant">
-                {format(new Date(post.date), 'MMM d, yyyy')}
-              </p>
+              <p className="ds-metadata mt-3">{format(new Date(post.date), 'MMM d, yyyy')}</p>
             </div>
           </Link>
         ))}

@@ -28,10 +28,10 @@ export const Tabs = ({ children }: TabsProps): React.JSX.Element => {
           <button
             key={i}
             onClick={() => setActiveIndex(i)}
-            className={`rounded-lg px-4 py-2 text-sm font-headline font-medium transition-colors ${
+            className={`rounded-full px-4 py-2 text-sm font-headline transition-all ${
               activeIndex === i
-                ? 'bg-primary text-on-primary'
-                : 'text-on-surface-variant hover:text-on-surface'
+                ? 'bg-surface-container-highest text-on-surface font-extrabold'
+                : 'text-on-surface-variant font-medium hover:text-on-surface'
             }`}
           >
             {tab.props.label}

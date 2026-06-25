@@ -148,9 +148,13 @@ const CyclingWord = ({
 
 export const CyclingDescription = ({
   onCategorySelect,
+  onProductsClick,
+  onExperiencesClick,
 }: {
   onCategorySelect?: (category: string) => void
-}): React.JSX.Element => {
+  onProductsClick?: () => void
+  onExperiencesClick?: () => void
+}) {
   const [fromIdx, setFromIdx] = useState(0)
   const [toIdx, setToIdx] = useState(0)
 
@@ -178,7 +182,20 @@ export const CyclingDescription = ({
 
   return (
     <p className="text-xl md:text-2xl text-on-surface-variant leading-relaxed mb-4">
-      Over a decade of products and experiences
+      Over a decade of{' '}
+      <span
+        className="font-bold transition-colors duration-300 hover:text-secondary cursor-pointer"
+        onClick={onProductsClick}
+      >
+        products
+      </span>{' '}
+      and{' '}
+      <span
+        className="font-bold transition-colors duration-300 hover:text-primary cursor-pointer"
+        onClick={onExperiencesClick}
+      >
+        experiences
+      </span>
       <br />
       from <CyclingWord words={FROM_WORDS} index={fromIdx} onCycle={cycleFrom} /> to{' '}
       <CyclingWord words={TO_WORDS} index={toIdx} onCycle={cycleTo} />.

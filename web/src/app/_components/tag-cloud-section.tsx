@@ -39,7 +39,6 @@ export const TagCloudSection = ({ tags, selectedTag, onTagSelect }: Props): Reac
   const containerRef = useRef<HTMLDivElement>(null)
   const tagRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const [particles, setParticles] = useState<Particle[]>([])
-  const [flashingTag, setFlashingTag] = useState<string | null>(null)
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -48,13 +47,10 @@ export const TagCloudSection = ({ tags, selectedTag, onTagSelect }: Props): Reac
     const randomTag = available[Math.floor(Math.random() * available.length)]
     onTagSelect(randomTag)
 
-    // Cancel any in-flight timers so rapid clicks don't leave stale state
     if (flashTimer.current) clearTimeout(flashTimer.current)
     if (clearTimer.current) clearTimeout(clearTimer.current)
-    setFlashingTag(null)
 
     flashTimer.current = setTimeout(() => {
-      setFlashingTag(randomTag)
       const el = tagRefs.current[randomTag]
       if (!el || !containerRef.current) return
       const elRect = el.getBoundingClientRect()
@@ -78,7 +74,6 @@ export const TagCloudSection = ({ tags, selectedTag, onTagSelect }: Props): Reac
       })
       setParticles((p) => [...p, ...newP])
       clearTimer.current = setTimeout(() => {
-        setFlashingTag(null)
         setParticles((p) => p.filter((pt) => !newP.find((b) => b.id === pt.id)))
       }, 950)
     }, 150)
@@ -112,11 +107,11 @@ export const TagCloudSection = ({ tags, selectedTag, onTagSelect }: Props): Reac
                 tagRefs.current[tag] = el
               }}
               onClick={() => onTagSelect(isSelected && tag !== 'Everything' ? 'Everything' : tag)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold font-headline transition-colors duration-150 cursor-pointer focus:outline-none ${
+              className={`px-4 py-1.5 rounded-full font-headline text-sm transition-colors duration-150 cursor-pointer focus:outline-none border ${
                 isSelected
-                  ? 'bg-secondary-container text-on-secondary-container'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
-              } ${flashingTag === tag ? 'scale-110 ring-2 ring-secondary' : ''}`}
+                  ? 'border-on-surface font-extrabold text-on-surface'
+                  : 'border-outline-variant/40 font-medium text-on-surface-variant hover:border-outline-variant hover:text-on-surface'
+              }`}
             >
               {tag}
             </button>

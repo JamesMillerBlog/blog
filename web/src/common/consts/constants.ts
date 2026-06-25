@@ -27,6 +27,37 @@ export const FEATURED_TAGS = [
   'Back End',
 ]
 
+export const PROJECT_TAG_TO_FEATURED: Record<string, string> = {
+  AI: 'Artificial Intelligence',
+  ML: 'Artificial Intelligence',
+  TensorFlow: 'Artificial Intelligence',
+  NLP: 'Artificial Intelligence',
+  'IBM Watson': 'Artificial Intelligence',
+  'Sentiment Analysis': 'Artificial Intelligence',
+  'Computer Vision': 'Artificial Intelligence',
+  AWS: 'Amazon Web Services',
+  WebXR: 'Spacial Computing',
+  VR: 'Spacial Computing',
+  'Mixed Reality': 'Spacial Computing',
+  '3D': 'Spacial Computing',
+  '360 Video': 'Spacial Computing',
+  Oculus: 'Spacial Computing',
+  Unity: 'Spacial Computing',
+  'Unreal Engine': 'Spacial Computing',
+  Blockchain: 'Blockchain',
+  DeFi: 'Blockchain',
+  Web3: 'Blockchain',
+  Radix: 'Blockchain',
+  React: 'Front End',
+  TypeScript: 'Front End',
+  'Three.js': 'Front End',
+  'Data Visualisation': 'Front End',
+  WebSockets: 'Front End',
+  WebRTC: 'Front End',
+  'Node.js': 'Back End',
+  Python: 'Back End',
+}
+
 export const FEATURED_TAG_MAP: Record<string, string[]> = {
   'Amazon Web Services': ['aws', 'amazonwebservices', 'amazoncognito'],
   'Spacial Computing': ['webxr', 'webvr', 'mixedreality', 'threejs'],

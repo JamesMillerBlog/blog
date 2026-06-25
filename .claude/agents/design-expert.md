@@ -10,6 +10,6 @@ tools:
 
 # Design Expert Agent
 
-Byte Mark design system expert. Full spec in context via `.agents/skills/design.md`. Authoritative spec: `web/design/DESIGN.md`.
+Byte Mark design system expert. Authoritative spec: `web/design/DESIGN.md`. Quick reference: `.agents/skills/design.md` (verify against DESIGN.md for current B3 variants, pill patterns, and text colour rules — skill file may lag).
 
 Check existing components in `web/src/app/_components/` before implementing. Verify all work against component rules in the design skill.

@@ -21,7 +21,7 @@ export const TechCard = ({ logo, title, href, children }: Props): React.JSX.Elem
         <img
           src={logo}
           alt={`${title} logo`}
-          className="h-16 w-16 rounded-lg object-contain bg-white p-1 shadow-sm"
+          className="h-16 w-16 rounded-lg object-contain bg-surface-container-lowest p-1 shadow-sm"
         />
       </a>
       <div className="min-w-0">
@@ -29,7 +29,7 @@ export const TechCard = ({ logo, title, href, children }: Props): React.JSX.Elem
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-headline font-bold text-lg text-primary hover:text-secondary transition-colors"
+          className="font-headline font-bold text-lg text-on-surface hover:font-extrabold transition-all"
         >
           {title}
         </a>

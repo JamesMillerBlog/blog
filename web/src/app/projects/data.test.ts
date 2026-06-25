@@ -34,7 +34,7 @@ describe('projects static data', () => {
       'Internet of Things',
       'Artificial Intelligence',
       'Web',
-      'Extended Reality',
+      'Spatial Computing',
     ])
     for (const project of projects) {
       expect(
@@ -83,7 +83,7 @@ describe('getCategories', () => {
     expect(cats).toContain('Internet of Things')
     expect(cats).toContain('Artificial Intelligence')
     expect(cats).toContain('Web')
-    expect(cats).toContain('Extended Reality')
+    expect(cats).toContain('Spatial Computing')
     expect(cats).toContain('All')
   })
 

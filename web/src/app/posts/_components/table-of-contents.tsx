@@ -24,10 +24,15 @@ const useHeadings = () => {
     if (!container) return
 
     const elements = Array.from(container.querySelectorAll('h2, h3, h4')) as HTMLElement[]
+    const seen = new Map<string, number>()
     const extracted: Heading[] = elements.map((el) => {
-      if (!el.id) el.id = slugify(el.textContent ?? '')
+      const base = el.id || slugify(el.textContent ?? '')
+      const count = seen.get(base) ?? 0
+      const id = count === 0 ? base : `${base}-${count}`
+      seen.set(base, count + 1)
+      el.id = id
       return {
-        id: el.id,
+        id,
         text: el.textContent ?? '',
         level: el.tagName === 'H2' ? 2 : el.tagName === 'H3' ? 3 : 4,
       }
@@ -73,11 +78,11 @@ export const TableOfContents = (): React.JSX.Element | null => {
             <button
               onClick={() => scrollTo(h.id)}
               className={`block w-full py-1 text-left transition-colors duration-150 leading-snug ${
-                h.level === 3 ? 'pl-3 text-[0.8rem]' : h.level === 4 ? 'pl-6 text-[0.75rem]' : ''
+                h.level === 3 ? 'pl-3 text-sm' : h.level === 4 ? 'pl-6 text-xs' : ''
               } ${
                 activeId === h.id
-                  ? 'border-l-2 border-primary pl-2 font-bold text-primary'
-                  : 'text-on-surface-variant/70 hover:text-on-surface'
+                  ? 'border-l-2 border-on-surface pl-2 font-extrabold text-on-surface'
+                  : 'text-on-surface-variant/60 hover:text-on-surface-variant'
               }`}
             >
               {h.text}
@@ -97,7 +102,7 @@ export const InlineTableOfContents = (): React.JSX.Element | null => {
   if (headings.length === 0) return null
 
   return (
-    <nav className="xl:hidden mb-10 rounded-2xl bg-surface-container-lowest overflow-hidden font-headline">
+    <nav className="ds-card xl:hidden mb-10 overflow-hidden font-headline">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
@@ -126,10 +131,10 @@ export const InlineTableOfContents = (): React.JSX.Element | null => {
                   setOpen(false)
                 }}
                 className={`block w-full py-1.5 text-left text-sm transition-colors duration-150 leading-snug ${
-                  h.level === 3 ? 'pl-4 text-[0.8rem]' : h.level === 4 ? 'pl-8 text-[0.75rem]' : ''
+                  h.level === 3 ? 'pl-4 text-sm' : h.level === 4 ? 'pl-8 text-xs' : ''
                 } ${
                   activeId === h.id
-                    ? 'font-bold text-primary'
+                    ? 'font-extrabold text-on-surface'
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >

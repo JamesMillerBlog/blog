@@ -164,7 +164,7 @@ export const SearchModal = ({
 
       {/* Modal */}
       <div className="relative max-w-2xl mx-auto mt-20 mx-4">
-        <div className="bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden border border-outline-variant/20">
+        <div className="ds-card shadow-2xl overflow-hidden border border-outline-variant/20">
           {/* Search Input */}
           <div className="flex items-center gap-4 p-4 border-b border-outline-variant/20">
             <SearchIcon className="w-5 h-5 text-on-surface-variant" />
@@ -199,20 +199,12 @@ export const SearchModal = ({
                 key={`${item.type}-${item.slug}`}
                 onClick={() => navigateToItem(item)}
                 onMouseEnter={() => setActiveIndex(index)}
-                className={`w-full text-left block p-4 transition-colors border-b border-outline-variant/10 last:border-0 ${
-                  index === activeIndex
-                    ? 'bg-secondary-container text-on-secondary-container'
-                    : 'hover:bg-surface-container-low'
+                className={`w-full text-left block p-4 transition-all border-b border-outline-variant/10 last:border-0 ${
+                  index === activeIndex ? 'opacity-100' : 'opacity-50 hover:opacity-75'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-headline font-semibold ${
-                      item.type === 'post'
-                        ? 'bg-primary-container text-on-primary-container'
-                        : 'bg-tertiary-container text-on-tertiary-container'
-                    }`}
-                  >
+                  <span className="ds-type-chip">
                     {item.type === 'post' ? ui.search.posts : ui.search.projects}
                   </span>
                   {item.dateOrYear && (

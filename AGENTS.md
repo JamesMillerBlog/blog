@@ -134,13 +134,14 @@ Claude runs in container via `pnpm claude` (no rebuild) or `pnpm claude:fresh` (
 
 ### AI Development (OpenCode/pi)
 
-Eight workflows automate issue implementation, PR review, and blog improvement using OpenCode:
+Nine workflows automate issue implementation, PR review, and blog improvement using OpenCode:
 
 | Workflow                       | Trigger                                                              | What it does                                                                                                                                              |
 | ------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ai-issue.yml`                 | Issue labeled `ai-implement` (repo owner only)                       | Runs council pre-implementation review, implements issue with deepseek-v4-pro, runs deterministic criteria check loop, creates draft PR, deploys ephemeral preview, generates E2E tests, runs Playwright tests |
 | `ai-issue-comment.yml`         | Issue comment `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; finds existing branch/PR for `/ai`/`/resume`/`/retry`; if no branch → re-implements from scratch; `/ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
-| `ai-pr-comment.yml`            | PR comment or inline review comment with `/ai <instruction>`, `/resume`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; `/ai` applies fix via ai-respond.sh, re-deploys preview; `/resume` re-deploys preview without code change        |
+| `ai-pr-comment.yml`            | PR comment with `/ai <instruction>`, `/resume`, or `/council <question>` (repo owner only) | Runs council for `/council <question>`; `/ai` applies fix via ai-respond.sh, re-deploys preview; `/resume` re-deploys preview without code change        |
+| `ai-pr-review-comment.yml`     | Inline review comment on PR (repo owner only)                        | Assesses inline review feedback, applies fixes via pi, re-deploys preview                                                                                 |
 | `ai-pr-review.yml`             | PR opened, reopened, or updated (same-repo only)                     | Runs multi-agent AI review (claude-sonnet-4-6) on the PR diff, posts verdict, dispatches auto-fix if DO_NOT_PUSH and iterations < 3, labels PR needs-human after max iterations |
 | `ai-pr-review-respond.yml`     | `repository_dispatch: pr-review-needs-fix`                           | Validates inputs, applies deepseek-v4-pro fixes for CRITICAL/HIGH findings, pushes (triggering re-review), tracks iterations via PR labels, posts emoji status |
 | `ai-pr-merged.yml`             | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
@@ -166,6 +167,7 @@ Four workflows provide continuous security monitoring:
 cd web && pnpm dev                  # dev server
 cd web && pnpm build                # production build
 cd web && pnpm test                 # unit tests (vitest)
+pnpm storybook                      # Storybook dev server (design system showcase)
 pnpm audit:standards                # coding standards audit (quick)
 pnpm audit:standards:full           # coding standards audit (with AI review)
 cd web && pnpm audit:security       # run local security audit

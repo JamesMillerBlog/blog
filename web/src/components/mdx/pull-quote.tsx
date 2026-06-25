@@ -7,9 +7,9 @@ type Props = {
 
 export const PullQuote = ({ children, author }: Props): React.JSX.Element => {
   return (
-    <blockquote className="not-prose my-10 rounded-xl border-l-4 border-primary bg-primary/5 px-6 py-8 md:px-10">
+    <blockquote className="not-prose my-10 rounded-xl border-l-4 border-surface-container-high bg-surface-container-lowest px-6 py-8 md:px-10">
       <div className="relative">
-        <span className="absolute -top-5 -left-2 font-body text-6xl leading-none text-primary/25 select-none">
+        <span className="absolute -top-5 -left-2 font-body text-6xl leading-none text-on-surface/10 select-none">
           &ldquo;
         </span>
         <p className="font-body text-2xl italic leading-relaxed text-on-surface md:text-3xl">

@@ -11,6 +11,34 @@ Write tests before or alongside implementation. Every new source file must have 
 - Mock at the boundary — mock external modules (`next/image`, `framer-motion`), not internal helpers
 - Coverage thresholds (enforced in CI): 46% lines/statements, 53% functions, 30% branches
 
+## Storybook Stories
+
+Every new reusable UI component must have a corresponding `*.stories.tsx` file in `web/src/stories/`.
+
+- Story file name matches the component: `PostCard.tsx` → `PostCard.stories.tsx`
+- Minimum stories: one `Default` story showing the typical use case, plus stories for key variants/states (empty state, error state, different props)
+- Use real-looking mock data, not placeholders
+- For interactive components add `render:` stories that show meaningful interactivity
+- Don't create stories for: pages, layouts, MDX content components, or server-only utilities
+
+```tsx
+// template
+import type { Meta, StoryObj } from '@storybook/react'
+import { MyComponent } from '@/path/to/component'
+
+const meta: Meta<typeof MyComponent> = {
+  title: 'Category/MyComponent',
+  component: MyComponent,
+  parameters: { layout: 'padded' },
+}
+export default meta
+type Story = StoryObj<typeof MyComponent>
+
+export const Default: Story = { args: { /* ... */ } }
+```
+
+Category conventions: `Blog/`, `MDX/`, `UI/`, `Navigation/`, `Projects/`
+
 ## Functional Style
 
 **Prefer `const` + arrow functions** for utilities, helpers, and non-exported internals:

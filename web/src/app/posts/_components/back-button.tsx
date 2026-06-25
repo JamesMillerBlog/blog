@@ -18,7 +18,7 @@ export const BackButton = ({ label }: { label: string }): React.JSX.Element => {
   return (
     <button
       onClick={handleBack}
-      className="inline-flex items-center gap-2 text-primary font-headline font-bold text-sm hover:text-secondary transition-colors px-4 py-2 bg-primary/5 hover:bg-secondary/5 rounded-full cursor-pointer"
+      className="inline-flex items-center gap-2 text-on-surface font-headline font-semibold text-sm hover:font-extrabold transition-all cursor-pointer"
     >
       <ArrowLeftIcon className="w-4 h-4" /> {label}
     </button>

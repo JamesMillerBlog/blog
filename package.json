@@ -60,6 +60,7 @@
     "pi:fresh": "sh scripts/pi.sh --fresh",
     "audit:standards": "./scripts/code-health-check.sh --quick",
     "audit:standards:full": "./scripts/code-health-check.sh",
+    "storybook": "pnpm --dir web storybook",
     "audit:security": "pnpm --dir web audit:security"
   },
   "devDependencies": {

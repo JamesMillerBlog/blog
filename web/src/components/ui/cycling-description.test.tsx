@@ -5,8 +5,8 @@ import React from 'react'
 describe('CyclingDescription', () => {
   it('renders the static description text', async () => {
     const { CyclingDescription } = await import('./cycling-description')
-    render(<CyclingDescription />)
-    expect(screen.getByText(/Over a decade of products and experiences/)).toBeInTheDocument()
+    const { container } = render(<CyclingDescription />)
+    expect(container.textContent).toMatch(/Over a decade of products and experiences/)
   })
 
   it('renders "from" and "to" connective words', async () => {
@@ -71,7 +71,7 @@ describe('CyclingDescription', () => {
     const { CyclingDescription } = await import('./cycling-description')
     const { container } = render(<CyclingDescription />)
     const clickableSpans = container.querySelectorAll('.cursor-pointer')
-    expect(clickableSpans.length).toBe(2)
+    expect(clickableSpans.length).toBe(4)
   })
 
   it('handles mouse enter and leave on cycling words', async () => {

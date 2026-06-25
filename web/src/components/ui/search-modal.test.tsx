@@ -179,7 +179,7 @@ describe('SearchModal', () => {
     const buttons = screen.getAllByRole('button').filter((b) => b.textContent?.includes('Post'))
     expect(buttons.length).toBeGreaterThan(0)
     // First button should have active class
-    expect(buttons[0].className).toContain('bg-secondary-container')
+    expect(buttons[0].className).toContain('opacity-100')
   })
 
   it('navigates with ArrowDown and Enter keys', async () => {

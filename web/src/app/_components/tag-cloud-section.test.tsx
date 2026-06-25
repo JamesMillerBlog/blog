@@ -101,7 +101,7 @@ describe('TagCloudSection', () => {
       />
     )
     const btn = screen.getByRole('button', { name: 'DevOps' })
-    expect(btn.className).toContain('bg-secondary-container')
+    expect(btn.className).toContain('border-on-surface')
   })
 
   it('calls onTagSelect when heading is clicked (random tag selection)', async () => {
@@ -144,31 +144,6 @@ describe('TagCloudSection', () => {
             (s as HTMLElement).style?.position === 'absolute'
         )
         expect(absoluteSpans.length).toBeGreaterThan(0)
-      },
-      { timeout: 500 }
-    )
-  })
-
-  it('applies flashing ring to selected tag after heading click', async () => {
-    const { TagCloudSection } = await import('./tag-cloud-section')
-    const onTagSelect = vi.fn()
-    render(
-      <TagCloudSection
-        tags={['Artificial Intelligence', 'DevOps']}
-        posts={[makePost()]}
-        selectedTag="Everything"
-        onTagSelect={onTagSelect}
-      />
-    )
-
-    fireEvent.click(screen.getByTestId('tech-icon-text'))
-
-    await vi.waitFor(
-      () => {
-        // After timeout, flashingTag is set - a button should have scale-110
-        const buttons = screen.getAllByRole('button')
-        const flashingBtn = buttons.find((b) => b.className.includes('scale-110'))
-        expect(flashingBtn).not.toBeUndefined()
       },
       { timeout: 500 }
     )

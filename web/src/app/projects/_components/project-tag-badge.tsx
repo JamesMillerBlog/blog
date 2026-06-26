@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { PROJECT_TAG_TO_FEATURED } from '@/common/consts/constants'
 
-export function ProjectTagBadge({ tag, className }: { tag: string; className?: string }) {
+export const ProjectTagBadge = ({ tag, className }: { tag: string; className?: string }) => {
   const router = useRouter()
   const featuredTag = PROJECT_TAG_TO_FEATURED[tag]
   const base =

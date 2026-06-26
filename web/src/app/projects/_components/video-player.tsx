@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Project } from '@/app/projects/data'
 
-export function VideoPlayer({ project, priority }: { project: Project; priority?: boolean }) {
+export const VideoPlayer = ({ project, priority }: { project: Project; priority?: boolean }) => {
   const [playing, setPlaying] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const thumbUrl =

@@ -7,7 +7,7 @@ const meta: Meta = {
 export default meta
 type Story = StoryObj
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => {
   return (
     <div className="mb-10">
       <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/50 font-headline mb-4">
@@ -18,7 +18,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function TokenRow({
+const TokenRow = ({
   cls,
   description,
   example,
@@ -26,7 +26,7 @@ function TokenRow({
   cls: string
   description: string
   example: React.ReactNode
-}) {
+}) => {
   return (
     <div className="flex items-center gap-6 py-3 border-b border-outline-variant/10 last:border-0">
       <code className="w-36 shrink-0 text-xs font-mono bg-surface-container px-2 py-1 rounded text-primary">

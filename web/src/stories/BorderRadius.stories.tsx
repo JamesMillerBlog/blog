@@ -9,7 +9,7 @@ type Story = StoryObj
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function Token({
+const Token = ({
   name,
   value,
   cls,
@@ -19,7 +19,7 @@ function Token({
   value: string
   cls: string
   note?: string
-}) {
+}) => {
   return (
     <div className="flex items-center gap-4 py-3 border-b border-outline-variant/20 last:border-0">
       <div className={`w-16 h-16 bg-primary/20 border-2 border-primary/40 shrink-0 ${cls}`} />
@@ -35,7 +35,7 @@ function Token({
   )
 }
 
-function AuditRow({
+const AuditRow = ({
   cls,
   status,
   token,
@@ -47,7 +47,7 @@ function AuditRow({
   token: string
   components: string[]
   elements: string
-}) {
+}) => {
   const badge = {
     ok: 'bg-primary/10 text-primary',
     warn: 'bg-tertiary-container/40 text-on-tertiary-container',
@@ -76,7 +76,7 @@ function AuditRow({
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => {
   return (
     <div className="mb-12">
       <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/50 font-headline mb-4">

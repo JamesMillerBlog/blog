@@ -9,7 +9,7 @@ type Story = StoryObj
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+const Row = ({ label, children }: { label: string; children: React.ReactNode }) => {
   return (
     <div className="flex items-baseline gap-6 py-3 border-b border-outline-variant/20 last:border-0">
       <span className="w-48 shrink-0 text-xs font-headline font-semibold text-on-surface-variant/60 uppercase tracking-widest">
@@ -20,7 +20,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => {
   return (
     <div className="mb-12">
       <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/50 font-headline mb-4">

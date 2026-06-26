@@ -117,7 +117,7 @@ jobs:
           PLAYWRIGHT_BASE_URL: ${{ env.PREVIEW_URL }}
           PLAYWRIGHT_BASIC_AUTH_USERNAME: ${{ secrets.BASIC_AUTH_USERNAME }}
           PLAYWRIGHT_BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
-        run: cd web && pnpm test:e2e --reporter=html
+        run: cd web && pnpm test:e2e --reporter=github,html
         continue-on-error: true
 
       - name: Upload Playwright report

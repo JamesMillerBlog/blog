@@ -46,7 +46,6 @@ echo '=== Pushing prompts to Langfuse ===' >&2
 push_prompt 'ai-issue-implement'          '.pi/prompts/ai-issue-implement.md'
 push_prompt 'ai-pr-respond'               '.pi/prompts/ai-pr-respond.md'
 push_prompt 'ai-pr-review'               '.pi/prompts/ai-pr-review.md'
-push_prompt 'pre-push-review'             '.pi/prompts/pre-push-review.md'
 push_prompt 'blog-improvement-radar'      '.pi/prompts/blog-improvement-radar.md'
 push_prompt 'ai-pr-review-comment-assess' '.pi/prompts/ai-pr-review-comment-assess.md'
 push_prompt 'council'                     '.pi/prompts/council.md'

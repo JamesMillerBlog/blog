@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-out_dir=".claude/pre-push-review"
+out_dir=".claude/ai-pr-review"
 mkdir -p "$out_dir"
 
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)

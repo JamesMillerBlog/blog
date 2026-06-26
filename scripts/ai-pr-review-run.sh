@@ -13,7 +13,7 @@ strip_ansi() {
 }
 
 echo "=== Generating review manifest ===" >&2
-bash scripts/pre-push-review-manifest.sh
+bash scripts/ai-pr-review-manifest.sh
 
 # Pre-flight: scan diff for secret patterns before sending to AI
 _DIFF_SECRETS=$(git diff origin/main...HEAD 2>/dev/null | grep '^+' | grep -v '^+++' || true)
@@ -30,7 +30,7 @@ LF_TRACE_ID=$(lf_trace_create \
   "$(jq -n --arg pr "$PR_NUMBER" '{pr_number: $pr}')")
 echo "Langfuse trace: ${LF_TRACE_ID}" >&2
 
-REVIEW_PROMPT="$(lf_prompt_get 'pre-push-review' '.pi/prompts/pre-push-review.md')
+REVIEW_PROMPT="$(lf_prompt_get 'ai-pr-review' '.pi/prompts/ai-pr-review.md')
 
 ---
 

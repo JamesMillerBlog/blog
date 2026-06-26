@@ -35,7 +35,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment "${PR_NUMBER}" --body "**Preview environment deploying...**
+          gh pr comment "${PR_NUMBER}" --repo "${{ github.repository }}" --body "**Preview environment deploying...**
 
           [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
@@ -136,11 +136,11 @@ jobs:
         run: |
           DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
             --method POST \
-            -f ref="${BRANCH}" \
-            -f environment="preview-pr-${PR_NUMBER}" \
-            -f description="Preview for PR #${PR_NUMBER}" \
-            -F auto_merge=false \
-            --jq '.id')
+            --input - \
+            --jq '.id' << EOF
+          {"ref": "${BRANCH}", "environment": "preview-pr-${PR_NUMBER}", "description": "Preview for PR #${PR_NUMBER}", "auto_merge": false, "required_contexts": []}
+          EOF
+          )
           gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \
             --method POST \
             -f state='success' \
@@ -153,7 +153,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           REPORT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          gh pr comment "${PR_NUMBER}" --body "**Preview ready:** ${PREVIEW_URL}
+          gh pr comment "${PR_NUMBER}" --repo "${{ github.repository }}" --body "**Preview ready:** ${PREVIEW_URL}
 
           Login with staging credentials.
 
@@ -164,6 +164,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment "${PR_NUMBER}" --body "**Preview deployment failed.**
+          gh pr comment "${PR_NUMBER}" --repo "${{ github.repository }}" --body "**Preview deployment failed.**
 
           [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"

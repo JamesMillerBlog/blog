@@ -59,7 +59,7 @@ export const SemanticClasses: Story = {
       <Section title="Containers">
         <TokenRow
           cls=".ds-card"
-          description="Card container — rounded-xl + surface-container-lowest"
+          description="Card container - rounded-xl + surface-container-lowest"
           example={
             <div className="ds-card p-4 w-48">
               <div className="h-2 bg-surface-container-high rounded-full mb-2 w-3/4" />
@@ -69,7 +69,7 @@ export const SemanticClasses: Story = {
         />
         <TokenRow
           cls=".ds-panel"
-          description="Panel/section — rounded-xl + surface-container-low + border"
+          description="Panel/section - rounded-xl + surface-container-low + border"
           example={
             <div className="ds-panel p-4 w-48">
               <div className="h-2 bg-surface-container-high rounded-full mb-2 w-3/4" />
@@ -97,7 +97,7 @@ export const SemanticClasses: Story = {
         />
         <TokenRow
           cls=".ds-type-chip"
-          description="Pill badge — rounded-full text-xs font-bold bg-surface-container"
+          description="Pill badge - rounded-full text-xs font-bold bg-surface-container"
           example={
             <div className="flex gap-2">
               <span className="ds-type-chip">post</span>

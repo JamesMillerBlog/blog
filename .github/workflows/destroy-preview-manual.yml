@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number whose preview environment to destroy'
-        required: true
-        type: number
+        description: 'PR number to destroy (leave empty to destroy ALL preview environments)'
+        required: false
+        type: string
 
 jobs:
   destroy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     environment: staging
 
     permissions:
@@ -20,7 +20,6 @@ jobs:
       deployments: write
 
     env:
-      PR_NUMBER: ${{ inputs.pr_number }}
       TF_VERSION: '1.9.5'
 
     steps:
@@ -37,7 +36,35 @@ jobs:
           role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
           aws-region: eu-west-2
 
-      - name: Terraform — destroy preview environment
+      - name: Discover PR numbers to destroy
+        id: discover
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          if [[ -n "${INPUT_PR_NUMBER}" ]]; then
+            if ! [[ "${INPUT_PR_NUMBER}" =~ ^[0-9]+$ ]]; then
+              echo "Invalid PR number: ${INPUT_PR_NUMBER}"
+              exit 1
+            fi
+            echo "Targeting single preview environment: PR #${INPUT_PR_NUMBER}"
+            echo "pr_numbers=${INPUT_PR_NUMBER}" >> "$GITHUB_OUTPUT"
+          else
+            echo "No PR number given - discovering all preview environments from S3..."
+            PR_NUMBERS=$(aws s3 ls "s3://${TF_STATE_BUCKET}/ephemeral/" \
+              | grep -oE 'pr-[0-9]+' \
+              | sed 's/pr-//' \
+              | tr '\n' ' ' \
+              | sed 's/[[:space:]]*$//')
+            if [[ -z "${PR_NUMBERS}" ]]; then
+              echo "No preview environments found in S3"
+            else
+              echo "Found environments for PRs: ${PR_NUMBERS}"
+            fi
+            echo "pr_numbers=${PR_NUMBERS}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Terraform - destroy preview environment(s)
         env:
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -45,25 +72,41 @@ jobs:
           TF_VAR_cloudflare_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
           TF_VAR_basic_auth_username: ${{ secrets.BASIC_AUTH_USERNAME }}
           TF_VAR_basic_auth_password: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          PR_NUMBERS: ${{ steps.discover.outputs.pr_numbers }}
         working-directory: infrastructure/stacks/site/ephemeral
         run: |
-          terraform init \
-            -backend-config="bucket=${TF_STATE_BUCKET}" \
-            -backend-config="key=ephemeral/pr-${PR_NUMBER}/terraform.tfstate" \
-            -backend-config="region=eu-west-2"
-          terraform destroy -auto-approve \
-            -var="pr_number=${PR_NUMBER}" || true
+          if [[ -z "${PR_NUMBERS}" ]]; then
+            echo "Nothing to destroy."
+            exit 0
+          fi
+          for PR_NUMBER in ${PR_NUMBERS}; do
+            echo "=== Destroying preview for PR #${PR_NUMBER} ==="
+            terraform init -reconfigure \
+              -backend-config="bucket=${TF_STATE_BUCKET}" \
+              -backend-config="key=ephemeral/pr-${PR_NUMBER}/terraform.tfstate" \
+              -backend-config="region=eu-west-2"
+            terraform destroy -auto-approve \
+              -var="pr_number=${PR_NUMBER}" || \
+              echo "Destroy for PR #${PR_NUMBER} failed or already gone - continuing"
+          done
 
-      - name: Mark GitHub deployment inactive
+      - name: Mark GitHub deployments inactive
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBERS: ${{ steps.discover.outputs.pr_numbers }}
         run: |
-          DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
-            -f environment="preview-pr-${PR_NUMBER}" \
-            --jq '.[0].id' 2>/dev/null || echo "")
-          if [[ -n "$DEPLOY_ID" && "$DEPLOY_ID" != "null" ]]; then
-            gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \
-              --method POST \
-              -f state="inactive" \
-              -f description="Preview environment manually destroyed"
+          if [[ -z "${PR_NUMBERS}" ]]; then
+            exit 0
           fi
+          for PR_NUMBER in ${PR_NUMBERS}; do
+            DEPLOY_ID=$(gh api "repos/${{ github.repository }}/deployments" \
+              --method GET \
+              -F environment="preview-pr-${PR_NUMBER}" \
+              --jq '.[0].id' 2>/dev/null || echo "")
+            if [[ -n "$DEPLOY_ID" && "$DEPLOY_ID" != "null" ]]; then
+              gh api "repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses" \
+                --method POST \
+                -f state="inactive" \
+                -f description="Preview environment destroyed" || true
+            fi
+          done

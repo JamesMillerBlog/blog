@@ -1,0 +1,169 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  preview:
+    # Skip bot PRs - they deploy via ai-issue.yml
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !contains(github.event.pull_request.user.login, '[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: staging
+
+    concurrency:
+      group: preview-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      deployments: write
+
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BRANCH: ${{ github.head_ref }}
+      TF_VERSION: '1.9.5'
+      PREVIEW_URL: https://pr-${{ github.event.pull_request.number }}.staging.jamesmiller.blog
+
+    steps:
+      - name: Comment - starting
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "${PR_NUMBER}" --repo "${{ github.repository }}" --body "**Preview environment deploying...**
+
+          [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@d15e628ca66d93ee5f352c71671a7bc6a97af5c9 # v6.4.0
+        with:
+          version: 9
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS credentials (infra)
+        uses: aws-actions/configure-aws-credentials@99214aa6889fcddfa57764031d71add364327e59 # v6.1.3
+        with:
+          role-to-assume: ${{ vars.AWS_INFRA_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Terraform - create preview environment
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_basic_auth_username: ${{ secrets.BASIC_AUTH_USERNAME }}
+          TF_VAR_basic_auth_password: ${{ secrets.BASIC_AUTH_PASSWORD }}
+        working-directory: infrastructure/stacks/site/ephemeral
+        run: |
+          terraform init \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="key=ephemeral/pr-${PR_NUMBER}/terraform.tfstate" \
+            -backend-config="region=eu-west-2"
+          terraform apply -auto-approve \
+            -var="pr_number=${PR_NUMBER}"
+
+      - name: Configure AWS credentials (deploy)
+        uses: aws-actions/configure-aws-credentials@99214aa6889fcddfa57764031d71add364327e59 # v6.1.3
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Build site
+        env:
+          POSTS_BUCKET: ${{ vars.POSTS_S3_BUCKET }}
+          POSTS_BUCKET_REGION: eu-west-2
+          NEXT_PUBLIC_ENVIRONMENT: staging
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
+        run: cd web && pnpm build
+
+      - name: Deploy to preview R2 bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ''
+          R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          aws s3 sync web/out/ s3://jamesmiller-blog-pr-${PR_NUMBER}/ \
+            --endpoint-url ${R2_ENDPOINT} \
+            --region auto \
+            --delete
+
+      - name: Install Playwright
+        run: cd web && pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests against preview
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.PREVIEW_URL }}
+          PLAYWRIGHT_BASIC_AUTH_USERNAME: ${{ secrets.BASIC_AUTH_USERNAME }}
+          PLAYWRIGHT_BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+        run: cd web && pnpm test:e2e --reporter=html
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: playwright-report-pr-${{ env.PR_NUMBER }}
+          path: |
+            web/e2e/playwright-report/
+            web/e2e/test-results/
+          retention-days: 14
+
+      - name: Register GitHub deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
+            --method POST \
+            --input - \
+            --jq '.id' << EOF
+          {"ref": "${BRANCH}", "environment": "preview-pr-${PR_NUMBER}", "description": "Preview for PR #${PR_NUMBER}", "auto_merge": false, "required_contexts": []}
+          EOF
+          )
+          gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \
+            --method POST \
+            -f state='success' \
+            -f environment_url="${PREVIEW_URL}" \
+            -f description='Preview live'
+
+      - name: Comment - preview ready
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPORT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh pr comment "${PR_NUMBER}" --repo "${{ github.repository }}" --body "**Preview ready:** ${PREVIEW_URL}
+
+          Login with staging credentials.
+
+          **E2E tests:** [View Playwright report](${REPORT_URL})"
+
+      - name: Comment - deployment failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "${PR_NUMBER}" --repo "${{ github.repository }}" --body "**Preview deployment failed.**
+
+          [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"

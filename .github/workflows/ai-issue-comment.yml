@@ -9,7 +9,7 @@ jobs:
     if: |
       github.event.issue.pull_request == null &&
       github.event.comment.user.login == github.repository_owner &&
-      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || github.event.comment.body == '/retry' || startsWith(github.event.comment.body, '/council '))
+      (startsWith(github.event.comment.body, '@ai ') || github.event.comment.body == '/resume' || github.event.comment.body == '/retry' || startsWith(github.event.comment.body, '@council '))
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -82,13 +82,13 @@ jobs:
           echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
 
       - name: Run council
-        if: startsWith(env.COMMENT_BODY, '/council ')
+        if: startsWith(env.COMMENT_BODY, '@council ')
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          QUESTION="${COMMENT_BODY#/council }"
+          QUESTION="${COMMENT_BODY#@council }"
           QUESTION="${QUESTION:0:2000}"
           git show origin/main:scripts/council.sh | bash -s -- "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
           {
@@ -132,7 +132,7 @@ jobs:
           echo "should_implement=${SHOULD_IMPLEMENT}" >> $GITHUB_OUTPUT
 
       - name: Implement from scratch
-        if: steps.detect.outputs.should_implement == 'true' && !startsWith(env.COMMENT_BODY, '/council ')
+        if: steps.detect.outputs.should_implement == 'true' && !startsWith(env.COMMENT_BODY, '@council ')
         id: implement
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -194,14 +194,14 @@ jobs:
       - name: Apply fix via /ai instruction
         if: |
           steps.detect.outputs.should_implement == 'false' &&
-          startsWith(env.COMMENT_BODY, '/ai ')
+          startsWith(env.COMMENT_BODY, '@ai ')
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.detect.outputs.pr_number }}
           BRANCH: ${{ steps.detect.outputs.branch }}
         run: |
-          INSTRUCTION="${COMMENT_BODY#/ai }"
+          INSTRUCTION="${COMMENT_BODY#@ai }"
           gh issue comment "$ISSUE_NUMBER" --body "**Applying fix to PR #${PR_NUMBER}...**
 
           > ${INSTRUCTION}
@@ -241,7 +241,7 @@ jobs:
             PR_NUMBER="${{ steps.retry.outputs.pr_number }}"
           fi
           SHOULD_PREVIEW='false'
-          if [[ "$COMMENT_BODY" != /council\ * ]] && [[ -n "$PR_NUMBER" ]]; then
+          if [[ "$COMMENT_BODY" != @council\ * ]] && [[ -n "$PR_NUMBER" ]]; then
             SHOULD_PREVIEW='true'
           fi
           echo "branch=${BRANCH}" >> $GITHUB_OUTPUT

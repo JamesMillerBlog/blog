@@ -36,7 +36,7 @@ jobs:
             --comment "Closed — implemented and merged via PR #${{ github.event.pull_request.number }}."
 
   destroy-preview:
-    if: startsWith(github.event.pull_request.head.ref, 'ai/issue-')
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: staging

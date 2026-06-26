@@ -97,11 +97,11 @@ const RoleCard = ({
         onClick={() => router.push(`/projects/${project.slug}`)}
         className="group relative rounded-xl overflow-hidden bg-surface-container-lowest hover:shadow-xl transition-all duration-300 cursor-pointer"
       >
-        {/* Left border accent — secondary/pink for products */}
+        {/* Left border accent - secondary/pink for products */}
         <div className="absolute inset-y-0 left-0 w-[3px] bg-secondary rounded-full scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-300" />
 
         <div className="p-6 md:p-8 flex flex-col md:flex-row md:gap-16">
-          {/* Left — identity + content */}
+          {/* Left - identity + content */}
           <div className="md:w-[48%] shrink-0 mb-6 md:mb-0 flex flex-col">
             <span className="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold font-headline uppercase tracking-wider self-start mb-4">
               {project.category}
@@ -120,7 +120,7 @@ const RoleCard = ({
             </div>
           </div>
 
-          {/* Right — video if available, otherwise placeholder */}
+          {/* Right - video if available, otherwise placeholder */}
           <div className="hidden md:flex md:flex-1 flex-col justify-center">
             {videoSection ?? (
               <div className="flex flex-col gap-3 px-4">
@@ -210,13 +210,13 @@ const ProjectCard = ({
         onClick={() => router.push(`/projects/${project.slug}`)}
         className="group relative bg-surface-container-lowest rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
       >
-        {/* Left border accent — pink for products, teal for experiences */}
+        {/* Left border accent - pink for products, teal for experiences */}
         <div
           className={`absolute inset-y-0 left-0 w-[3px] rounded-full scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-300 ${project.type === 'role' ? 'bg-secondary' : 'bg-primary'}`}
         />
 
         <div className="p-6 flex flex-col md:flex-row md:gap-10">
-          {/* Left — identity + content */}
+          {/* Left - identity + content */}
           <div className="md:w-[48%] shrink-0 mb-6 md:mb-0 flex flex-col">
             <span
               className={`px-3 py-1 rounded-full text-xs font-bold font-headline uppercase tracking-wider self-start mb-4 ${project.type === 'role' ? 'bg-secondary-container text-on-secondary-container' : 'bg-primary-container text-on-primary-container'}`}
@@ -239,7 +239,7 @@ const ProjectCard = ({
             </div>
           </div>
 
-          {/* Right — video if available, otherwise placeholder */}
+          {/* Right - video if available, otherwise placeholder */}
           <div className="hidden md:flex md:flex-1 flex-col justify-center">
             {videoSection ?? (
               <div className="flex flex-col gap-3 px-4">
@@ -264,7 +264,7 @@ const ProjectCard = ({
       onClick={() => router.push(`/projects/${project.slug}`)}
       className="group relative bg-surface-container-lowest rounded-xl p-6 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
     >
-      {/* Left border accent — pink for products, teal for experiences */}
+      {/* Left border accent - pink for products, teal for experiences */}
       <div
         className={`absolute inset-y-0 left-0 w-[3px] rounded-full scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-300 ${project.type === 'role' ? 'bg-secondary' : 'bg-primary'}`}
       />
@@ -460,7 +460,7 @@ export const ProjectsTimeline = ({
                   transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   className="mb-8"
                 >
-                  {/* Role cards — always full width */}
+                  {/* Role cards - always full width */}
                   {roleCards.map((project, i) => (
                     <RoleCard
                       key={project.slug}
@@ -470,12 +470,12 @@ export const ProjectsTimeline = ({
                     />
                   ))}
 
-                  {/* Project cards — half or full width based on pairing */}
+                  {/* Project cards - half or full width based on pairing */}
                   {projectCards.length > 0 && (
                     <ProjectGrid projects={projectCards} onHoverChange={setAnyHovered} />
                   )}
 
-                  {/* Year label — below section content */}
+                  {/* Year label - below section content */}
                   <div className="relative h-16 mt-8 flex items-center">
                     <div className="absolute left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-primary border-2 border-surface z-10 hidden md:flex items-center justify-center">
                       <span className="font-headline text-xs font-bold text-on-primary leading-none text-center">

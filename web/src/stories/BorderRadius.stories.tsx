@@ -93,7 +93,7 @@ export const TokenScale: Story = {
   name: 'Token Scale',
   render: () => (
     <div className="space-y-12">
-      <Section title="Design System Tokens — @theme in globals.css">
+      <Section title="Design System Tokens - @theme in globals.css">
         <Token
           name="rounded-sm"
           value="--radius-sm · 0.5rem"
@@ -126,7 +126,7 @@ export const TokenScale: Story = {
         />
       </Section>
 
-      <Section title="Off-System Classes — Tailwind defaults, no token defined">
+      <Section title="Off-System Classes - Tailwind defaults, no token defined">
         <div className="flex items-center gap-3 mb-4 p-3 bg-tertiary-container/20 rounded-xl">
           <span className="text-sm font-headline font-bold text-on-tertiary-container">
             ⚠ These classes bypass the token system
@@ -136,7 +136,7 @@ export const TokenScale: Story = {
           name="rounded-md"
           value="Tailwind default · 0.375rem (no token)"
           cls="rounded-md"
-          note="Used in: kbd.tsx — should be rounded-sm or rounded"
+          note="Used in: kbd.tsx - should be rounded-sm or rounded"
         />
         <Token
           name="rounded-2xl"
@@ -148,7 +148,7 @@ export const TokenScale: Story = {
           name="rounded-3xl"
           value="Tailwind default · 1.5rem (no token)"
           cls="rounded-3xl"
-          note="Used in: post-header hero image — outlier"
+          note="Used in: post-header hero image - outlier"
         />
       </Section>
     </div>
@@ -158,7 +158,7 @@ export const TokenScale: Story = {
 export const ComponentAudit: Story = {
   name: 'Component Audit',
   render: () => (
-    <Section title="All components — radius class, token status, usage">
+    <Section title="All components - radius class, token status, usage">
       <table className="w-full text-left">
         <thead>
           <tr className="border-b border-outline-variant/30">
@@ -252,7 +252,7 @@ export const VisualComparison: Story = {
   name: 'Visual Comparison',
   render: () => (
     <div className="space-y-12">
-      <Section title="Cards — should all be rounded-xl (✓ consistent)">
+      <Section title="Cards - should all be rounded-xl (✓ consistent)">
         <div className="grid grid-cols-3 gap-4">
           {[
             { label: 'post-card.tsx', cls: 'rounded-xl', ok: true },
@@ -273,7 +273,7 @@ export const VisualComparison: Story = {
         </div>
       </Section>
 
-      <Section title="Modals & Panels — inconsistent (⚠ rounded-2xl off-system)">
+      <Section title="Modals & Panels - inconsistent (⚠ rounded-2xl off-system)">
         <div className="grid grid-cols-3 gap-4">
           {[
             { label: 'search-modal.tsx', cls: 'rounded-2xl', ok: false },
@@ -302,12 +302,12 @@ export const VisualComparison: Story = {
         <p className="text-xs font-headline text-on-surface-variant mt-4">
           The last box shows what{' '}
           <code className="font-mono bg-surface-container px-1 rounded">rounded-xl</code>{' '}
-          (token-aligned) would look like — visually compare to decide if these should be
+          (token-aligned) would look like - visually compare to decide if these should be
           standardised.
         </p>
       </Section>
 
-      <Section title="Badges & Pills — should all be rounded-full (✓ consistent)">
+      <Section title="Badges & Pills - should all be rounded-full (✓ consistent)">
         <div className="flex flex-wrap gap-3">
           {[
             { label: 'tag (tag-cloud-section)', text: 'Front End' },
@@ -337,7 +337,7 @@ export const Decisions: Story = {
           issue: 'rounded-2xl used in 10 components',
           components: 'search-modal, author-bio, table-of-contents, project-detail, post-header',
           option1: 'Add --radius-2xl token to globals.css (formalise it)',
-          option2: 'Migrate all to rounded-xl (3rem) — matches card token, fewer values',
+          option2: 'Migrate all to rounded-xl (3rem) - matches card token, fewer values',
           severity: 'medium',
         },
         {

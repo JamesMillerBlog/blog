@@ -33,6 +33,26 @@ const eslintConfig = [
     },
   },
   {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.test.js', '**/*.test.jsx'],
+    rules: {
+      '@next/next/no-img-element': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'max-lines': 'off',
+    },
+  },
+  {
+    files: ['**/*.stories.tsx', '**/*.stories.ts', '**/*.stories.jsx', '**/*.stories.js'],
+    rules: {
+      'max-lines': 'off',
+    },
+  },
+  {
+    files: ['**/data.ts'],
+    rules: {
+      'max-lines': 'off',
+    },
+  },
+  {
     // Next.js App Router files require default function exports
     files: [
       'src/app/**/page.tsx',

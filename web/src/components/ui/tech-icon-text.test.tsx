@@ -7,7 +7,7 @@ describe('TechIconText', () => {
     const { TechIconText } = await import('./tech-icon-text')
     const { container } = render(<TechIconText>Hi</TechIconText>)
     // "Hi" = 2 chars, each in its own span.inline-block
-    const charSpans = container.querySelectorAll('span.inline-block.cursor-pointer ~ span')
+    const _charSpans = container.querySelectorAll('span.inline-block.cursor-pointer ~ span')
     // The outer span contains word spans; verify we have char-level spans
     expect(container.querySelectorAll('span.inline-block[style]').length).toBeGreaterThan(0)
   })

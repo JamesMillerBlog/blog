@@ -42,4 +42,38 @@ jobs:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN || github.token }}
           GH_PR_CREATE_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-        run: ./scripts/generate-pr.sh
+        run: |
+          for attempt in 1 2 3; do
+            echo "Attempt ${attempt}/3..."
+            if ./scripts/generate-pr.sh; then
+              break
+            elif [ "${attempt}" -lt 3 ]; then
+              delay=$((attempt * 30))
+              echo "Attempt ${attempt} failed, waiting ${delay}s before retry..."
+              sleep "${delay}"
+            else
+              echo "All 3 attempts failed"
+              exit 1
+            fi
+          done
+
+      - name: Post commands reference
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s\n' \
+            '---' \
+            '### AI Commands' \
+            '' \
+            'Use these in PR comments to interact with AI:' \
+            '' \
+            '| Command | What it does |' \
+            '|---|---|' \
+            '| `@ai <instruction>` | Ask AI to apply a fix or make a change |' \
+            '| `@council <question>` | Ask the agent council for analysis or a second opinion |' \
+            '| `@review` | Trigger an AI code review |' \
+            '| `/resume` | Redeploy the preview environment without code changes |' \
+            '| `/rate <value>` | Submit a quality rating for this PR |' \
+            > /tmp/commands.md
+          gh pr comment "${PR_NUMBER}" --body-file /tmp/commands.md

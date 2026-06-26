@@ -37,7 +37,7 @@ export const FontFamilies: Story = {
   name: 'Font Families',
   render: () => (
     <div className="space-y-12">
-      <Section title="Plus Jakarta Sans — UI & Navigation (font-headline)">
+      <Section title="Plus Jakarta Sans - UI & Navigation (font-headline)">
         <Row label="font-headline text-base">
           <p className="font-headline text-base text-on-surface">
             The quick brown fox jumps over the lazy dog
@@ -60,7 +60,7 @@ export const FontFamilies: Story = {
         </Row>
       </Section>
 
-      <Section title="Newsreader — Long-form Content (font-body)">
+      <Section title="Newsreader - Long-form Content (font-body)">
         <Row label="font-body text-base">
           <p className="font-body text-base text-on-surface leading-7">
             The quick brown fox jumps over the lazy dog
@@ -84,7 +84,7 @@ export const FontFamilies: Story = {
 export const TypeScale: Story = {
   name: 'Type Scale',
   render: () => (
-    <Section title="Text Size Scale — Tailwind standard only, no custom px">
+    <Section title="Text Size Scale - Tailwind standard only, no custom px">
       {[
         {
           cls: 'text-xs',
@@ -207,7 +207,7 @@ export const ComponentAudit: Story = {
   name: '⚠ Component Audit',
   render: () => (
     <div className="space-y-12">
-      <Section title="Badge / Label text — should all be text-xs font-bold uppercase tracking-widest">
+      <Section title="Badge / Label text - should all be text-xs font-bold uppercase tracking-widest">
         <div className="space-y-3">
           {[
             {
@@ -224,7 +224,7 @@ export const ComponentAudit: Story = {
               label: 'tag-cloud-section.tsx tag',
               cls: 'font-medium text-sm font-headline text-on-surface-variant',
               ok: false,
-              note: 'Missing uppercase + tracking-widest — uses B3 pattern instead',
+              note: 'Missing uppercase + tracking-widest - uses B3 pattern instead',
             },
             {
               label: 'search-modal.tsx type chip',
@@ -255,7 +255,7 @@ export const ComponentAudit: Story = {
         </div>
       </Section>
 
-      <Section title="Card title text — should all be font-headline font-bold text-on-surface">
+      <Section title="Card title text - should all be font-headline font-bold text-on-surface">
         <div className="space-y-3">
           {[
             {
@@ -267,7 +267,7 @@ export const ComponentAudit: Story = {
               label: 'projects-timeline.tsx ProjectCard title',
               cls: 'font-headline text-2xl font-bold text-on-surface',
               ok: false,
-              note: 'text-2xl vs text-lg — larger than post cards',
+              note: 'text-2xl vs text-lg - larger than post cards',
             },
             {
               label: 'related-posts.tsx title',
@@ -297,7 +297,7 @@ export const ComponentAudit: Story = {
         </div>
       </Section>
 
-      <Section title="Metadata / date text — should all be text-xs font-headline text-outline">
+      <Section title="Metadata / date text - should all be text-xs font-headline text-outline">
         <div className="space-y-3">
           {[
             {
@@ -315,7 +315,7 @@ export const ComponentAudit: Story = {
               label: 'table-of-contents.tsx heading',
               cls: 'text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline',
               ok: false,
-              note: 'Uses label pattern — may be intentional',
+              note: 'Uses label pattern - may be intentional',
             },
           ].map(({ label, cls, ok, note }) => (
             <div
@@ -347,7 +347,7 @@ export const UIPatterns: Story = {
   name: 'UI Patterns (B3)',
   render: () => (
     <div className="space-y-12">
-      <Section title="B3 — Weight + Size shift (navigation, tag filters, TOC)">
+      <Section title="B3 - Weight + Size shift (navigation, tag filters, TOC)">
         <Row label="Active state">
           <span className="font-headline font-extrabold text-base text-on-surface">
             Active Link
@@ -379,7 +379,7 @@ export const UIPatterns: Story = {
         </Row>
       </Section>
 
-      <Section title="Semantic Labels (primary / secondary — not for chrome)">
+      <Section title="Semantic Labels (primary / secondary - not for chrome)">
         <Row label="Product badge">
           <span className="px-2.5 py-0.5 rounded-full text-xs font-headline font-bold uppercase tracking-widest bg-primary/10 text-primary">
             Product

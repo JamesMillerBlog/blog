@@ -18,12 +18,18 @@ const eslintConfig = [
       'prefer-arrow-callback': 'warn',
       'func-style': ['error', 'expression', { allowArrowFunctions: true }],
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           selector: 'Literal[value=/\u2014/]',
-          message: 'Use a hyphen (-) instead of an em dash (—).',
+          message: 'Use a hyphen (-) instead of an em dash (\u2014).',
         },
       ],
+    },
+  },
+  {
+    files: ['eslint.config.mjs'],
+    rules: {
+      'no-restricted-syntax': 'off',
     },
   },
   {

@@ -235,7 +235,7 @@ Preview live + tests pass/fail visible in Actions
 
 ### AI PR Review (`ai-pr-review` workflow)
 
-**When:** A PR is opened, reopened, or updated (same-repo PRs only).
+**When:** A PR is opened, reopened, or commits are pushed (same-repo PRs only). Skips if pi[bot] is pushing (prevents auto-fix loops).
 
 **What happens:**
 1. Posts 👀 to indicate review is running
@@ -245,7 +245,7 @@ Preview live + tests pass/fail visible in Actions
 5. If `DO_NOT_PUSH` and fix iterations < 3 → dispatches `repository_dispatch: pr-review-needs-fix`
 6. If `DO_NOT_PUSH` and 3 iterations already attempted → labels PR `ai-review-needs-human`
 
-**Concurrency:** Cancels any in-progress review for the same PR number when a new push arrives.
+**Concurrency:** Cancels any in-progress review for the same PR number when a new push arrives. Human pushes trigger a new review; pi[bot] auto-fix pushes skip review to prevent loops.
 
 ### AI PR Review - Auto Fix (`ai-pr-review-respond` workflow)
 

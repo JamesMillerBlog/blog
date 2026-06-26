@@ -79,7 +79,7 @@ is_high_risk_path() {
 
 is_frontend_path() {
   case "$1" in
-    *.tsx|*.ts|*.jsx|*.js|*.css)
+    *.tsx|*.ts|*.jsx|*.js|*.css|*.mdx)
       return 0
       ;;
     *)
@@ -90,7 +90,7 @@ is_frontend_path() {
 
 is_design_path() {
   case "$1" in
-    *.css|*.tsx|*.jsx)
+    *.css|*.tsx|*.jsx|*.mdx)
       return 0
       ;;
     *)

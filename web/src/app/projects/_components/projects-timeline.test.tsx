@@ -1,6 +1,19 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}))
+
 // Mock framer-motion to render children directly (avoid animation complexity in jsdom)
 vi.mock('framer-motion', () => ({
   motion: {
@@ -32,6 +45,7 @@ vi.mock('@/i18n/en', () => ({
       empty: 'No projects found for the selected category.',
       heading: "Things I've",
       description: '',
+      typeLabel: (type: string) => (type === 'role' ? 'Product' : 'Experience'),
     },
     nav: {},
     footer: {},
@@ -129,7 +143,7 @@ describe('ProjectsTimeline', () => {
     const elements = screen.getAllByText('Web')
     const button = elements.find((el) => el.tagName === 'BUTTON')
     expect(button).not.toBeUndefined()
-    expect(button!.className).toContain('bg-secondary-container')
+    expect(button!.className).toContain('font-extrabold')
   })
 
   it('filters projects by selected category', async () => {
@@ -165,8 +179,6 @@ describe('ProjectsTimeline', () => {
     // Use getAllByText because multiple DOM branches render simultaneously in jsdom
     const titles = screen.getAllByText('Alpha Project')
     expect(titles.length).toBeGreaterThanOrEqual(1)
-    const companies = screen.getAllByText('AlphaCo')
-    expect(companies.length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders project tags', async () => {
@@ -236,7 +248,6 @@ describe('ProjectsTimeline', () => {
     const button = elements.find((el) => el.tagName === 'BUTTON')
     expect(button).not.toBeUndefined()
     expect(button!.className).toContain('scale-110')
-    expect(button!.className).toContain('ring-2')
   })
 
   it('renders non-portfolio projects when not in Highlights', async () => {

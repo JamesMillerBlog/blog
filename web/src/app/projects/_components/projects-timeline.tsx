@@ -18,7 +18,7 @@ const CARD_VARIANTS = {
   }),
 }
 
-function RoleCard({
+const RoleCard = ({
   project,
   i,
   onHoverChange,
@@ -26,7 +26,7 @@ function RoleCard({
   project: Project
   i: number
   onHoverChange?: (h: boolean) => void
-}) {
+}) => {
   const router = useRouter()
   const [playing, setPlaying] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -140,7 +140,7 @@ function RoleCard({
   )
 }
 
-function ProjectCard({
+const ProjectCard = ({
   project,
   priority,
   isFullWidth,
@@ -148,7 +148,7 @@ function ProjectCard({
   project: Project
   priority?: boolean
   isFullWidth?: boolean
-}) {
+}) => {
   const router = useRouter()
   const [playing, setPlaying] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -227,7 +227,7 @@ function ProjectCard({
             <span
               className={`text-xs font-headline font-bold uppercase tracking-widest block mb-3 ${project.type === 'role' ? 'text-secondary' : 'text-primary'}`}
             >
-              / {project.type === 'role' ? 'Product' : 'Experience'}
+              / {ui.projects.typeLabel(project.type ?? '')}
             </span>
             <p className="text-on-surface-variant leading-relaxed font-body text-lg mb-6">
               {project.description}
@@ -281,7 +281,7 @@ function ProjectCard({
       <span
         className={`text-xs font-headline font-bold uppercase tracking-widest block mb-3 ${project.type === 'role' ? 'text-secondary' : 'text-primary'}`}
       >
-        / {project.type === 'role' ? 'Product' : 'Experience'}
+        / {ui.projects.typeLabel(project.type ?? '')}
       </span>
 
       <p className="text-on-surface-variant leading-relaxed mb-6 font-body">
@@ -299,7 +299,7 @@ function ProjectCard({
   )
 }
 
-function ProjectGrid({
+const ProjectGrid = ({
   projects,
   priorityFirst,
   onHoverChange,
@@ -307,7 +307,7 @@ function ProjectGrid({
   projects: Project[]
   priorityFirst?: boolean
   onHoverChange?: (h: boolean) => void
-}) {
+}) => {
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null)
 
   const isOdd = projects.length % 2 === 1

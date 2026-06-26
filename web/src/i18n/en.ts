@@ -42,6 +42,7 @@ export const ui = {
     description:
       'A decade of products and experiments across web, AI, extended reality, and connected hardware.',
     empty: 'No projects found for the selected category.',
+    typeLabel: (type: string) => (type === 'role' ? 'Product' : 'Experience'),
   },
 
   search: {

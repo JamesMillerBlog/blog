@@ -154,7 +154,7 @@ export const CyclingDescription = ({
   onCategorySelect?: (category: string) => void
   onProductsClick?: () => void
   onExperiencesClick?: () => void
-}) {
+}) => {
   const [fromIdx, setFromIdx] = useState(0)
   const [toIdx, setToIdx] = useState(0)
 

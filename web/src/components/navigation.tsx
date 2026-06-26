@@ -182,18 +182,18 @@ export const Navigation = ({ posts = [] }: { posts?: SearchItem[] }): React.JSX.
 
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 mt-2 p-4 bg-surface-container-lowest/95 dark:bg-surface-container/95 backdrop-blur-xl rounded-2xl shadow-xl border border-outline-variant/10 flex flex-col gap-2">
+          <div className="md:hidden absolute top-full left-0 right-0 mt-2 p-4 bg-surface-container-lowest/95 dark:bg-surface-container/95 backdrop-blur-xl rounded-xl shadow-xl border border-outline-variant/10 flex flex-col gap-2">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/') && pathname === '/' ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface'}`}
+              className={`px-4 py-3 rounded-xl font-headline transition-opacity ${isActive('/') && pathname === '/' ? 'font-extrabold text-on-surface' : 'font-bold text-on-surface opacity-50'}`}
             >
               {ui.nav.posts}
             </Link>
             <Link
               href="/projects"
               onClick={() => setMobileMenuOpen(false)}
-              className={`px-4 py-3 rounded-xl font-headline font-bold transition-colors ${isActive('/projects') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface'}`}
+              className={`px-4 py-3 rounded-xl font-headline transition-opacity ${isActive('/projects') ? 'font-extrabold text-on-surface' : 'font-bold text-on-surface opacity-50'}`}
             >
               {ui.nav.projects}
             </Link>
@@ -223,10 +223,10 @@ const NavLink = ({
   return (
     <Link
       href={href}
-      className={`px-4 py-1.5 rounded-full font-semibold transition-colors duration-300 font-headline text-sm inline-flex items-center ${
+      className={`px-4 py-1.5 inline-flex items-center transition-opacity duration-300 ${
         active
-          ? 'bg-secondary-container text-on-secondary-container'
-          : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+          ? 'ds-b3-active'
+          : 'font-headline font-bold text-sm text-on-surface opacity-50 hover:opacity-80'
       }`}
     >
       {children}

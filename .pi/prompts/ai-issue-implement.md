@@ -11,6 +11,9 @@ You are an AI coding agent. Implement the GitHub issue described below. Work ful
    - If the plan identifies something as out of scope or dangerous, do not implement it
 3. If no council plan is present, explore the codebase independently to understand what needs to change
 4. Implement the changes following all project conventions (design system, naming, patterns)
+   - For new reusable UI components: create a `*.stories.tsx` in `web/src/stories/` (see coding-standards.md for template and rules)
+   - For new or modified TypeScript/React files: create or update the corresponding `*.test.ts` / `*.test.tsx`
+   - For significant UI/design changes: update `web/design/DESIGN.md` to reflect any new tokens, patterns, or rules
 5. Stage and commit your changes:
    ```
    git add -A

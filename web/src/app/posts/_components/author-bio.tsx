@@ -82,7 +82,7 @@ export const AuthorBio = ({ author }: Props): React.JSX.Element => {
   }
 
   return (
-    <div className="mt-16 flex gap-6 rounded-2xl border border-outline-variant/10 bg-surface-container-low p-8 items-start">
+    <div className="ds-panel mt-16 flex gap-6 p-8 items-start">
       <style>{`
         @keyframes authorFlip {
           0%   { transform: rotateY(0deg); opacity: 1; }
@@ -165,7 +165,7 @@ export const AuthorBio = ({ author }: Props): React.JSX.Element => {
             href={`https://x.com/${TWITTER_HANDLE.replace('@', '')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm font-headline text-primary transition-colors hover:text-secondary"
+            className="flex items-center gap-2 text-sm font-headline text-on-surface-variant hover:text-on-surface hover:font-semibold transition-all"
           >
             <TwitterIcon className="h-4 w-4" />
             {TWITTER_HANDLE}
@@ -174,7 +174,7 @@ export const AuthorBio = ({ author }: Props): React.JSX.Element => {
             href="https://github.com/JamesMillerBlog"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm font-headline text-primary transition-colors hover:text-secondary"
+            className="flex items-center gap-2 text-sm font-headline text-on-surface-variant hover:text-on-surface hover:font-semibold transition-all"
           >
             <GithubIcon className="h-4 w-4" />
             GitHub

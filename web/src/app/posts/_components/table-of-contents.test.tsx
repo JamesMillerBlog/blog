@@ -122,7 +122,7 @@ describe('TableOfContents (sidebar)', () => {
     })
 
     expect(getTocButton('Setup').className).toContain('border-l-2')
-    expect(getTocButton('Setup').className).toContain('font-bold')
+    expect(getTocButton('Setup').className).toContain('font-extrabold')
   })
 
   it('generates id from textContent when heading has no id', async () => {
@@ -175,7 +175,7 @@ describe('TableOfContents (sidebar)', () => {
       ])
     })
 
-    expect(getTocButton('Introduction').className).toContain('border-primary')
+    expect(getTocButton('Introduction').className).toContain('border-on-surface')
   })
 })
 
@@ -297,7 +297,7 @@ describe('InlineTableOfContents (mobile)', () => {
     })
 
     act(() => fireEvent.click(screen.getByText('On this page').closest('button')!))
-    expect(getTocButton('Introduction').className).toContain('font-bold')
-    expect(getTocButton('Introduction').className).toContain('text-primary')
+    expect(getTocButton('Introduction').className).toContain('font-extrabold')
+    expect(getTocButton('Introduction').className).toContain('text-on-surface')
   })
 })

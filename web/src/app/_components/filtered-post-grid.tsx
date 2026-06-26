@@ -89,7 +89,7 @@ export const FilteredPostGrid = ({
           <button
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="px-4 py-1.5 rounded-full text-sm font-semibold font-headline transition-all duration-300 cursor-pointer text-on-surface-variant hover:text-primary hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+            className="px-4 py-1.5 text-sm font-medium font-headline transition-colors cursor-pointer text-on-surface-variant hover:text-on-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             {ui.home.postGrid.prev}
           </button>
@@ -98,10 +98,10 @@ export const FilteredPostGrid = ({
             <button
               key={n}
               onClick={() => setPage(n)}
-              className={`w-9 h-9 rounded-full text-sm font-semibold font-headline transition-all duration-300 cursor-pointer ${
+              className={`w-9 h-9 rounded-full font-headline transition-all duration-200 cursor-pointer ${
                 n === page
-                  ? 'bg-secondary-container text-on-secondary-container'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  ? 'font-extrabold text-base text-on-surface'
+                  : 'font-medium text-sm text-on-surface-variant hover:text-on-surface'
               }`}
             >
               {n}
@@ -111,7 +111,7 @@ export const FilteredPostGrid = ({
           <button
             onClick={() => setPage(page + 1)}
             disabled={page === totalPages}
-            className="px-4 py-1.5 rounded-full text-sm font-semibold font-headline transition-all duration-300 cursor-pointer text-on-surface-variant hover:text-primary hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+            className="px-4 py-1.5 text-sm font-medium font-headline transition-colors cursor-pointer text-on-surface-variant hover:text-on-surface disabled:opacity-30 disabled:cursor-not-allowed"
           >
             {ui.home.postGrid.next}
           </button>

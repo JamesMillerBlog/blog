@@ -52,7 +52,7 @@ const FooterLink = ({
     <Component
       {...props}
       aria-label={label}
-      className="text-on-surface-variant hover:text-secondary transition-colors duration-200"
+      className="text-on-surface opacity-30 hover:opacity-100 transition-opacity duration-200"
     >
       {children}
     </Component>

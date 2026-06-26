@@ -7,7 +7,7 @@ type Props = {
 export const Screenshot = ({ src, alt, caption }: Props): React.JSX.Element => {
   return (
     <figure className="not-prose my-8 mx-auto max-w-3xl">
-      <div className="overflow-hidden rounded-xl border border-outline-variant/20 shadow-lg">
+      <div className="overflow-hidden rounded-lg border border-outline-variant/20 shadow-lg">
         <div className="flex items-center gap-1.5 bg-surface-container-high px-4 py-2.5 border-b border-outline-variant/20">
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />

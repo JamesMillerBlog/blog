@@ -32,6 +32,7 @@ export const ProjectsPageClient = ({
   const [flashCategory, setFlashCategory] = useState<string | null>(null)
   const [highlightsOverride, setHighlightsOverride] = useState<Project[] | null>(null)
   const [headlineWord, setHeadlineWord] = useState('Made')
+  const [typeFilter, setTypeFilter] = useState<'products' | 'experiences' | null>(null)
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -67,6 +68,35 @@ export const ProjectsPageClient = ({
     if (category !== 'Highlights') {
       setHighlightsOverride(null)
       setHeadlineWord('Made')
+      setTypeFilter(null)
+    }
+  }
+
+  const handleProductsClick = () => {
+    if (selectedCategory === 'Highlights' && typeFilter === 'products') {
+      setTypeFilter(null)
+      setHighlightsOverride(null)
+    } else {
+      setSelectedCategory('Highlights')
+      setHeadlineWord('Made')
+      setTypeFilter('products')
+      setHighlightsOverride(projects.filter((p) => p.portfolio && p.type === 'role'))
+    }
+  }
+
+  const handleExperiencesClick = () => {
+    if (selectedCategory === 'Highlights' && typeFilter === 'experiences') {
+      setTypeFilter(null)
+      setHighlightsOverride(null)
+    } else {
+      setSelectedCategory('Highlights')
+      setHeadlineWord('Made')
+      setTypeFilter('experiences')
+      setHighlightsOverride(
+        projects
+          .filter((p) => p.portfolio && p.type !== 'role')
+          .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
+      )
     }
   }
 
@@ -81,7 +111,11 @@ export const ProjectsPageClient = ({
         </div>
       </section>
 
-      <CyclingDescription onCategorySelect={handleCategorySelect} />
+      <CyclingDescription
+        onCategorySelect={handleCategorySelect}
+        onProductsClick={handleProductsClick}
+        onExperiencesClick={handleExperiencesClick}
+      />
       <ProjectsTimeline
         projects={projects}
         categories={categories}

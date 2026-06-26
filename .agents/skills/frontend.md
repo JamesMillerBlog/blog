@@ -17,6 +17,11 @@
 - Styles: `web/src/app/globals.css`
 - Types: `web/src/types/`
 - Utils: `web/src/common/`
+- Storybook stories: `web/src/stories/` (one `*.stories.tsx` per reusable UI component)
+
+## Storybook
+
+Every new reusable UI component needs a `*.stories.tsx` in `web/src/stories/`. See coding-standards.md for the full spec (story template, category conventions, required variants). Don't create stories for pages, layouts, MDX content components, or server-only utilities.
 
 ## MDX Components
 

@@ -139,7 +139,7 @@ describe('PostCard', () => {
     const { PostCard } = await import('./post-card')
     const { container } = render(<PostCard post={makePost()} />)
     const article = container.querySelector('article')
-    expect(article?.className).toContain('bg-surface-container')
+    expect(article?.className).toContain('ds-card')
     expect(article?.className).toContain('hover:shadow-lg')
   })
 

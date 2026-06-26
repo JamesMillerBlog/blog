@@ -14,8 +14,8 @@ export const PostCard = ({
   return (
     <Link href={`/posts/${post.slug}`} className="block h-full">
       <article
-        className={`group h-full flex flex-col bg-surface-container-lowest rounded-xl overflow-hidden hover:scale-[1.02] transition-all duration-300 ${
-          variant === 'default' ? 'bg-surface-container hover:shadow-lg' : ''
+        className={`ds-card group h-full flex flex-col overflow-hidden hover:scale-[1.02] transition-all duration-300 ${
+          variant === 'default' ? 'hover:shadow-lg' : ''
         }`}
         style={
           variant === 'glow'
@@ -40,27 +40,23 @@ export const PostCard = ({
               {post.tags.slice(0, 2).map((tag) => (
                 <span
                   key={tag}
-                  className="text-[10px] font-bold uppercase tracking-wider text-primary"
+                  className="px-2.5 py-0.5 rounded-full border border-outline-variant/50 text-on-surface-variant text-xs font-headline font-semibold"
                 >
                   {tag}
                 </span>
               ))}
             </div>
           )}
-          <h3 className="font-headline text-lg font-bold text-on-surface mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="ds-card-title mb-2 line-clamp-2 group-hover:font-extrabold transition-all">
             {post.title}
           </h3>
           <p className="font-body text-on-surface-variant text-sm line-clamp-3 mb-4 flex-grow">
             {post.excerpt}
           </p>
           <div className="flex items-center gap-2 mt-auto">
-            <span className="text-xs font-semibold text-outline font-headline">
-              {format(new Date(post.date), 'MMM d, yyyy')}
-            </span>
-            <span className="text-xs text-outline">·</span>
-            <span className="text-xs font-semibold text-outline font-headline">
-              {readingTime(post.content || '')} min read
-            </span>
+            <span className="ds-metadata">{format(new Date(post.date), 'MMM d, yyyy')}</span>
+            <span className="ds-metadata">·</span>
+            <span className="ds-metadata">{readingTime(post.content || '')} min read</span>
           </div>
         </div>
       </article>

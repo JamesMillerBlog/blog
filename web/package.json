@@ -1,8 +1,9 @@
 {
+  "name": "web",
   "version": "0.3.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -16,6 +17,8 @@
     "precommit": "lint-staged",
     "health": "cd .. && ./scripts/code-health-check.sh --quick",
     "health:full": "cd .. && ./scripts/code-health-check.sh",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
     "audit:security": "bash ../scripts/security-audit-run.sh; exit 0"
   },
   "lint-staged": {
@@ -48,6 +51,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.60.0",
+    "@storybook/nextjs-vite": "9.1.20",
     "@tailwindcss/postcss": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -68,6 +72,7 @@
     "playwright": "^1.60.0",
     "postcss": "^8.5.15",
     "prettier": "^3.8.3",
+    "storybook": "^9.1.20",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",
     "vite": "^6.0.0",

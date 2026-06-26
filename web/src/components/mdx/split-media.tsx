@@ -36,7 +36,7 @@ export const SplitMedia = ({
       </div>
       <figure className="shrink-0 w-full md:w-[48%] m-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt} className="w-full h-auto rounded-xl shadow-md block" />
+        <img src={src} alt={alt} className="w-full h-auto rounded-lg shadow-md block" />
         {caption && (
           <figcaption
             className="mt-2 text-center text-sm italic"

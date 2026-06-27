@@ -14,7 +14,6 @@ vi.mock('@/common/utils/posts', () => ({
   getAllPosts: vi.fn().mockResolvedValue([]),
 }))
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getMeta = (mod: any) => mod.metadata
 
 describe('Layout metadata', () => {

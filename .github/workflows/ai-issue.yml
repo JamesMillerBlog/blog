@@ -143,7 +143,7 @@ jobs:
 
           https://github.com/${{ github.repository }}/pull/${{ steps.pr.outputs.number }}
 
-          AI review runs automatically on the PR. Reply with \`@ai <instruction>\` to have OpenCode action any findings."
+          AI review runs automatically on the PR. Reply with \`/ai <instruction>\` to have OpenCode action any findings."
 
   preview:
     name: Deploy preview environment

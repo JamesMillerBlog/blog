@@ -191,7 +191,7 @@ jobs:
           FAILURE_COMMENT_ID: ${{ steps.validate.outputs.failure_comment_id }}
           REPO: ${{ github.repository }}
         run: |
-          RETRY_CMD='`@ai Fix the failing CI checks — run pnpm build, resolve all errors, then commit`'
+          RETRY_CMD='`/ai Fix the failing CI checks — run pnpm build, resolve all errors, then commit`'
           if [[ "${PUSHED}" == 'true' && "${DELTA_PASSED}" == 'true' ]]; then
             SUMMARY="✅ **CI fix verified (iteration ${FIX_ITER}).** All checks passing."
           elif [[ "${PUSHED}" == 'true' ]]; then

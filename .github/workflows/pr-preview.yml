@@ -27,7 +27,7 @@ jobs:
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       BRANCH: ${{ github.head_ref }}
-      TF_VERSION: '1.9.5'
+      TF_VERSION: "1.9.5"
       PREVIEW_URL: https://pr-${{ github.event.pull_request.number }}.staging.jamesmiller.blog
 
     steps:
@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: '22'
+          node-version: "22"
 
       - uses: pnpm/action-setup@d15e628ca66d93ee5f352c71671a7bc6a97af5c9 # v6.4.0
         with:
@@ -97,15 +97,18 @@ jobs:
           NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
         run: cd web && pnpm build
 
+      # R2 credentials use long-lived static keys.
+      # TODO: scope to single-bucket write-only; migrate to ephemeral
+      # OIDC-style token exchange when Cloudflare supports it for R2 S3 API.
       - name: Deploy to preview R2 bucket
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ''
+          AWS_SESSION_TOKEN: ""
           R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
-          aws s3 sync web/out/ s3://jamesmiller-blog-pr-${PR_NUMBER}/ \
-            --endpoint-url ${R2_ENDPOINT} \
+          aws s3 sync web/out/ "s3://jamesmiller-blog-pr-${PR_NUMBER}/" \
+            --endpoint-url "${R2_ENDPOINT}" \
             --region auto \
             --delete
 
@@ -117,7 +120,7 @@ jobs:
           PLAYWRIGHT_BASE_URL: ${{ env.PREVIEW_URL }}
           PLAYWRIGHT_BASIC_AUTH_USERNAME: ${{ secrets.BASIC_AUTH_USERNAME }}
           PLAYWRIGHT_BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
-        run: cd web && pnpm test:e2e --reporter=html
+        run: cd web && pnpm test:e2e --reporter=github,html
         continue-on-error: true
 
       - name: Upload Playwright report
@@ -137,11 +140,14 @@ jobs:
           DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
             --method POST \
             --input - \
-            --jq '.id' << EOF
-          {"ref": "${BRANCH}", "environment": "preview-pr-${PR_NUMBER}", "description": "Preview for PR #${PR_NUMBER}", "auto_merge": false, "required_contexts": []}
-          EOF
+            --jq '.id' <<< "$(jq -n \
+              --arg branch "$BRANCH" \
+              --arg env "preview-pr-${PR_NUMBER}" \
+              --arg desc "Preview for PR #${PR_NUMBER}" \
+              '{ref: $branch, environment: $env, description: $desc,
+                auto_merge: false, required_contexts: []}')"
           )
-          gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \
+          gh api "repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses" \
             --method POST \
             -f state='success' \
             -f environment_url="${PREVIEW_URL}" \

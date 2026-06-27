@@ -60,7 +60,7 @@ export const NoTags: Story = {
 
 export const Grid: Story = {
   decorators: [
-    (Story) => (
+    (_Story) => (
       <div className="grid grid-cols-3 gap-6 max-w-4xl">
         <PostCard post={mockPost} />
         <PostCard

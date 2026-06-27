@@ -70,9 +70,9 @@ jobs:
             '' \
             '| Command | What it does |' \
             '|---|---|' \
-            '| `@ai <instruction>` | Ask AI to apply a fix or make a change |' \
-            '| `@council <question>` | Ask the agent council for analysis or a second opinion |' \
-            '| `@review` | Trigger an AI code review |' \
+            '| `/ai <instruction>` | Ask AI to apply a fix or make a change |' \
+            '| `/council <question>` | Ask the agent council for analysis or a second opinion |' \
+            '| `/review` | Trigger an AI code review |' \
             '| `/resume` | Redeploy the preview environment without code changes |' \
             '| `/rate <value>` | Submit a quality rating for this PR |' \
             > /tmp/commands.md

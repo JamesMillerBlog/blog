@@ -5,7 +5,7 @@ import type { Post } from '@/types/post'
 
 // Mock date-fns
 vi.mock('date-fns', () => ({
-  format: vi.fn((_date: Date, fmt: string) => 'Jan 1, 2024'),
+  format: vi.fn((_date: Date, _fmt: string) => 'Jan 1, 2024'),
 }))
 
 vi.mock('next/link', () => ({

@@ -187,7 +187,7 @@ jobs:
           PUSHED: ${{ steps.push.outputs.pushed }}
           FIX_OUTCOME: ${{ steps.fix.outcome }}
         run: |
-          RETRY_CMD='`@ai Fix the remaining HIGH and CRITICAL findings from the AI code review`'
+          RETRY_CMD='`/ai Fix the remaining HIGH and CRITICAL findings from the AI code review`'
           if [[ "${PUSHED}" == 'true' ]]; then
             gh pr comment "${PR_NUMBER}" \
               --body "🔍 **Fix pushed (iteration ${FIX_ITER}) — delta review running.** Results will be posted to each finding thread." || true

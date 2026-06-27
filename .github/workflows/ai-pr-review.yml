@@ -138,7 +138,7 @@ jobs:
 
           **To trigger another targeted fix attempt**, post this command as a comment:
 
-          \`@ai Fix the remaining HIGH severity findings from the AI code review. Focus only on HIGH issues — read the last review comment for the full list.\`
+          \`/ai Fix the remaining HIGH severity findings from the AI code review. Focus only on HIGH issues — read the last review comment for the full list.\`
 
-          Or to address a specific finding, post a more targeted \`@ai\` instruction.
+          Or to address a specific finding, post a more targeted \`/ai\` instruction.
           ESCALATION_EOF

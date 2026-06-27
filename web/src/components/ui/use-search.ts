@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useCallback, useMemo } from 'react'
 import Fuse from 'fuse.js'
 import type { SearchItem } from '@/types/search'

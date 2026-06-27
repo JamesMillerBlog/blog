@@ -97,6 +97,9 @@ jobs:
           NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
         run: cd web && pnpm build
 
+      # R2 credentials use long-lived static keys.
+      # TODO: scope to single-bucket write-only; migrate to ephemeral
+      # OIDC-style token exchange when Cloudflare supports it for R2 S3 API.
       - name: Deploy to preview R2 bucket
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -104,8 +107,8 @@ jobs:
           AWS_SESSION_TOKEN: ''
           R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
-          aws s3 sync web/out/ s3://jamesmiller-blog-pr-${PR_NUMBER}/ \
-            --endpoint-url ${R2_ENDPOINT} \
+          aws s3 sync web/out/ "s3://jamesmiller-blog-pr-${PR_NUMBER}/" \
+            --endpoint-url "${R2_ENDPOINT}" \
             --region auto \
             --delete
 
@@ -137,11 +140,14 @@ jobs:
           DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
             --method POST \
             --input - \
-            --jq '.id' << EOF
-          {"ref": "${BRANCH}", "environment": "preview-pr-${PR_NUMBER}", "description": "Preview for PR #${PR_NUMBER}", "auto_merge": false, "required_contexts": []}
-          EOF
+            --jq '.id' <<< "$(jq -n \
+              --arg branch "$BRANCH" \
+              --arg env "preview-pr-${PR_NUMBER}" \
+              --arg desc "Preview for PR #${PR_NUMBER}" \
+              '{ref: $branch, environment: $env, description: $desc,
+                auto_merge: false, required_contexts: []}')"
           )
-          gh api repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses \
+          gh api "repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses" \
             --method POST \
             -f state='success' \
             -f environment_url="${PREVIEW_URL}" \

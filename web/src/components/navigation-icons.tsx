@@ -13,6 +13,7 @@ export const NavLink = ({
   return (
     <Link
       href={href}
+      aria-current={active ? 'page' : undefined}
       className={`px-4 py-1.5 inline-flex items-center transition-opacity duration-300 ${
         active
           ? 'ds-b3-active'

@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import type { Project } from '@/app/projects/data'
+import { ui } from '@/i18n/en'
 import { ProjectTagBadge } from './project-tag-badge'
 import { CARD_VARIANTS, CardPlaceholderContent } from './projects-card-media'
 
@@ -17,7 +18,6 @@ export const RoleCard = ({
   i: number
   onHoverChange?: (h: boolean) => void
 }) => {
-  const router = useRouter()
   const [playing, setPlaying] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const thumbUrl =
@@ -26,14 +26,7 @@ export const RoleCard = ({
   const [imgSrc, setImgSrc] = useState(thumbUrl)
 
   const videoSection = project.youtubeId && (
-    <div
-      className="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-low cursor-pointer"
-      onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setPlaying(true)
-      }}
-    >
+    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-low">
       {playing ? (
         <iframe
           src={`https://www.youtube.com/embed/${project.youtubeId}?autoplay=1`}
@@ -60,13 +53,22 @@ export const RoleCard = ({
             />
           )}
           {imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">
+            <button
+              type="button"
+              aria-label={`Play video: ${project.title}`}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setPlaying(true)
+              }}
+              className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors cursor-pointer"
+            >
               <div className="w-14 h-14 rounded-full bg-on-surface/90 flex items-center justify-center shadow-lg">
                 <svg className="w-5 h-5 text-surface ml-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
-            </div>
+            </button>
           )}
         </>
       )}
@@ -83,9 +85,9 @@ export const RoleCard = ({
       onMouseLeave={() => onHoverChange?.(false)}
       className="mb-6 transition-transform duration-300 hover:scale-[1.02]"
     >
-      <div
-        onClick={() => router.push(`/projects/${project.slug}`)}
-        className="group relative rounded-xl overflow-hidden bg-surface-container-lowest hover:shadow-xl transition-all duration-300 cursor-pointer"
+      <Link
+        href={`/projects/${project.slug}`}
+        className="group relative rounded-xl overflow-hidden bg-surface-container-lowest hover:shadow-xl transition-all duration-300 block"
       >
         <div className="absolute inset-y-0 left-0 w-[3px] bg-secondary rounded-full scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-300" />
 
@@ -96,7 +98,7 @@ export const RoleCard = ({
             </span>
             <h3 className="ds-card-title mb-1">{project.title}</h3>
             <span className="text-xs font-headline font-bold text-secondary uppercase tracking-widest block mb-3">
-              / Product
+              / {ui.projects.typeLabel(project.type ?? '')}
             </span>
             <p className="text-on-surface-variant leading-relaxed font-body text-lg mb-6">
               {project.description}
@@ -112,7 +114,7 @@ export const RoleCard = ({
             {videoSection ?? <CardPlaceholderContent />}
           </div>
         </div>
-      </div>
+      </Link>
     </motion.div>
   )
 }

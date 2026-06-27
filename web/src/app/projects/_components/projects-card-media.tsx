@@ -44,14 +44,7 @@ export const VideoSection = ({
   const [imgSrc, setImgSrc] = useState(initialSrc || defaultSrc)
 
   return (
-    <div
-      className="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-low cursor-pointer"
-      onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setPlaying(true)
-      }}
-    >
+    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-low">
       {playing ? (
         <iframe
           src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
@@ -77,13 +70,22 @@ export const VideoSection = ({
             className={`object-cover transition-all duration-500 ${hoverScale ? 'group-hover:scale-[1.02]' : ''} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
           {imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">
+            <button
+              type="button"
+              aria-label={`Play video: ${title}`}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setPlaying(true)
+              }}
+              className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors cursor-pointer"
+            >
               <div className="w-14 h-14 rounded-full bg-on-surface/90 flex items-center justify-center shadow-lg">
                 <svg className="w-5 h-5 text-surface ml-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
-            </div>
+            </button>
           )}
         </>
       )}

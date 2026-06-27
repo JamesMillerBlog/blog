@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { Project } from '@/app/projects/data'
 import { ui } from '@/i18n/en'
 import { ProjectTagBadge } from './project-tag-badge'
@@ -18,13 +18,11 @@ const typeTextClass = (type: string | undefined) =>
   type === 'role' ? 'text-secondary' : 'text-primary'
 
 const ProjectCardFullWidth = ({ project, priority }: { project: Project; priority?: boolean }) => {
-  const router = useRouter()
-
   return (
-    <div
+    <Link
       id={project.slug}
-      onClick={() => router.push(`/projects/${project.slug}`)}
-      className="group relative bg-surface-container-lowest rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+      href={`/projects/${project.slug}`}
+      className="group relative bg-surface-container-lowest rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 block"
     >
       <div
         className={`absolute inset-y-0 left-0 w-[3px] rounded-full scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-300 ${typeAccentClass(project.type)}`}
@@ -67,18 +65,16 @@ const ProjectCardFullWidth = ({ project, priority }: { project: Project; priorit
           )}
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
 const ProjectCardGrid = ({ project, priority }: { project: Project; priority?: boolean }) => {
-  const router = useRouter()
-
   return (
-    <div
+    <Link
       id={project.slug}
-      onClick={() => router.push(`/projects/${project.slug}`)}
-      className="group relative bg-surface-container-lowest rounded-xl p-6 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
+      href={`/projects/${project.slug}`}
+      className="group relative bg-surface-container-lowest rounded-xl p-6 hover:shadow-xl transition-all duration-300 overflow-hidden block"
     >
       <div
         className={`absolute inset-y-0 left-0 w-[3px] rounded-full scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-300 ${typeAccentClass(project.type)}`}
@@ -118,7 +114,7 @@ const ProjectCardGrid = ({ project, priority }: { project: Project; priority?: b
           hoverScale
         />
       )}
-    </div>
+    </Link>
   )
 }
 

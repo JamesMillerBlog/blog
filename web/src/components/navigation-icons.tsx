@@ -1,3 +1,4 @@
+import type { ReactNode, JSX } from 'react'
 import Link from 'next/link'
 
 export const NavLink = ({
@@ -7,8 +8,8 @@ export const NavLink = ({
 }: {
   href: string
   active: boolean
-  children: React.ReactNode
-}): React.JSX.Element => {
+  children: ReactNode
+}): JSX.Element => {
   return (
     <Link
       href={href}
@@ -23,7 +24,7 @@ export const NavLink = ({
   )
 }
 
-export const SearchIcon = (): React.JSX.Element => {
+export const SearchIcon = (): JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -36,7 +37,7 @@ export const SearchIcon = (): React.JSX.Element => {
   )
 }
 
-export const MoonIcon = (): React.JSX.Element => {
+export const MoonIcon = (): JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -49,7 +50,7 @@ export const MoonIcon = (): React.JSX.Element => {
   )
 }
 
-export const SunIcon = (): React.JSX.Element => {
+export const SunIcon = (): JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -62,7 +63,7 @@ export const SunIcon = (): React.JSX.Element => {
   )
 }
 
-export const MenuIcon = (): React.JSX.Element => {
+export const MenuIcon = (): JSX.Element => {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path

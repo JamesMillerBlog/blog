@@ -208,30 +208,30 @@ Preview live + tests pass/fail visible in Actions
 
 ### AI Issue Comment Response (`ai-issue-comment` workflow)
 
-**When:** A repo owner comments `@ai <instruction>`, `/resume`, `/retry`, or `@council <question>` on an issue.
+**When:** A repo owner comments `/ai <instruction>`, `/resume`, `/retry`, or `/council <question>` on an issue.
 
 **What happens:**
-1. If `@council <question>` → runs council of agents on the question and posts answer
+1. If `/council <question>` → runs council of agents on the question and posts answer
 2. Otherwise: detects existing branch+PR for this issue number
 3. If no branch exists → re-implements from scratch (same as `ai-issue.yml` but runs in the comment workflow)
-4. If branch exists and `@ai <instruction>` → applies fix via `ai-respond.sh`, pushes, re-deploys preview (AI review triggers automatically via PR update)
+4. If branch exists and `/ai <instruction>` → applies fix via `ai-respond.sh`, pushes, re-deploys preview (AI review triggers automatically via PR update)
 5. If branch exists and `/resume` → re-deploys preview environment without code changes
 6. If `/retry` → force-re-runs full implementation from scratch on the existing branch (clean checkout, re-run ai-implement.sh)
 
-**Why:** Lets you iterate on an AI-generated feature by commenting `@ai` with instructions, consult the council with `@council` for advice, or restart preview deployment with `/resume`, all without leaving GitHub.
+**Why:** Lets you iterate on an AI-generated feature by commenting `/ai` with instructions, consult the council with `/council` for advice, or restart preview deployment with `/resume`, all without leaving GitHub.
 
 ### AI PR Comment Response (`ai-pr-comment` workflow)
 
-**When:** A repo owner comments `@ai <instruction>`, `/resume`, `@review`, `/rate <good|bad> [reason]`, or `@council <question>` on a pull request.
+**When:** A repo owner comments `/ai <instruction>`, `/resume`, `/review`, `/rate <good|bad> [reason]`, or `/council <question>` on a pull request.
 
 **What happens:**
-1. If `@council <question>` → runs council of agents on the question and posts answer
-2. If `@ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary (AI review triggers automatically via PR update)
+1. If `/council <question>` → runs council of agents on the question and posts answer
+2. If `/ai <instruction>` → runs `ai-respond.sh` to apply the fix, pushes changes, posts result summary (AI review triggers automatically via PR update)
 3. If `/resume` → re-deploys preview environment without code changes
-4. If `@review` → dispatches `ai-pr-review.yml` for multi-agent code review
+4. If `/review` → dispatches `ai-pr-review.yml` for multi-agent code review
 5. If `/rate good [reason]` or `/rate bad [reason]` → records human feedback to Langfuse trace for this PR (used for AI quality monitoring)
 
-**Why:** Enables rapid iteration on PRs - comment `@ai fix the heading colour` and the AI implements and re-deploys automatically. Use `@council` for architectural guidance, `@review` to trigger review anytime, and `/rate` to provide feedback for improving AI output quality.
+**Why:** Enables rapid iteration on PRs - comment `/ai fix the heading colour` and the AI implements and re-deploys automatically. Use `/council` for architectural guidance, `/review` to trigger review anytime, and `/rate` to provide feedback for improving AI output quality.
 
 ### AI PR Review (`ai-pr-review` workflow)
 
@@ -321,7 +321,7 @@ Preview live + tests pass/fail visible in Actions
 | `scripts/ai-criteria-check.sh` | Deterministic gate: build, typecheck, test coverage, console.log scan, secret pattern scan |
 | `scripts/ai-pr-review-run.sh` | Runs manifest + multi-agent review (`claude-sonnet-4-6`), posts verdict to PR |
 | `scripts/ai-pr-review-fix.sh` | Fetches latest review comment, runs deepseek-v4-pro to fix CRITICAL/HIGH findings |
-| `scripts/ai-respond.sh` | Respond to PR comments with `@ai <instruction>` |
+| `scripts/ai-respond.sh` | Respond to PR comments with `/ai <instruction>` |
 | `scripts/ai-generate-tests.sh` | Generates Playwright E2E tests from issue description using `deepseek-v4-pro` |
 | `scripts/ai-eval-trends.sh` | Computes aggregated eval trends and writes trend summary |
 | `scripts/ai-blog-suggestions.sh` | Monthly blog improvement radar - research, generate, and issue creation |

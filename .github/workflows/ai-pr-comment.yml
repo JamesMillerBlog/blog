@@ -12,7 +12,7 @@ jobs:
     if: |
       (github.event_name == 'pull_request_review_comment' || github.event.issue.pull_request != null) &&
       github.event.comment.user.login == github.repository_owner &&
-      (startsWith(github.event.comment.body, '@ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '@council ') || github.event.comment.body == '@review' || startsWith(github.event.comment.body, '/rate '))
+      (startsWith(github.event.comment.body, '/ai ') || github.event.comment.body == '/resume' || startsWith(github.event.comment.body, '/council ') || github.event.comment.body == '/review' || startsWith(github.event.comment.body, '/rate '))
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -140,13 +140,13 @@ jobs:
 
           if [[ "$COMMENT_BODY" == '/resume' ]]; then
             post_reply "🔄 **Resuming preview deployment...** [View run](${RUN_URL})"
-          elif [[ "$COMMENT_BODY" == '@review' ]]; then
+          elif [[ "$COMMENT_BODY" == '/review' ]]; then
             post_reply "🔍 **AI review triggered...** [View run](${RUN_URL})"
-          elif [[ "$COMMENT_BODY" == @council\ * ]]; then
-            QUESTION="${COMMENT_BODY#@council }"
+          elif [[ "$COMMENT_BODY" == /council * ]]; then
+            QUESTION="${COMMENT_BODY#/council }"
             post_reply "🧠 **Running council on:** ${QUESTION} [View run](${RUN_URL})"
           else
-            INSTRUCTION="${COMMENT_BODY#@ai }"
+            INSTRUCTION="${COMMENT_BODY#/ai }"
             add_reaction rocket
             post_reply "🔨 **Starting work:** ${INSTRUCTION} [View run](${RUN_URL})"
           fi
@@ -194,7 +194,7 @@ jobs:
           echo '{"yoloMode": true}' > .pi/extensions/pi-permission-system/config.json
 
       - name: Dispatch PR review
-        if: env.COMMENT_BODY == '@review'
+        if: env.COMMENT_BODY == '/review'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -208,13 +208,13 @@ jobs:
             --field branch="${BRANCH}"
 
       - name: Run council
-        if: startsWith(env.COMMENT_BODY, '@council ')
+        if: startsWith(env.COMMENT_BODY, '/council ')
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
         run: |
-          QUESTION="${COMMENT_BODY#@council }"
+          QUESTION="${COMMENT_BODY#/council }"
           QUESTION="${QUESTION:0:2000}"
           git show origin/main:scripts/council.sh | bash -s -- "$QUESTION" 2>&1 | tail -c 60000 > /tmp/council-output.txt
           {
@@ -224,22 +224,22 @@ jobs:
           gh pr comment "${PR_NUMBER}" --body-file /tmp/council-comment.md
 
       - name: Run AI response
-        if: startsWith(env.COMMENT_BODY, '@ai ')
+        if: startsWith(env.COMMENT_BODY, '/ai ')
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
           BRANCH: ${{ needs.gate.outputs.branch }}
         run: |
-          INSTRUCTION="${COMMENT_BODY#@ai }"
+          INSTRUCTION="${COMMENT_BODY#/ai }"
           bash scripts/ai-respond.sh "$PR_NUMBER" "$BRANCH" "$INSTRUCTION"
 
       - name: Push changes
-        if: startsWith(env.COMMENT_BODY, '@ai ')
+        if: startsWith(env.COMMENT_BODY, '/ai ')
         run: git push origin "$BRANCH"
 
       - name: Post AI response result
-        if: startsWith(env.COMMENT_BODY, '@ai ')
+        if: startsWith(env.COMMENT_BODY, '/ai ')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -288,7 +288,7 @@ jobs:
       - name: Set preview flag
         id: set_preview
         run: |
-          if [[ "$COMMENT_BODY" == '/resume' ]] || [[ "$COMMENT_BODY" == @ai\ * ]]; then
+          if [[ "$COMMENT_BODY" == '/resume' ]] || [[ "$COMMENT_BODY" == /ai * ]]; then
             echo 'should_preview=true' >> $GITHUB_OUTPUT
           else
             echo 'should_preview=false' >> $GITHUB_OUTPUT

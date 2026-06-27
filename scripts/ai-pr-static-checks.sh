@@ -1,14 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-review_dir=".claude/pre-push-review"
+review_dir=".claude/ai-pr-review"
 all_files="$review_dir/all-changed-files.txt"
 output_file="$review_dir/static-checks.txt"
 
 mkdir -p "$review_dir"
 
 if [ ! -f "$all_files" ]; then
-  bash scripts/pre-push-review-manifest.sh >/dev/null
+  bash scripts/ai-pr-review-manifest.sh >/dev/null
 fi
 
 tmp_hits=$(mktemp)

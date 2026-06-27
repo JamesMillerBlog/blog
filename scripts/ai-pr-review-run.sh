@@ -13,13 +13,13 @@ strip_ansi() {
 }
 
 echo "=== Generating review manifest ===" >&2
-bash scripts/pre-push-review-manifest.sh
+bash scripts/ai-pr-review-manifest.sh
 
 # Pre-flight: scan diff for secret patterns before sending to AI
 _DIFF_SECRETS=$(git diff origin/main...HEAD 2>/dev/null | grep '^+' | grep -v '^+++' || true)
-_PREFLIGHT_SECRET_RE='ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|-----BEGIN (RSA |EC )?PRIVATE KEY'
+_PREFLIGHT_SECRET_RE='ghp_[A-Za-z0-9]{36}|ghs_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{82}|AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}|xox[baprs]-[A-Za-z0-9-]+|-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}'
 if printf '%s' "$_DIFF_SECRETS" | grep -qE "$_PREFLIGHT_SECRET_RE" 2>/dev/null; then
-  echo "::warning::Secret pattern detected in diff — review will proceed but findings should be manually checked" >&2
+  echo "::warning::Secret pattern detected in diff - review will proceed but findings should be manually checked" >&2
 fi
 unset _DIFF_SECRETS _PREFLIGHT_SECRET_RE
 
@@ -30,7 +30,7 @@ LF_TRACE_ID=$(lf_trace_create \
   "$(jq -n --arg pr "$PR_NUMBER" '{pr_number: $pr}')")
 echo "Langfuse trace: ${LF_TRACE_ID}" >&2
 
-REVIEW_PROMPT="$(lf_prompt_get 'pre-push-review' '.pi/prompts/pre-push-review.md')
+REVIEW_PROMPT="$(lf_prompt_get 'ai-pr-review' '.pi/prompts/ai-pr-review.md')
 
 ---
 

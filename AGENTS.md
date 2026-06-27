@@ -122,8 +122,8 @@ Full spec: `web/design/DESIGN.md`. Key tokens:
 | ---------------------------- | ------------------------ | --------------------------------------- | ------------------------------------------- |
 | `reviewer-security`          | `claude-sonnet-4-6`      | always                                  | Secrets, injection, CVEs, exploitable logic |
 | `reviewer-code-quality`      | `claude-haiku-4-5-20251001` | app / infra changes                  | Smells, complexity, best practices          |
-| `reviewer-frontend`          | `claude-haiku-4-5-20251001` | `*.tsx/ts/jsx/js/css`                | React, TypeScript, a11y                     |
-| `reviewer-design`            | `claude-haiku-4-5-20251001` | `*.tsx/jsx/css`                      | Byte Mark tokens, typography                |
+| `reviewer-frontend`          | `claude-haiku-4-5-20251001` | `*.tsx/ts/jsx/js/css/mdx`            | React, TypeScript, a11y                     |
+| `reviewer-design`            | `claude-haiku-4-5-20251001` | `*.tsx/jsx/css/mdx`                  | Byte Mark tokens, typography                |
 | `reviewer-infrastructure`    | `claude-haiku-4-5-20251001` | infra / CI / Docker / Terraform changes | GitHub Actions, IAM, Terraform          |
 
 ## Docker
@@ -142,7 +142,7 @@ Nine workflows automate issue implementation, PR review, and blog improvement us
 | `ai-issue-comment.yml`         | Issue comment `@ai <instruction>`, `/resume`, `/retry`, or `@council <question>` (repo owner only) | Runs council for `@council <question>`; finds existing branch/PR for `@ai`/`/resume`/`/retry`; if no branch → re-implements from scratch; `@ai` applies fix then re-deploys preview; `/resume` re-deploys preview without code change; `/retry` re-runs full implementation on existing branch |
 | `ai-pr-comment.yml`            | PR comment with `@ai <instruction>`, `/resume`, `@review`, or `@council <question>` (repo owner only) | Runs council for `@council <question>`; `@ai` applies fix via ai-respond.sh, re-deploys preview; `/resume` re-deploys preview without code change; `@review` triggers review        |
 | `ai-pr-review-comment.yml`     | Inline review comment on PR (repo owner only)                        | Assesses inline review feedback, applies fixes via pi, re-deploys preview                                                                                 |
-| `ai-pr-review.yml`             | PR opened, reopened, or updated (same-repo only)                     | Runs multi-agent AI review (claude-sonnet-4-6) on the PR diff, posts verdict, dispatches auto-fix if DO_NOT_PUSH and iterations < 3, labels PR needs-human after max iterations |
+| `ai-pr-review.yml`             | PR opened, reopened, commits pushed - except skips if pi[bot] pushes (same-repo only) | Runs multi-agent AI review (claude-sonnet-4-6) on the PR diff, posts verdict, dispatches auto-fix if DO_NOT_PUSH and iterations < 3, labels PR needs-human after max iterations |
 | `ai-pr-review-respond.yml`     | `repository_dispatch: pr-review-needs-fix`                           | Validates inputs, applies deepseek-v4-pro fixes for CRITICAL/HIGH findings, pushes (triggering re-review), tracks iterations via PR labels, posts emoji status |
 | `ai-pr-merged.yml`             | AI-generated PR merged (auto)                                        | Closes linked issue, destroys ephemeral preview environment (Terraform destroy), marks deployment inactive                                                |
 | `ai-blog-suggestions.yml`      | Monthly schedule (1st of month) or manual trigger (repo owner)       | Runs blog improvement radar: researches competitor blogs & trends, generates 8-15 prioritized suggestions, creates GitHub issue with `blog-radar` label  |

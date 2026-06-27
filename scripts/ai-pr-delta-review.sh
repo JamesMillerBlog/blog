@@ -131,9 +131,28 @@ for i in $(seq 0 $(( RESULT_COUNT - 1 ))); do
 
   if [[ "$STATUS" == 'RESOLVED' ]]; then
     MSG="✅ **Delta review (iter ${FIX_ITER}):** Fix confirmed — ${REASON}"
-    # Resolve the GitHub thread so it collapses in the UI
     if [[ -n "$COMMENT_ID" && "$COMMENT_ID" =~ ^[0-9]+$ ]]; then
       resolve_review_thread "$COMMENT_ID"
+      # Update original finding comment: replace severity emoji with ✅
+      ORIG_BODY=$(printf '%s' "$FINDING_COMMENTS" | \
+        jq -r --argjson cid "$COMMENT_ID" \
+          '[.[] | select(.id == $cid)] | first | .body // empty' \
+        2>/dev/null || true)
+      if [[ -n "$ORIG_BODY" ]]; then
+        UPDATED_BODY=$(python3 -c "
+import sys
+body = sys.stdin.read()
+for emoji in ['\U0001f534', '\U0001f7e0']:
+    if body.startswith(emoji):
+        body = '\u2705' + body[1:]
+        break
+sys.stdout.write(body)
+" <<< "$ORIG_BODY" 2>/dev/null || true)
+        if [[ -n "$UPDATED_BODY" ]]; then
+          gh api "repos/${REPO}/pulls/comments/${COMMENT_ID}" \
+            --method PATCH --field body="$UPDATED_BODY" 2>/dev/null || true
+        fi
+      fi
     fi
   else
     MSG="⚠️ **Delta review (iter ${FIX_ITER}):** Fix incomplete — ${REASON}"
